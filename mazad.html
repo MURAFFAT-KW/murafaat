@@ -274,6 +274,19 @@ input.field{font-size:16px}
 .award b{font-family:var(--font-d);font-size:1.3rem;color:var(--cyan)}
 .qcard h2{color:var(--cyan)}
 
+.perk-pick{grid-template-columns:1fr}
+.perk-pick span{color:var(--muted);font-size:.9rem;line-height:1.5}
+.perk-pick em{font-style:normal;font-size:.78rem;color:var(--cyan);font-weight:600}
+.perk-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:56px;padding:8px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg-2);color:var(--muted);cursor:pointer;text-align:start;font:inherit}
+.perk-btn b{font-family:var(--font-d);font-size:.98rem;color:var(--text)}
+.perk-btn span{font-size:.8rem}
+.perk-btn.ready{border-color:var(--gold);background:rgba(20,164,77,.09);color:var(--gold)}
+.perk-btn.ready b{color:var(--gold)}
+.perk-btn.used{opacity:.55;text-decoration:line-through}
+.perk-btn[aria-disabled=true]{cursor:not-allowed}
+.perk-btn:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.perklog{display:grid;gap:6px;border:1px solid var(--cyan);background:rgba(30,111,217,.07);border-radius:14px;padding:10px 14px;font-size:.92rem;font-weight:600;color:var(--text)}
+.chip.bad{border-color:var(--bad);color:var(--bad);background:rgba(211,47,47,.08)}
 </style>
 </head>
 <body>
@@ -345,6 +358,17 @@ input.field{font-size:16px}
   const VOTE_SEC = TEST ? 6 : 30, PRICE_SEC = TEST ? 6 : 40, BUY_SEC = TEST ? 6 : 30;
   const PMIN = 1, PMAX = 20;
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const PERKS = [
+    { id: 'half', name: 'تنزيلات ٥٠٪', desc: 'بعد ما تنكشف الأسعار، تنزّل سعرك للنص.', when: 'بعد كشف الأسعار' },
+    { id: 'up', name: 'رفع سعر الخصم', desc: 'تزيد سعر خصمك لين ٣ دنانير، فيصير غرضه أغلى.', when: 'بعد كشف الأسعار' },
+    { id: 'down', name: 'تنزيل سعر الخصم', desc: 'تنقص سعر خصمك لين ٣ دنانير، فيقل ربحه بكل بيعة.', when: 'بعد كشف الأسعار' },
+    { id: 'rep', name: 'مسؤول مبيعات', desc: 'تسحب واحد من الجمهور يساعدك تقنع، وما يقدر يشتري بهالجولة.', when: 'بعد كشف الأسعار' },
+    { id: 'cancel', name: 'اعتراض على البيعة', desc: 'بعد البيع، تلغي كل بيعات خصمك بالجولة وترجع الفلوس للمشترين.', when: 'بعد البيع' },
+    { id: 'opp', name: 'تغيير الخصم', desc: 'يتغير خصمك بلاعب عشوائي من الجمهور.', when: 'وقت التسعير' },
+    { id: 'item', name: 'تغيير المنتج', desc: 'يتغير الغرض المعروض بغرض عشوائي ثاني.', when: 'وقت التسعير' }
+  ];
+  const perkName = id => (PERKS.find(x => x.id === id) || {}).name || id;
+  const PRICE_STAGES = ['reveal', 'pitch1', 'pitch2'];
   const app = document.getElementById('app');
   const toastEl = document.getElementById('toast');
   try { document.documentElement.dir = 'rtl'; document.documentElement.lang = 'ar'; } catch (e) { }
@@ -355,7 +379,7 @@ input.field{font-size:16px}
   let seq = 0, toastT = null;
   const U = {
     splash: true, ready: false, view: 'home', modal: null, draft: {}, err: '', lastKey: '', lastHtml: '',
-    code: '', name: '', gender: 'm', busy: false, offline: '', fromLink: false, pick: null, pickKey: '', price: null, priceKey: ''
+    code: '', name: '', gender: 'm', busy: false, offline: '', fromLink: false, pick: null, pickKey: '', price: null, priceKey: '', perks: [], perksKey: '', logSeen: '', logN: 0
   };
 
   /* ---------- helpers ---------- */
@@ -367,7 +391,7 @@ input.field{font-size:16px}
   const gv = (p, m, f) => (p && p.gender === 'f' ? f : m);
   const gLabel = p => (p.gender === 'f' ? 'امرأة' : 'رجل');
   const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
-  const kd = v => (+v || 0) + ' د.ك';
+  const kd = v => (Math.round((+v || 0) * 100) / 100) + ' د.ك';
   const isHost = () => !!(G && ME_ID && G.host === ME_ID);
   const nowH = () => (isHost() ? Date.now() : Date.now() - (skew || 0));
   const inp = id => (id === ME_ID ? ME : INP[id]) || {};
@@ -463,7 +487,7 @@ input.field{font-size:16px}
     return {
       v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {},
       settings: { rounds: 2, start: 20, val: 5, think: 60, pitch: 60 },
-      pool: [], used: [], itemsRound: 0, needMore: false, prog: [], econ: {}, sold: {}, roundNo: 0, total: 0, cur: null, history: [], lastPair: ''
+      perks: {}, pused: {}, pool: [], used: [], itemsRound: 0, needMore: false, prog: [], econ: {}, sold: {}, roundNo: 0, total: 0, cur: null, history: [], lastPair: ''
     };
   }
   function blankMe(code) { return { room: code, name: U.name.trim(), gender: U.gender, at: Date.now(), reqN: 0, reqs: [] }; }
@@ -589,15 +613,21 @@ input.field{font-size:16px}
   }
   function progList() {
     const ids = G.players.map(p => p.id), c = G.cur;
+    if (G.phase === 'perks') return ids.filter(id => { const x = inp(id).perks; return x && x.g === G.gameNo && x.done; });
     if (G.phase === 'items') return ids.filter(id => { const x = inp(id).items; return x && x.g === G.gameNo && x.r === G.itemsRound; });
     if (G.phase === 'round' && c) {
       if (c.stage === 'vote') return ids.filter(id => { const x = inp(id).vote; return x && x.key === c.key; });
-      if (c.stage === 'price') return [c.a, c.b].filter(id => { const x = inp(id).price; return x && x.key === c.key; });
+      if (c.stage === 'price') return ['a', 'b'].filter(s => priceIn(s) != null).map(s => c[s]);
       if (c.stage === 'buy') return buyers().filter(id => { const x = inp(id).buy; return x && x.key === c.key; });
     }
     return [];
   }
-  const buyers = () => G.players.map(p => p.id).filter(id => !G.cur || (id !== G.cur.a && id !== G.cur.b));
+  const helpers = () => (G.cur && G.cur.help ? Object.values(G.cur.help) : []);
+  const buyers = () => G.players.map(p => p.id).filter(id => !G.cur || (id !== G.cur.a && id !== G.cur.b && !helpers().includes(id)));
+  function priceIn(s) {
+    const c = G.cur, x = inp(c[s]).price;
+    return x && x.key === c.key && x.side === s && x.ver === (c.pv ? c.pv[s] : 0) ? Math.min(PMAX, Math.max(PMIN, Math.round(+x.v || 0))) : null;
+  }
   function hostTickFn() {
     if (!isHost() || !G || G.phase !== 'round' || !G.cur) return;
     const c = G.cur;
@@ -606,6 +636,86 @@ input.field{font-size:16px}
   function applyReq(id, r) {
     const c = G.cur;
     if (r.type === 'done' && c && r.key === c.key && (c.stage === 'pitch1' || c.stage === 'pitch2') && c[c.speaker] === id) roundStep(true);
+    if (r.type === 'perk' && c && r.key === c.key) usePerk(id, r);
+  }
+  /* perks: who can use what, now */
+  function perkState(pid, id) {
+    const c = G.cur;
+    if (!c || G.phase !== 'round') return { ok: false, why: '' };
+    const side = c.a === pid ? 'a' : (c.b === pid ? 'b' : null);
+    if (!side) return { ok: false, why: 'للبائعين بس' };
+    if (!(G.perks[pid] || []).includes(id)) return { ok: false, why: '' };
+    if ((G.pused[pid] || []).includes(id)) return { ok: false, why: 'مستخدمة' };
+    const os = other(side);
+    if (id === 'item' || id === 'opp') {
+      if (c.stage !== 'price') return { ok: false, why: 'وقت التسعير' };
+      if (id === 'item' && !G.pool.some(x => !G.used.includes(x.id))) return { ok: false, why: 'ما فيه أغراض ثانية' };
+      if (id === 'opp' && !buyers().length) return { ok: false, why: 'ما فيه أحد بالجمهور' };
+      return { ok: true, side };
+    }
+    if (id === 'cancel') {
+      if (c.stage !== 'result') return { ok: false, why: 'بعد البيع' };
+      if (c.cancel && c.cancel[os]) return { ok: false, why: 'انلغت' };
+      if (!(c.n && c.n[os] > 0)) return { ok: false, why: 'خصمك ما باع' };
+      return { ok: true, side };
+    }
+    if (!PRICE_STAGES.includes(c.stage)) return { ok: false, why: 'بعد كشف الأسعار' };
+    if (id === 'half' && c.prices[side] <= 0.5) return { ok: false, why: 'سعرك أقل شي' };
+    if (id === 'up' && c.prices[os] >= PMAX) return { ok: false, why: 'سعره أعلى شي' };
+    if (id === 'down' && c.prices[os] <= 0.5) return { ok: false, why: 'سعره أقل شي' };
+    if (id === 'rep') {
+      if (c.help && c.help[side]) return { ok: false, why: 'عندك مسؤول' };
+      if (!buyers().length) return { ok: false, why: 'ما فيه أحد بالجمهور' };
+    }
+    return { ok: true, side };
+  }
+  const half = v => Math.max(0.5, Math.round(v * 2) / 2);
+  function usePerk(pid, r) {
+    const st = perkState(pid, r.id);
+    if (!st.ok) return false;
+    const c = G.cur, side = st.side, os = other(side), me = P(pid).name, op = P(c[os]).name;
+    let msg = '';
+    if (r.id === 'item') {
+      const avail = G.pool.filter(x => !G.used.includes(x.id) && x.id !== c.item);
+      const nx = avail[Math.floor(Math.random() * avail.length)];
+      G.used = G.used.filter(id => id !== c.item); G.used.push(nx.id);
+      const old = itemText(c.item); c.item = nx.id; c.tie = false;
+      c.pv.a++; c.pv.b++; c.endsAt = Date.now() + PRICE_SEC * 1000; c.dur = PRICE_SEC;
+      msg = me + gv(P(pid), ' غيّر', ' غيّرت') + ' المنتج: بدل «' + old + '» صار «' + nx.t + '». حطوا أسعاركم من جديد.';
+    } else if (r.id === 'opp') {
+      const cand = buyers(); const nw = cand[Math.floor(Math.random() * cand.length)];
+      G.sold[c[os]] = Math.max(0, (G.sold[c[os]] || 1) - 1); G.sold[nw] = (G.sold[nw] || 0) + 1;
+      c[os] = nw; c.pv[os]++; c.endsAt = Date.now() + PRICE_SEC * 1000; c.dur = PRICE_SEC;
+      msg = me + gv(P(pid), ' غيّر خصمه', ' غيّرت خصمها') + ': طلع ' + op + ' ودخل ' + P(nw).name + '.';
+    } else if (r.id === 'half') {
+      const o = c.prices[side]; c.prices[side] = half(o / 2);
+      msg = me + gv(P(pid), ' سوّى', ' سوّت') + ' تنزيلات ٥٠٪: من ' + kd(o) + ' إلى ' + kd(c.prices[side]) + '.';
+    } else if (r.id === 'up') {
+      const amt = Math.min(3, Math.max(1, Math.round(+r.amt || 3))), o = c.prices[os];
+      c.prices[os] = Math.min(PMAX, o + amt);
+      msg = me + gv(P(pid), ' رفع', ' رفعت') + ' سعر ' + op + ': من ' + kd(o) + ' إلى ' + kd(c.prices[os]) + '.';
+    } else if (r.id === 'down') {
+      const amt = Math.min(3, Math.max(1, Math.round(+r.amt || 3))), o = c.prices[os];
+      c.prices[os] = Math.max(0.5, o - amt);
+      msg = me + gv(P(pid), ' نزّل', ' نزّلت') + ' سعر ' + op + ': من ' + kd(o) + ' إلى ' + kd(c.prices[os]) + '.';
+    } else if (r.id === 'rep') {
+      if (!buyers().includes(r.target)) return false;
+      c.help = c.help || {}; c.help[side] = r.target;
+      msg = me + gv(P(pid), ' سحب ', ' سحبت ') + P(r.target).name + ' مسؤول مبيعات. ' + gv(P(r.target), 'ما يقدر يشتري', 'ما تقدر تشتري') + ' بهالجولة.';
+    } else if (r.id === 'cancel') {
+      const pr = c.prices[os];
+      (c.sales[os] || []).forEach(id => {
+        const e = G.econ[id], paid = c.paid[id] || pr;
+        e.w += paid; const k = e.items.lastIndexOf(itemText(c.item)); if (k >= 0) e.items.splice(k, 1);
+        G.econ[c[os]].p -= paid; c.buys[id] = 'c';
+      });
+      c.cancel = c.cancel || {}; c.cancel[os] = c.n[os]; c.n[os] = 0;
+      const h = G.history[G.history.length - 1]; if (h) { if (os === 'a') h.na = 0; else h.nb = 0; h.cx = (h.cx || '') + os; }
+      msg = me + gv(P(pid), ' اعترض', ' اعترضت') + ' على البيعة! انلغت كل بيعات ' + op + ' ورجعت الفلوس للمشترين.';
+    }
+    G.pused[pid] = (G.pused[pid] || []).concat([r.id]);
+    c.log = (c.log || []).concat([msg]);
+    return true;
   }
   function sendReq(r) {
     if (!G) return;
@@ -622,7 +732,15 @@ input.field{font-size:16px}
     G.players.forEach(p => { G.econ[p.id] = { w: G.settings.start, p: 0, items: [] }; G.sold[p.id] = 0; });
     G.total = Math.ceil(G.players.length * Math.max(2, G.settings.rounds) / 2);
     G.roundNo = 0; G.pool = []; G.used = []; G.history = []; G.cur = null; G.lastPair = '';
-    G.itemsRound = 1; G.needMore = false; G.phase = 'items'; G.prog = [];
+    G.itemsRound = 1; G.needMore = false; G.phase = 'perks'; G.prog = []; G.perks = {}; G.pused = {};
+  }
+  function lockPerks() {
+    G.players.forEach(p => {
+      const x = inp(p.id).perks;
+      G.perks[p.id] = x && x.g === G.gameNo && x.done ? (x.list || []).filter(id => PERKS.some(k => k.id === id)).slice(0, 3) : [];
+      G.pused[p.id] = [];
+    });
+    G.phase = 'items'; G.prog = [];
   }
   function collectItems() {
     const seen = new Set(G.pool.map(x => norm(x.t)));
@@ -655,7 +773,7 @@ input.field{font-size:16px}
     const [a, b] = pickSellers();
     const cands = shuffle(avail).slice(0, 6).map(x => x.id);
     G.phase = 'round'; G.prog = [];
-    G.cur = { key: uid('r'), no: G.roundNo + 1, a, b, cands, item: null, votes: null, stage: 'vote', endsAt: Date.now() + VOTE_SEC * 1000, dur: VOTE_SEC, prices: null, auto: {}, first: 'a', speaker: null, buys: null };
+    G.cur = { key: uid('r'), no: G.roundNo + 1, a, b, cands, item: null, votes: null, stage: 'vote', endsAt: Date.now() + VOTE_SEC * 1000, dur: VOTE_SEC, prices: null, auto: {}, first: 'a', speaker: null, buys: null, pv: { a: 0, b: 0 }, help: {}, log: [], cancel: {}, sales: { a: [], b: [] }, paid: {} };
     if (cands.length === 1) chooseItem({});
   }
   function chooseItem(t) {
@@ -684,8 +802,7 @@ input.field{font-size:16px}
       return true;
     }
     if (c.stage === 'price') {
-      const got = s => { const x = inp(c[s]).price; return x && x.key === c.key ? Math.min(PMAX, Math.max(PMIN, Math.round(+x.v || 0))) : null; };
-      const pa = got('a'), pb = got('b');
+      const pa = priceIn('a'), pb = priceIn('b');
       if (!go && (pa == null || pb == null)) return false;
       c.prices = { a: pa == null ? G.settings.val : pa, b: pb == null ? G.settings.val : pb };
       c.auto = { a: pa == null, b: pb == null };
@@ -715,6 +832,7 @@ input.field{font-size:16px}
       if ((v === 'a' || v === 'b') && e && c.prices[v] <= e.w) {
         e.w -= c.prices[v]; e.items.push(name);
         G.econ[c[v]].p += c.prices[v]; n[v]++;
+        c.sales[v].push(id); c.paid[id] = c.prices[v];
       } else if (v === 'a' || v === 'b') v = 'x';
       c.buys[id] = v;
     });
@@ -758,6 +876,7 @@ input.field{font-size:16px}
       me + errBox() + (U.fromLink ? join + host : host + join) +
       '<section class="card"><h2>كيف تُلعب؟</h2><ol class="howto">' +
       '<li><span>كل لاعب يبدأ بمحفظة فيها ' + kd(20) + '، ويكتب أشياء موجودة بالمكان.</span></li>' +
+      '<li><span>كل لاعب يختار ٣ مزايا سرًّا يستخدمها لما يكون بائع: تنزيلات، رفع أو تنزيل سعر خصمه، مسؤول مبيعات، اعتراض على البيعة، تغيير الخصم أو المنتج.</span></li>' +
       '<li><span>كل جولة: الكل يصوّت على غرض واحد للبيع، واللعبة تختار بائعَين.</span></li>' +
       '<li><span>كل بائع يحط سعره سرًّا (من دينار لين 20)، وبعدها تنكشف الأسعار.</span></li>' +
       '<li><span>دقيقة تفكير، وبعدها كل بائع عنده دقيقة يقنع الناس يشترون منه.</span></li>' +
@@ -832,6 +951,35 @@ input.field{font-size:16px}
     return head + body + progBox('مين كتب أغراضه') + next;
   }
 
+  function perksView() {
+    const x = inp(ME_ID).perks, done = x && x.g === G.gameNo && x.done;
+    let body;
+    if (done) body = '<section class="card pass"><h2>اخترت مزاياك ✓</h2><p class="muted">' + ((x.list || []).map(perkName).join('، ') || 'بدون مزايا') + '</p></section>';
+    else {
+      const key = G.code + G.gameNo;
+      if (U.perksKey !== key) { U.perksKey = key; U.perks = []; }
+      const full = U.perks.length >= 3;
+      body = '<section class="card action"><h2>اختر مزاياك سرًّا</h2><p class="muted" style="margin-bottom:12px">٣ مزايا من ٧ · <b class="num" style="color:var(--gold)">' + U.perks.length + '</b> من ٣ · كل ميزة تستخدمها مرة وحدة باللعبة، ولما تكون بائع بس.</p>' +
+        '<div class="perk-grid">' + PERKS.map(k => { const on = U.perks.includes(k.id); return '<button class="perk-pick ' + (on ? 'on' : (full ? 'off' : '')) + '" data-act="togglePerk" data-id="' + k.id + '" aria-pressed="' + on + '"><b>' + k.name + '</b><span>' + k.desc + '</span><em>' + k.when + '</em></button>'; }).join('') + '</div>' +
+        '<button class="btn xl primary" data-act="sendPerks" style="margin-top:14px">' + (U.perks.length ? 'تأكيد المزايا' : 'كمّل بدون مزايا') + '</button></section>';
+    }
+    const all = (G.prog || []).length >= G.players.length;
+    return body + progBox('مين اختار مزاياه') + (isHost() ? '<button class="btn xl primary" data-act="perksNext">' + (all ? 'التالي: كتابة الأغراض' : 'كمّل بدون الباقين') + '</button>' : waitHost());
+  }
+  function perkPanel() {
+    const c = G.cur;
+    if (c.a !== ME_ID && c.b !== ME_ID) return '';
+    const mine = G.perks[ME_ID] || [];
+    if (!mine.length) return '';
+    return '<section class="card"><h3 style="margin-bottom:10px">مزاياك</h3><div class="perks">' + mine.map(id => {
+      const used = (G.pused[ME_ID] || []).includes(id), st = perkState(ME_ID, id);
+      return '<button class="perk-btn ' + (used ? 'used' : (st.ok ? 'ready' : '')) + '" data-act="perk" data-id="' + id + '"' + (st.ok ? '' : ' aria-disabled="true"') + '><b>' + perkName(id) + '</b><span>' + (used ? 'مستخدمة' : (st.ok ? 'استخدمها الحين' : esc(st.why))) + '</span></button>';
+    }).join('') + '</div></section>';
+  }
+  function logBox() {
+    const l = (G.cur && G.cur.log) || [];
+    return l.length ? '<section class="perklog">' + l.slice(-3).map(m => '<div>⚡ ' + esc(m) + '</div>').join('') + '</section>' : '';
+  }
   function clockBox(label) {
     const c = G.cur;
     return '<section class="card timerbox"><div class="ring" data-ring="' + (c.dur || 0) + '"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="clock num" data-clock>' + fmt(remain()) + '</div></div>' +
@@ -844,7 +992,9 @@ input.field{font-size:16px}
       const p = P(c[s]), sp = c.speaker === s, me = c[s] === ME_ID;
       return '<div class="party ' + (sp ? 'speaking' : '') + (me ? ' mine' : '') + '"><div class="pid">' + avatar(p, 52) + '<div><span class="muted small">البائع ' + (s === c.first || !c.prices ? (s === 'a' ? 'الأول' : 'الثاني') : (s === 'a' ? 'الأول' : 'الثاني')) + '</span><h3>' + esc(p.name) + (me ? ' <span class="muted small">(أنت)</span>' : '') + '</h3></div></div>' +
         (showPrice && c.prices ? '<div class="price num">' + kd(c.prices[s]) + (c.auto[s] ? '<span class="muted small"> (ما حط سعر، أخذ الافتراضي)</span>' : '') + '</div>' : '') +
-        (sp ? '<span class="chip live">يقنعكم الحين</span>' : '') + '</div>';
+        (c.help && c.help[s] ? '<span class="muted small">مسؤول المبيعات: <b>' + esc(P(c.help[s]).name) + '</b></span>' : '') +
+        (c.cancel && c.cancel[s] ? '<span class="chip bad">انلغت بيعاته بالاعتراض</span>' : '') +
+        (sp ? '<span class="chip live">يقنعكم الحين</span>' : '') + '<span class="muted small">مزايا باقية: ' + ((G.perks[c[s]] || []).length - (G.pused[c[s]] || []).length) + '</span></div>';
     };
     return '<div class="parties">' + one('a') + one('b') + '</div>';
   }
@@ -855,7 +1005,10 @@ input.field{font-size:16px}
 
   function roundView() {
     const c = G.cur, seller = c.a === ME_ID || c.b === ME_ID, mySide = c.a === ME_ID ? 'a' : (c.b === ME_ID ? 'b' : null);
-    const head = '<div class="casehead"><span class="chip gold num">الجولة ' + c.no + ' من ' + G.total + '</span>' + (seller ? '<span class="chip live">أنت بائع بهالجولة</span>' : '') + '</div>' + walletBar();
+    const helpFor = c.help ? Object.keys(c.help).find(k => c.help[k] === ME_ID) : null;
+    const head = '<div class="casehead"><span class="chip gold num">الجولة ' + c.no + ' من ' + G.total + '</span>' + (seller ? '<span class="chip live">أنت بائع بهالجولة</span>' : '') + (helpFor ? '<span class="chip live">مسؤول مبيعات</span>' : '') + '</div>' + walletBar() + logBox() +
+      (helpFor && c.stage !== 'result' ? '<section class="note"><b>أنت مسؤول مبيعات ' + esc(P(c[helpFor]).name) + '!</b> ' + gv(P(c[helpFor]), 'ساعده', 'ساعدها') + ' تقنعون الناس. ما تقدر تشتري بهالجولة.</section>' : '');
+    const pp = perkPanel();
     if (c.stage === 'vote') {
       const v = inp(ME_ID).vote, voted = v && v.key === c.key;
       if (U.pickKey !== c.key) { U.pickKey = c.key; U.pick = null; }
@@ -868,10 +1021,11 @@ input.field{font-size:16px}
       return head + '<section class="card"><h3 style="margin-bottom:10px">البائعين بهالجولة</h3>' + sellersBox(false) + '</section>' + body + clockBox('وقت التصويت') + progBox('مين صوّت');
     }
     if (c.stage === 'price') {
-      const pr = inp(ME_ID).price, sent = pr && pr.key === c.key;
+      const pr = inp(ME_ID).price, sent = !!(mySide && pr && pr.key === c.key && pr.side === mySide && pr.ver === c.pv[mySide]);
       let body;
       if (seller && !sent) {
-        if (U.priceKey !== c.key) { U.priceKey = c.key; U.price = G.settings.val; }
+        const pk = c.key + mySide + c.pv[mySide];
+        if (U.priceKey !== pk) { U.priceKey = pk; U.price = G.settings.val; }
         const quick = [1, 2, 3, 5, 10, 15, 20];
         body = '<section class="card action" style="display:grid;gap:14px;text-align:center"><h2 style="margin:0">حط سعرك سرًّا</h2><p class="muted">خصمك ما يشوف سعرك لين ينكشف للكل. رخيص يبيع أكثر، وغالي يربح أكثر بكل بيعة.</p>' +
           '<div class="stepper"><button class="btn" data-act="pm" data-v="1" aria-label="زيادة">+</button><div class="bigprice num">' + U.price + '<small>د.ك</small></div><button class="btn" data-act="pm" data-v="-1" aria-label="نقص">−</button></div>' +
@@ -879,24 +1033,24 @@ input.field{font-size:16px}
           '<button class="btn xl primary" data-act="sendPrice">ثبّت السعر</button></section>';
       } else if (seller) body = '<section class="card pass"><h2>ثبّت سعرك ✓</h2><p class="muted">بانتظار البائع الثاني.</p></section>';
       else body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>البائعين يحطون أسعارهم سرًّا…</h2></section>';
-      return head + itemCard() + sellersBox(false) + body + clockBox('وقت التسعير') + progBox('مين ثبّت سعره', [c.a, c.b]);
+      return head + itemCard() + sellersBox(false) + body + pp + clockBox('وقت التسعير') + progBox('مين ثبّت سعره', [c.a, c.b]);
     }
     if (c.stage === 'reveal') {
       return head + itemCard() + '<section class="vkind"><b>انكشفت الأسعار!</b><span class="muted">فكروا شوي. بعدها كل بائع عنده ' + G.settings.pitch + ' ثانية يقنعكم. يبدأ ' + esc(P(c[c.first]).name) + '.</span></section>' +
-        sellersBox(true) + clockBox('وقت التفكير');
+        sellersBox(true) + pp + clockBox('وقت التفكير');
     }
     if (c.stage === 'pitch1' || c.stage === 'pitch2') {
       const mine = mySide === c.speaker;
       return head + itemCard() + sellersBox(true) +
         (mine ? '<section class="card action pass"><h2>دورك! أقنعهم يشترون منك</h2><p class="muted">سعرك ' + kd(c.prices[mySide]) + '. قول ليش غرضك يستاهل.</p><button class="btn xl" data-act="pitchDone">خلصت كلامي</button></section>'
           : '<section class="card pass"><h2>' + esc(P(c[c.speaker]).name) + ' ' + gv(P(c[c.speaker]), 'يقنعكم', 'تقنعكم') + ' الحين</h2><p class="muted">اسمعوا زين، بعدها تقررون.</p></section>') +
-        clockBox(c.stage === 'pitch1' ? 'العرض الأول' : 'العرض الثاني');
+        pp + clockBox(c.stage === 'pitch1' ? 'العرض الأول' : 'العرض الثاني');
     }
     if (c.stage === 'buy') {
       const b = inp(ME_ID).buy, sent = b && b.key === c.key;
       if (U.pickKey !== c.key + 'b') { U.pickKey = c.key + 'b'; U.pick = null; }
       let body;
-      if (seller) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>الناس يقررون…</h2><p class="muted">بنشوف كم واحد اشترى منك.</p></section>';
+      if (seller || helpFor) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>الناس يقررون…</h2><p class="muted">' + (seller ? 'بنشوف كم واحد اشترى منك.' : 'أنت مسؤول مبيعات، ما تشتري بهالجولة.') + '</p></section>';
       else if (!sent) {
         const w = E(ME_ID).w;
         const opt = s => {
@@ -912,21 +1066,26 @@ input.field{font-size:16px}
     }
     if (c.stage === 'result') {
       const list = s => buyers().filter(id => c.buys[id] === s);
+      const cx = buyers().filter(id => c.buys[id] === 'c');
       const ref = buyers().filter(id => c.buys[id] === 'x'), abst = buyers().filter(id => c.buys[id] === '-');
       const rev = s => c.n[s] * c.prices[s];
       const win = rev('a') === rev('b') ? null : (rev('a') > rev('b') ? 'a' : 'b');
       const col = s => '<div class="party' + (win === s ? ' speaking' : '') + '"><div class="pid">' + avatar(P(c[s]), 48) + '<div><h3>' + esc(P(c[s]).name) + '</h3><span class="muted small">بـ ' + kd(c.prices[s]) + '</span></div></div>' +
-        '<div class="price num">باع ' + c.n[s] + ' · ربح ' + kd(rev(s)) + '</div>' +
+        '<div class="price num">' + (c.cancel && c.cancel[s] ? 'انلغت ' + c.cancel[s] + ' بيعات' : 'باع ' + c.n[s] + ' · ربح ' + kd(rev(s))) + '</div>' +
+        (c.cancel && c.cancel[s] ? '<span class="chip bad">اعتراض: انلغت البيعة</span>' : '') +
         '<div class="plist">' + (list(s).map(id => '<span class="pchip ok">' + avatar(P(id), 24) + esc(P(id).name) + '</span>').join('') || '<span class="muted small">محد اشترى منه</span>') + '</div>' +
         (win === s ? '<span class="chip gold">أشطر بائع بالجولة</span>' : '') + '</div>';
       let mine = '';
       if (mySide) mine = 'بعت ' + c.n[mySide] + ' وربحت ' + kd(rev(mySide)) + '.';
       else if (c.buys[ME_ID] === 'a' || c.buys[ME_ID] === 'b') mine = 'اشتريت ' + esc(itemText(c.item)) + ' بـ ' + kd(c.prices[c.buys[ME_ID]]) + '.';
       else if (c.buys[ME_ID] === 'x') mine = 'رفضت الشراء.';
+      else if (c.buys[ME_ID] === 'c') mine = 'انلغت شروتك بالاعتراض، ورجعت فلوسك.';
+      else if (helpFor) mine = 'كنت مسؤول مبيعات ' + esc(P(c[helpFor]).name) + '.';
       else mine = 'ما اخترت، انحسبت ممتنع.';
       const last = G.roundNo >= G.total;
       return head + '<section class="verdict"><h2>' + (win ? esc(P(c[win]).name) + ' ' + gv(P(c[win]), 'كسب الجولة', 'كسبت الجولة') : (c.n.a + c.n.b ? 'تعادل بالأرباح!' : 'محد اشترى شي!')) + '</h2><p>' + mine + '</p></section>' +
         itemCard() + '<div class="parties">' + col('a') + col('b') + '</div>' +
+        (cx.length ? '<section class="card small muted">انلغت شروتهم ورجعت فلوسهم: ' + cx.map(id => esc(P(id).name)).join('، ') + '</section>' : '') + pp +
         (ref.length || abst.length ? '<section class="card small muted">' + (ref.length ? 'رفضوا: ' + ref.map(id => esc(P(id).name)).join('، ') : '') + (ref.length && abst.length ? ' · ' : '') + (abst.length ? 'امتنعوا: ' + abst.map(id => esc(P(id).name)).join('، ') : '') + '</section>' : '') +
         standings(false) +
         (isHost() ? '<button class="btn xl primary" data-act="nextRound">' + (last ? 'النتيجة النهائية' : 'الجولة التالية') + '</button>' : waitHost());
@@ -950,7 +1109,7 @@ input.field{font-size:16px}
       '<div class="grid2"><section class="card award"><span class="muted small">أشطر بائع</span><b>' + esc(topSeller.name) + '</b><span class="num">أرباح ' + kd(E(topSeller.id).p) + '</span></section>' +
       '<section class="card award"><span class="muted small">أشطر مشتري</span><b>' + esc(topBuyer.name) + '</b><span class="num">' + E(topBuyer.id).items.length + ' أغراض</span></section></div>' +
       standings(true) +
-      '<section class="card"><h2 style="margin-bottom:12px">الجولات</h2><div class="cases">' + G.history.map(h => '<div class="cr"><span class="q">' + h.no + '. ' + esc(h.item) + '</span><div class="v"><span class="chip">' + esc(P(h.a).name) + ': ' + kd(h.pa) + ' · باع ' + h.na + '</span><span class="chip">' + esc(P(h.b).name) + ': ' + kd(h.pb) + ' · باع ' + h.nb + '</span></div></div>').join('') + '</div></section>' +
+      '<section class="card"><h2 style="margin-bottom:12px">الجولات</h2><div class="cases">' + G.history.map(h => '<div class="cr"><span class="q">' + h.no + '. ' + esc(h.item) + '</span><div class="v"><span class="chip">' + esc(P(h.a).name) + ': ' + kd(h.pa) + ' · باع ' + h.na + ((h.cx || '').includes('a') ? ' (انلغت)' : '') + '</span><span class="chip">' + esc(P(h.b).name) + ': ' + kd(h.pb) + ' · باع ' + h.nb + ((h.cx || '').includes('b') ? ' (انلغت)' : '') + '</span></div></div>').join('') + '</div></section>' +
       (inRoom(ME_ID) ? '<section class="card"><h3>أغراضك</h3><p class="muted">' + (E(ME_ID).items.map(esc).join('، ') || 'ما اشتريت شي') + '</p></section>' : '') +
       (isHost() ? '<div class="btn-row"><button class="btn xl primary" data-act="rematch">مزاد جديد بنفس اللاعبين</button><button class="btn xl" data-act="toLobby">رجوع للردهة</button></div>' : waitHost());
   }
@@ -965,6 +1124,15 @@ input.field{font-size:16px}
         (!host && G && inRoom(ME_ID) ? '<button class="btn" data-act="askTake">المضيف ما يرد؟ استلم الاستضافة</button>' : '') +
         (host && others.length ? '<button class="btn" data-act="askHand">نقل الاستضافة للاعب آخر</button>' : '') +
         '<button class="btn danger" data-act="askLeave">الخروج من الغرفة</button><button class="btn ghost" data-act="closeModal">إغلاق</button>';
+    } else if (m.type === 'perk') {
+      const k = PERKS.find(x => x.id === m.id), c = G.cur, st = G.cur ? perkState(ME_ID, m.id) : { ok: false };
+      if (!st.ok) { U.modal = null; return ''; }
+      const os = other(st.side);
+      let act;
+      if (m.id === 'up' || m.id === 'down') act = '<p class="muted">سعر ' + esc(P(c[os]).name) + ' الحين ' + kd(c.prices[os]) + '. كم ' + (m.id === 'up' ? 'تزيده' : 'تنقصه') + '؟</p><div class="seg-wide">' + [1, 2, 3].map(a => '<button data-act="perkGo" data-amt="' + a + '">' + (m.id === 'up' ? '+' : '−') + a + ' د.ك</button>').join('') + '</div>';
+      else if (m.id === 'rep') act = '<p class="muted">اختر مين يصير مسؤول مبيعاتك:</p><div class="cands">' + buyers().map(id => '<button class="cand" data-act="perkGo" data-target="' + id + '">' + avatar(P(id), 40) + '<b>' + esc(P(id).name) + '</b></button>').join('') + '</div>';
+      else act = (m.id === 'half' ? '<p class="muted">سعرك يصير ' + kd(half(c.prices[st.side] / 2)) + ' بدل ' + kd(c.prices[st.side]) + '.</p>' : '') + '<button class="btn xl primary" data-act="perkGo">استخدم الميزة</button>';
+      body = '<h2>' + k.name + '</h2><p class="muted">' + k.desc + ' تنستخدم مرة وحدة باللعبة.</p>' + act + '<button class="btn ghost" data-act="closeModal">إلغاء</button>';
     } else if (m.type === 'take') {
       body = '<h2>استلام الاستضافة؟</h2><p class="muted">استخدمها فقط إذا المضيف طلع أو تلفونه فصل. بتصير أنت اللي ينقل اللعبة بين المراحل.</p><div class="btn-row"><button class="btn primary" data-act="takeHost">استلام</button><button class="btn" data-act="closeModal">إلغاء</button></div>';
     } else if (m.type === 'hand') {
@@ -978,6 +1146,7 @@ input.field{font-size:16px}
   function gameView() {
     switch (G.phase) {
       case 'lobby': return lobbyView();
+      case 'perks': return perksView();
       case 'items': return itemsView();
       case 'round': return G.cur ? roundView() : '';
       case 'final': return finalView();
@@ -999,6 +1168,10 @@ input.field{font-size:16px}
       else if (U.view === 'kicked') html += kickedView();
       else html += gameView();
       html += modalView();
+    }
+    if (G && G.cur && G.cur.log) {
+      if (U.logSeen !== G.cur.key) { U.logSeen = G.cur.key; U.logN = 0; }
+      if (G.cur.log.length > U.logN) { U.logN = G.cur.log.length; toast(G.cur.log[G.cur.log.length - 1]); }
     }
     if (html === U.lastHtml) { tickUI(); return; }
     const key = U.splash ? 'splash' : (G ? U.view + G.phase + G.roundNo + (G.cur ? G.cur.key + G.cur.stage : '') : U.view);
@@ -1126,6 +1299,18 @@ input.field{font-size:16px}
     if (!G.pool.some(x => !G.used.includes(x.id))) { toast('ما فيه أغراض للحين.'); return false; }
     G.needMore = false; startRound();
   });
+  ACT.perksNext = H(() => { if (G.phase !== 'perks') return false; lockPerks(); });
+  ACT.togglePerk = d => {
+    const i = U.perks.indexOf(d.id);
+    if (i >= 0) U.perks.splice(i, 1); else if (U.perks.length < 3) U.perks.push(d.id); else { toast('٣ مزايا بس. شيل وحدة أول.'); return false; }
+  };
+  ACT.sendPerks = async () => { mine().perks = { g: G.gameNo, list: U.perks.slice(), done: true }; render(); await saveMe(); };
+  ACT.perk = d => { if (!perkState(ME_ID, d.id).ok) return false; U.modal = { type: 'perk', id: d.id }; };
+  ACT.perkGo = d => {
+    const m = U.modal, c = G.cur; if (!m || !c) return false;
+    U.modal = null;
+    sendReq({ type: 'perk', id: m.id, key: c.key, amt: d.amt ? +d.amt : 0, target: d.target || '' });
+  };
   ACT.skip = H(() => { if (!roundStep(true)) return false; });
   ACT.nextRound = H(() => { if (!G.cur || G.cur.stage !== 'result') return false; startRound(); });
   ACT.rematch = H(() => { startGame(); });
@@ -1150,7 +1335,8 @@ input.field{font-size:16px}
   ACT.pset = d => { U.price = +d.v; };
   ACT.sendPrice = async () => {
     const c = G.cur; if (!c || c.stage !== 'price' || (c.a !== ME_ID && c.b !== ME_ID)) return false;
-    mine().price = { key: c.key, v: U.price }; render(); await saveMe();
+    const side = c.a === ME_ID ? 'a' : 'b';
+    mine().price = { key: c.key, side, ver: c.pv[side], v: U.price }; render(); await saveMe();
   };
   ACT.pitchDone = () => { const c = G.cur; if (!c) return false; sendReq({ type: 'done', key: c.key }); };
   ACT.sendBuy = async () => {
