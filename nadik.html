@@ -502,7 +502,9 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
   const mil = v => (Math.round((+v || 0) * 10) / 10) + ' مليون';
   const isHost = () => !!(G && ME_ID && G.host === ME_ID);
   const nowH = () => (isHost() ? Date.now() : Date.now() - (skew || 0));
-  const inp = id => (id === ME_ID ? ME : INP[id]) || {};
+  const BOT = {};
+  const isBot = id => String(id).startsWith('bot');
+  const inp = id => (id === ME_ID ? ME : (isBot(id) ? BOT[id] : INP[id])) || {};
   const norm = s => String(s || '').trim().toLowerCase();
   const shuffle = a => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
   function lsGet() { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; } }
@@ -682,7 +684,8 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
         G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
     });
-    const on = G.players.filter(p => SEEN[p.id] && Date.now() - SEEN[p.id] < (TEST ? 10000 : 50000)).map(p => p.id);
+    if (botsAct()) ch = true;
+    const on = G.players.filter(p => isBot(p.id) || SEEN[p.id] && Date.now() - SEEN[p.id] < (TEST ? 10000 : 50000)).map(p => p.id);
     if (JSON.stringify(on) !== JSON.stringify(G.online || [])) { G.online = on; ch = true; }
     const pr = progList();
     if (JSON.stringify(pr) !== JSON.stringify(G.prog || [])) { G.prog = pr; ch = true; }
@@ -694,6 +697,36 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
     if (autoStep(false)) ch = true;
     if (ch) publish();
     render();
+  }
+  /* test bots: the host plays them so one person can try the whole game */
+  function botsAct() {
+    const bots = G.players.filter(p => isBot(p.id)); if (!bots.length) return false;
+    const g = G.gameNo, mk = G.mk, cup = G.cup, rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+    bots.forEach(p => {
+      const b = BOT[p.id] = BOT[p.id] || {};
+      if (G.phase === 'picks' && !(b.picks && b.picks.g === g)) { const t = shuffle(TEAMS.map(x => x.id)); b.picks = { g, s: t[0], w: t[1] }; }
+      if (G.phase === 'tier' && !(b.tier && b.tier.g === g)) b.tier = { g, v: Math.random() < .5 ? 's' : 'w' };
+      if (G.phase === 'reveal') b.ready = { k: 'reveal' + g };
+      if (G.phase === 'market' && mk) {
+        if (mk.stage === 'list' && !(b.list && b.list.key === mk.key)) {
+          const r = shuffle(roster(p.id)).slice(0, rnd(1, 2)), items = {};
+          r.forEach(k => { items[k] = Math.max(1, Math.round(val(k)) + rnd(0, 6)); });
+          if (r.length) b.list = { key: mk.key, items };
+        }
+        if (mk.stage === 'bid' && !(b.bids && b.bids.key === mk.key)) {
+          const bb = {}; let money = bal(p.id);
+          shuffle(Object.keys(mk.lst)).forEach(l => {
+            const L = mk.lst[l]; if (L.seller === p.id || Object.keys(bb).length >= 3 || Math.random() < .45) return;
+            const a = L.ask + rnd(0, 5); if (a <= money) { bb[l] = a; money -= a; }
+          });
+          b.bids = { key: mk.key, b: bb, done: true };
+        }
+        if (mk.stage === 'review') b.ready = { k: mk.key };
+      }
+      if (G.phase === 'lineup' && !(b.xi && b.xi.g === g && validXI(p.id, b.xi.list))) b.xi = { g, list: suggestXI(p.id) };
+      if (G.phase === 'cup' && cup && cup.stage === 'vote' && !(b.vote && b.vote.key === cup.key)) b.vote = { key: cup.key, v: Math.random() < .5 ? 'a' : 'b' };
+    });
+    return false;
   }
   function uniqueName(n, id) {
     let base = String(n || '').trim().slice(0, 20) || 'لاعب', name = base, k = 2;
@@ -717,6 +750,7 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
   }
   function hostTickFn() {
     if (!isHost() || !G) return;
+    if (G.players.some(p => isBot(p.id))) hostStep();
     const t = G.phase === 'market' && G.mk ? G.mk.endsAt : (G.phase === 'cup' && G.cup ? G.cup.endsAt : 0);
     if (t && Date.now() >= t) { beep(); if (autoStep(true)) { publish(); render(); } }
   }
@@ -1019,7 +1053,7 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
     const link = ART_URL + '#room-' + G.code;
     const seg = (k, vals, unit) => '<div class="seg-wide" role="group">' + vals.map(v => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + v + (unit || '') + '</button>').join('') + '</div>';
     const rows = G.players.map(p => '<div class="prow">' + dot(p.id) + '<b style="flex:1">' + esc(p.name) + (p.id === ME_ID ? ' <span class="muted small">(أنت)</span>' : '') + '</b>' +
-      (p.id === G.host ? '<span class="chip gold">المضيف</span>' : '') + '<span class="muted small">' + ((G.online || []).includes(p.id) ? 'متصل' : 'غير متصل') + '</span>' +
+      (p.id === G.host ? '<span class="chip gold">المضيف</span>' : '') + '<span class="muted small">' + (isBot(p.id) ? 'لاعب تجريبي' : ((G.online || []).includes(p.id) ? 'متصل' : 'غير متصل')) + '</span>' +
       (host && p.id !== ME_ID ? '<button class="x" data-act="kick" data-id="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">×</button>' : '') + '</div>').join('');
     const settings = host ? '<section class="card" style="display:grid;gap:16px"><h2>الإعدادات</h2>' +
       '<div class="labelled"><span class="lbl">عدد المواسم</span>' + seg('seasons', [5, 3, 1]) + '<span class="muted small">اللعبة الكاملة ٥ مواسم (١٠ أسواق). ٣ أو ١ للتجربة السريعة.</span></div>' +
@@ -1031,7 +1065,8 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
     return '<section class="card roomcard"><span class="muted">رمز الغرفة</span><div class="bigcode" dir="ltr">' + esc(G.code) + '</div>' +
       '<div class="linkrow"><input class="field" id="lnk" readonly value="' + esc(link) + '" dir="ltr" aria-label="رابط الدعوة"><button class="btn" data-act="copyLink">نسخ الرابط</button></div></section>' +
       '<section class="card"><div class="row-b" style="margin-bottom:10px"><h2 style="margin:0">غرفة الانتظار</h2><span class="chip num">' + n + ' لاعبين</span></div><div style="display:grid;gap:8px">' + rows + '</div>' +
-      (n < 3 ? '<p class="muted small" style="margin-top:10px">تحتاج ٣ لاعبين على الأقل، عشان يكون فيه جمهور يصوّت بالكأس.</p>' : '') + '</section>' + settings + errBox() +
+      (n < 3 ? '<p class="muted small" style="margin-top:10px">تحتاج ٣ لاعبين على الأقل، عشان يكون فيه جمهور يصوّت بالكأس.</p>' : '') +
+      (host ? '<div class="btn-row" style="margin-top:12px"><button class="btn" data-act="addBot"' + (n >= 8 ? ' aria-disabled="true"' : '') + '>+ أضف لاعب تجريبي</button></div><p class="muted small">اللاعب التجريبي يلعب لحاله (يختار ويعرض ويزايد ويصوّت عشوائيًا)، عشان تجرب اللعبة بروحك.</p>' : '') + '</section>' + settings + errBox() +
       (host ? '<button class="btn xl primary" data-act="startGame"' + (n < 3 ? ' aria-disabled="true"' : '') + '>ابدأ اللعبة</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف يبدأ اللعبة…</p>');
   }
 
@@ -1287,7 +1322,7 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
 
   /* ---------- actions ---------- */
   const ACT = {};
-  const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
+  const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) { publish(); setTimeout(hostStep, 60); } return r; };
   ACT.enter = () => { U.splash = false; };
   ACT.closeModal = () => { U.modal = null; U.err = ''; };
   ACT.ovClose = (d, el, ev) => { if (ev.target !== el) return false; U.modal = null; };
@@ -1370,7 +1405,14 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
   function selectLink() { const i = document.getElementById('lnk'); if (i) { i.focus(); i.select(); } toast('انسخ الرابط من الخانة.'); }
 
   /* host controls */
-  ACT.kick = H(d => { G.players = G.players.filter(p => p.id !== d.id); G.kicked[d.id] = true; });
+  ACT.kick = H(d => { G.players = G.players.filter(p => p.id !== d.id); G.kicked[d.id] = true; delete BOT[d.id]; });
+  ACT.addBot = H(() => {
+    if (G.phase !== 'lobby' || G.players.length >= 8) return false;
+    const used = G.players.filter(p => isBot(p.id)).length;
+    const nm = ['بوت الهلال', 'بوت النجم', 'بوت الصقر', 'بوت الريان', 'بوت الشبح', 'بوت الكابتن', 'بوت المدرب'][used % 7];
+    G.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 8), name: uniqueName(nm, ''), at: Date.now() });
+    setTimeout(hostStep, 50);
+  });
   ACT.set = H(d => { G.settings[d.k] = +d.v; });
   ACT.startGame = H(() => { if (G.players.length < 3) { U.err = 'تحتاج ٣ لاعبين على الأقل.'; return false; } U.err = ''; startGame(); });
   ACT.picksNext = H(() => {
