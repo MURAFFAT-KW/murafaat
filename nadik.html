@@ -292,6 +292,7 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
 .hero .sub{font-family:var(--font-d);font-weight:800;font-size:1.6rem;color:var(--gold);margin-top:-6px}
 .top .brand span{color:var(--gold)}
 .row-b{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tdot{width:15px;height:15px;border-radius:50%;display:inline-block;flex:none;border:1.5px solid #8A93A6;vertical-align:-3px;margin-inline-end:5px}
 .dot{width:10px;height:10px;border-radius:50%;background:#C3CADB;flex:none;display:inline-block;box-shadow:0 0 0 3px #fff}
 .dot.on{background:#16A34A}
 .prow{display:flex;align-items:center;gap:10px;border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px;background:var(--bg-2)}
@@ -389,7 +390,7 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
 .bm{border:1px solid var(--line);border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;font-size:.84rem;background:#fff}
 .bm .w{font-weight:800;color:var(--blue)}.bm .l{color:var(--muted);text-decoration:line-through}
 .bm.live{border-color:var(--yel);box-shadow:0 0 0 2px var(--yel)}
-.tr{grid-template-columns:18px minmax(0,1fr) 34px 34px 40px 34px 46px!important}
+.tr{grid-template-columns:repeat(6,minmax(0,1fr))!important;row-gap:6px}.tr .nm{grid-column:1/-1;white-space:normal;overflow:visible}.tr > span:not(.nm){text-align:center}
 
 .vs{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px;padding:10px}
 .vs .side{min-width:0}
@@ -559,11 +560,18 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const LG = { ENG: 'الإنجليزي', ESP: 'الإسباني', GER: 'الألماني', ITA: 'الإيطالي', FRA: 'الفرنسي' };
   const POS = { GK: 'حارس', DF: 'دفاع', MF: 'وسط', FW: 'هجوم' };
   const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
-  const TIER = { s: { name: 'الفريق الأقوى', bal: 10, pv: 15 }, w: { name: 'الفريق الأضعف', bal: 60, pv: 5 } };
+  const TIER = { s: { name: 'الفريق الأقوى', bal: 15, pv: 10 }, w: { name: 'الفريق الأضعف', bal: 50, pv: 5 } };
   /* five-a-side: slot 1 GK, 2 DF, 3 DF or MF, 4 MF or FW, 5 FW */
   const SLOTS = [['GK'], ['DF'], ['DF', 'MF'], ['MF', 'FW'], ['FW']];
   const SLOT_N = ['حارس', 'مدافع', 'مدافع أو وسط', 'وسط أو مهاجم', 'مهاجم'];
   const FILL_ORDER = [0, 1, 4, 2, 3];
+  /* squad = 5 starters + 2 subs (any position); max squad size 7 */
+  /* team colours: two-colour circles, every pair of these 9 colours = 36 unique teams */
+  const COLS = ['#E11D2E', '#1D4ED8', '#FBC611', '#16A34A', '#111827', '#FFFFFF', '#F97316', '#7C3AED', '#38BDF8'];
+  const COMBOS = []; COLS.forEach((a, i) => COLS.forEach((b, j) => { if (j > i) COMBOS.push([a, b]); }));
+  const tdot = id => { const c = G && G.col && G.col[id] != null ? COMBOS[G.col[id] % COMBOS.length] : null; return c ? '<span class="tdot" style="background:linear-gradient(90deg,' + c[0] + ' 50%,' + c[1] + ' 50%)" aria-hidden="true"></span>' : ''; };
+  const NSUB = 2, NPICK = 7, NSQ = 9;
+  const slotN = i => (i < 5 ? SLOT_N[i] : 'احتياط ' + (i - 4));
   const fits = (ps, i) => (ps || []).some(x => SLOTS[i].includes(x));
   const MODE = { hist: 'تشكيلات تاريخية', custom: 'تشكيلات يكتبها اللاعبين' };
   const MAXP = 500;
@@ -641,24 +649,32 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     });
     return out;
   }
+  /* the five + the two next most-used players of any position */
+  function histSeven(t) {
+    const f = histFive(t), used = new Set(f.filter(v => v !== null));
+    const rest = t.pl.map((r, j) => j).filter(j => !used.has(j)).sort((a, b) => (t.pl[b][4] - t.pl[a][4]) || (t.pl[b][3] - t.pl[a][3]));
+    return f.concat([rest.length > 0 ? rest[0] : null, rest.length > 1 ? rest[1] : null]);
+  }
   function cleanSide(x, mode) {
     if (!x) return null;
     if (mode !== 'custom') {
-      const t = TM[x.tid]; if (!t || !Array.isArray(x.ix) || x.ix.length !== 5) return null;
+      const t = TM[x.tid]; if (!t || !Array.isArray(x.ix) || x.ix.length !== NPICK) return null;
       const ix = x.ix.map(v => (v === null || v === '' ? -1 : +v));
-      if (new Set(ix).size !== 5 || !ix.every((j, i) => t.pl[j] && SLOTS[i].includes(t.pl[j][2]))) return null;
+      if (new Set(ix).size !== NPICK || !ix.every((j, i) => t.pl[j] && (i >= 5 || SLOTS[i].includes(t.pl[j][2])))) return null;
       return { tid: t.id, ix };
     }
     const nm = (Array.isArray(x.names) ? x.names : []).map(v => String(v || '').trim().slice(0, 30));
-    if (nm.length !== 5 || nm.some(v => v.length < 2)) return null;
-    return { name: String(x.name || '').trim().slice(0, 30), names: nm };
+    if (nm.length !== NPICK || nm.some(v => v.length < 2)) return null;
+    const sp = (Array.isArray(x.sp) ? x.sp : []).slice(0, NSUB);
+    if (sp.length !== NSUB || !sp.every(v => POS[v])) return null;
+    return { name: String(x.name || '').trim().slice(0, 30), names: nm, sp };
   }
   function makeSquad(side) {
     if (side.tid) {
       const t = TM[side.tid];
       return { lbl: tLabel(t), club: t.club, coach: t.coach, src: t.src, hist: true, five: side.ix.map(j => ({ n: t.pl[j][1], ps: [t.pl[j][2]], num: t.pl[j][0], st: t.pl[j][3] })) };
     }
-    return { lbl: side.name || 'تشكيلة بدون اسم', hist: false, five: side.names.map((n, i) => ({ n, ps: SLOTS[i].slice(), num: String(i + 1), st: 0 })) };
+    return { lbl: side.name || 'تشكيلة بدون اسم', hist: false, five: side.names.map((n, i) => ({ n, ps: i < 5 ? SLOTS[i].slice() : [(side.sp || [])[i - 5] || 'MF'], num: String(i + 1), st: 0 })) };
   }
   /* best valid five from a list of players (highest value first); missing slots stay null */
   function bestFive(list) {
@@ -861,25 +877,35 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const b = BOT[p.id] = BOT[p.id] || {};
       if (G.phase === 'picks' && !(b.picks && b.picks.g === g)) {
         /* bots label sensibly: their "strong" pick is a title-winning side, their "weak" pick is not */
-        const STRONG = ['t0', 't1', 't2', 't4', 't5', 't6', 't7', 't8', 't10', 't13', 't14', 't16', 't18', 't20', 't24'].filter(x => TM[x] && histFive(TM[x]).every(v => v !== null));
-        const WEAK = TEAMS.map(x => x.id).filter(x => !STRONG.includes(x) && histFive(TM[x]).every(v => v !== null));
-        const side = tid => { const t = TM[tid], ix = histFive(t); return G.settings.mode === 'custom' ? { name: tLabel(t), names: ix.map(j => t.pl[j][1]) } : { tid, ix }; };
+        const STRONG = ['t0', 't1', 't2', 't4', 't5', 't6', 't7', 't8', 't10', 't13', 't14', 't16', 't18', 't20', 't24'].filter(x => TM[x] && histSeven(TM[x]).every(v => v !== null));
+        const WEAK = TEAMS.map(x => x.id).filter(x => !STRONG.includes(x) && histSeven(TM[x]).every(v => v !== null));
+        const side = tid => { const t = TM[tid], ix = histSeven(t); return G.settings.mode === 'custom' ? { name: tLabel(t), names: ix.map(j => t.pl[j][1]), sp: ix.slice(5).map(j => t.pl[j][2]) } : { tid, ix }; };
         b.picks = { g, s: side(shuffle(STRONG)[0]), w: side(shuffle(WEAK)[0]) };
       }
       if (G.phase === 'tier' && !(b.tier && b.tier.g === g)) b.tier = { g, v: Math.random() < .5 ? 's' : 'w' };
       if (G.phase === 'reveal') b.ready = { k: 'reveal' + g };
       if (G.phase === 'market' && mk) {
         if (mk.stage === 'list' && !(b.list && b.list.key === mk.key)) {
-          const r = shuffle(roster(p.id)).slice(0, rnd(1, 2)), items = {};
-          r.forEach(k => { items[k] = Math.max(1, Math.round(val(k)) + rnd(0, 6)); });
+          const all = roster(p.id), safe = shuffle(all.filter(k => canFill(all.filter(x => x !== k)))), r = (safe.length ? safe : shuffle(all)).slice(0, Math.random() < .6 ? 1 : 2), items = {};
+          r.forEach(k => { items[k] = Math.max(1, Math.round(val(k)) + rnd(-1, 3)); });
           if (r.length) b.list = { key: mk.key, items };
         }
         if (mk.stage === 'bid' && !(b.bids && b.bids.key === mk.key)) {
+          /* smarter bots: 1) buy a replacement for whoever they listed, so their own sale can stand;
+             2) grab bargains (listed under value); 3) a few random bids with spare cash */
           const bb = {}; let money = bal(p.id);
-          shuffle(Object.keys(mk.lst)).forEach(l => {
-            const L = mk.lst[l]; if (L.seller === p.id || Object.keys(bb).length >= 3 || Math.random() < .45) return;
-            const a = L.ask + rnd(0, 5); if (a <= money) { bb[l] = a; money -= a; }
+          const others = Object.keys(mk.lst).filter(l => mk.lst[l].seller !== p.id);
+          const put = (l, extra) => { const a = mk.lst[l].ask + extra; if (!(l in bb) && Object.keys(bb).length < Math.min(5, NSQ - roster(p.id).length + mineL.length) && a <= money) { bb[l] = a; money -= a; return true; } return false; };
+          const mineL = Object.keys(mk.lst).filter(l => mk.lst[l].seller === p.id).map(l => mk.lst[l].pk);
+          let cur = roster(p.id).filter(k => !mineL.includes(k));
+          const filled = list => bestFive(list).filter(Boolean).length;
+          others.slice().sort((x, y) => mk.lst[x].ask - mk.lst[y].ask).forEach(l => {
+            if (canFill(cur)) return;
+            const nx = cur.concat([mk.lst[l].pk]);
+            if (filled(nx) > filled(cur) && put(l, rnd(0, 2))) cur = nx;
           });
+          shuffle(others).forEach(l => { const L = mk.lst[l]; if (L.ask < val(L.pk) && Math.random() < .8) put(l, rnd(0, 3)); });
+          shuffle(others).forEach(l => { if (Math.random() < .45) put(l, rnd(0, 4)); });
           b.bids = { key: mk.key, b: bb, done: true };
         }
         if (mk.stage === 'review') b.ready = { k: mk.key };
@@ -954,7 +980,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     /* a pool entry points to another player's pick: { o: owner, t: 's' | 'w' } */
     const poolFor = (id, tier) => pl.filter(o => o !== id && G.picks[o]).map(o => ({ o, t: tier, r: o + '#' + tier }))
       .filter(e => { const sd = G.picks[e.o][e.t]; return !(sd.tid && ownT(id).includes(sd.tid)); });
-    const LIB = TEAMS.filter(t => histFive(t).every(v => v !== null));
+    const LIB = TEAMS.filter(t => histSeven(t).every(v => v !== null));
     let best = null;
     for (let tries = 0; tries < 300; tries++) {
       const used = new Set(), res = {}, note = {};
@@ -965,7 +991,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
         if (!pool.length) { pool = poolFor(id, t === 's' ? 'w' : 's'); why = 'other'; }
         if (!pool.length) {
           const lt = shuffle(LIB.filter(x => !ownT(id).includes(x.id)))[0];
-          res[id] = { side: { tid: lt.id, ix: histFive(lt) } }; note[id] = 'lib'; return;
+          res[id] = { side: { tid: lt.id, ix: histSeven(lt) } }; note[id] = 'lib'; return;
         }
         const fresh = pool.filter(e => !used.has(e.r));
         const pickFrom = fresh.length ? fresh : pool;
@@ -986,6 +1012,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       G.stats[id] = { sold: 0, bought: 0 };
     });
     pl.forEach(id => { G.start[id] = assets(id); });
+    G.startBal = {}; pl.forEach(id => { G.startBal[id] = bal(id); });
+    G.col = {}; shuffle(COMBOS.map((c, i) => i)).slice(0, pl.length).forEach((c, i) => { G.col[pl[i]] = c; });
     /* fixed anonymous squad numbers for the squads page */
     G.num = {}; shuffle(pl).forEach((id, i) => { G.num[id] = i + 1; });
     G.phase = 'reveal'; G.prog = [];
@@ -1025,35 +1053,44 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function resolveMarket() {
     const mk = G.mk, res = [];
     const lids = Object.keys(mk.lst);
-    const tops = {}; lids.forEach(l => { tops[l] = Math.max(0, ...bidsOn(l).map(b => b.a)); });
-    /* money from sales arrives after the market, so every bid is checked against the balance at the start */
-    const spent = {}, buys = {};
-    shuffle(lids).sort((a, b) => tops[b] - tops[a]).forEach(lid => {
-      const L = mk.lst[lid];
-      const bs = shuffle(bidsOn(lid)).sort((a, b) => b.a - a.a);
-      const base = { pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null };
-      if (!bs.length) { res.push(Object.assign(base, { why: 'nobid' })); return; }
-      const ok = b => bal(b.id) - (spent[b.id] || 0) >= b.a && (buys[b.id] || 0) < 10;
-      const i = bs.findIndex(ok);
-      if (i < 0) { res.push(Object.assign(base, { why: 'nomoney' })); return; }
-      const win = bs[i], tie = bs.some((o, j) => j !== i && o.a === win.a && ok(o));
-      spent[win.id] = (spent[win.id] || 0) + win.a; buys[win.id] = (buys[win.id] || 0) + 1;
-      res.push(Object.assign(base, { price: win.a, buyer: win.id, n: bs.length, tie }));
-    });
-    /* a sale only stands if the seller can still field a full five after this market's deals */
-    const after = () => {
-      const a = {}; ids().forEach(id => { a[id] = roster(id); });
-      res.forEach(r => { if (!r.buyer) return; a[r.seller] = a[r.seller].filter(k => k !== r.pk); a[r.buyer].push(r.pk); });
-      return a;
-    };
-    for (let guard = 0; guard < 400; guard++) {
-      const a = after();
-      const bad = ids().find(id => res.some(r => r.buyer && r.seller === id) && !canFill(a[id]));
-      if (!bad) break;
-      const sales = res.filter(r => r.buyer && r.seller === bad).sort((x, y) => x.price - y.price);
-      const fix = sales.find(r => canFill(a[bad].concat([r.pk]))) || sales[0];
-      fix.buyer = null; fix.price = 0; fix.why = 'keep5';
+    /* each listing goes to its highest bid (ties by draw); if that buyer can't take him, the next bidder gets a chance */
+    const ranked = {}; lids.forEach(l => { ranked[l] = shuffle(bidsOn(l)).sort((a, b) => b.a - a.a); });
+    const out = {}, dead = {};
+    const pick = l => (dead[l] ? null : ranked[l].find(b => !(out[l] && out[l][b.id])) || null);
+    const deals = () => lids.map(l => { const w = pick(l); return w ? { l, pk: mk.lst[l].pk, seller: mk.lst[l].seller, buyer: w.id, price: w.a } : null; }).filter(Boolean);
+    /* sale money counts in the same market; every squad keeps a full five and never goes above NSQ players */
+    for (let guard = 0; guard < 800; guard++) {
+      const D = deals(), sq = {}, money = {};
+      ids().forEach(id => { sq[id] = roster(id); money[id] = bal(id); });
+      D.forEach(d => { sq[d.seller] = sq[d.seller].filter(k => k !== d.pk); sq[d.buyer].push(d.pk); money[d.seller] += d.price; money[d.buyer] -= d.price; });
+      let id = ids().find(x => D.some(d => d.seller === x) && !canFill(sq[x]));
+      if (id) {
+        const s5 = D.filter(d => d.seller === id).sort((x, y) => x.price - y.price);
+        const fx = s5.find(d => canFill(sq[id].concat([d.pk]))) || s5[0];
+        dead[fx.l] = 'keep5'; continue;
+      }
+      id = ids().find(x => money[x] < 0 && D.some(d => d.buyer === x));
+      if (id) {
+        const d = D.filter(z => z.buyer === id).sort((x, y) => y.price - x.price)[0];
+        (out[d.l] = out[d.l] || {})[id] = 'nomoney'; continue;
+      }
+      id = ids().find(x => sq[x].length > NSQ && D.some(d => d.buyer === x));
+      if (id) {
+        const d = D.filter(z => z.buyer === id).sort((x, y) => x.price - y.price)[0];
+        (out[d.l] = out[d.l] || {})[id] = 'full'; continue;
+      }
+      break;
     }
+    const D = deals();
+    lids.forEach(l => {
+      const L = mk.lst[l], base = { pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null };
+      const d = D.find(x => x.l === l);
+      if (d) { res.push(Object.assign(base, { price: d.price, buyer: d.buyer, n: ranked[l].length, tie: ranked[l].some(b => b.id !== d.buyer && b.a === d.price) })); return; }
+      if (dead[l]) { res.push(Object.assign(base, { why: dead[l] })); return; }
+      if (!ranked[l].length) { res.push(Object.assign(base, { why: 'nobid' })); return; }
+      res.push(Object.assign(base, { why: Object.values(out[l] || {}).includes('nomoney') ? 'nomoney' : 'full' }));
+    });
+    res.sort((x, y) => y.price - x.price);
     res.forEach(r => {
       if (!r.buyer) return;
       G.bal[r.buyer] -= r.price; G.bal[r.seller] += r.price;
@@ -1142,20 +1179,24 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const v = id => (G.stats[id] || {})[key] || 0;
       return id => { const x = v(id); if (!x) return 0; const rank = 1 + pl.filter(o => v(o) > x).length; return Math.round(max * (n - rank + 1) / n * 10) / 10; };
     };
-    const sp = rankPts('sold', 10), bp = rankPts('bought', 10);
+    const sp = rankPts('sold', 20), bp = rankPts('bought', 20);
+    /* rank by a value: first gets 20, then less step by step; ties share */
+    const rankBy = fn => id => { const x = fn(id), rank = 1 + pl.filter(o => fn(o) > x + 1e-9).length; return Math.round(20 * (n - rank + 1) / n * 10) / 10; };
+    const wdiff = id => bal(id) - ((G.startBal || {})[id] != null ? G.startBal[id] : (TIER[G.tier[id]] || TIER.w).bal);
+    const pval = id => roster(id).reduce((s, k) => s + val(k), 0);
+    const wp = rankBy(wdiff), ap = rankBy(pval);
     const growth = id => { const s = G.start[id] || 1; return (assets(id) - s) / s; };
-    const gmax = Math.max(0, ...pl.map(growth));
     const c = G.cup, R = c ? c.R : 1;
     const cupPts = id => {
       if (!c) return 0;
-      if (c.champ === id) return 50;
+      if (c.champ === id) return 20;
       const k = c.out[id]; if (!k) return 0;
-      return Math.round(10 + (k - 1) * 40 / R);
+      return Math.round(4 + (k - 1) * 16 / R);
     };
     return pl.map(id => {
       const g = growth(id);
-      const r = { id, sold: sp(id), bought: bp(id), port: g > 0 && gmax > 0 ? Math.round(30 * g / gmax * 10) / 10 : 0, cup: cupPts(id), growth: g, assets: assets(id) };
-      r.market = Math.round((r.sold + r.bought + r.port) * 10) / 10;
+      const r = { id, sold: sp(id), bought: bp(id), port: wp(id), pv: ap(id), cup: cupPts(id), growth: g, assets: assets(id), wdiff: wdiff(id), pval: pval(id) };
+      r.market = Math.round((r.sold + r.bought + r.port + r.pv) * 10) / 10;
       r.total = Math.round((r.market + r.cup) * 10) / 10;
       return r;
     });
@@ -1171,7 +1212,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const sqReady = () => !!(G && G.num && (inRoom(ME_ID) || isHost()) && ['reveal', 'market', 'lineup', 'cup', 'final'].includes(G.phase));
   function squadsBody(m) {
     const list = Object.keys(G.num).filter(id => inRoom(id)).sort((a, b) => G.num[a] - G.num[b]);
-    const grid = '<div class="sqgrid">' + list.map(id => '<button class="sqb' + (m.n === G.num[id] ? ' on' : '') + (id === ME_ID ? ' mine' : '') + '" data-act="sqOpen" data-n="' + G.num[id] + '"><b class="num">' + G.num[id] + '</b>' + (id === ME_ID ? '<small>فريقك</small>' : '') + '</button>').join('') + '</div>';
+    const grid = '<div class="sqgrid">' + list.map(id => '<button class="sqb' + (m.n === G.num[id] ? ' on' : '') + (id === ME_ID ? ' mine' : '') + '" data-act="sqOpen" data-n="' + G.num[id] + '">' + tdot(id) + '<b class="num">' + G.num[id] + '</b>' + (id === ME_ID ? '<small>فريقك</small>' : '') + '</button>').join('') + '</div>';
     let detail = '<p class="muted small" style="text-align:center">اضغط على رقم عشان تشوف التشكيلة. الأرقام ثابتة طول اللعبة، وما ينكتب صاحب أي تشكيلة.</p>';
     const pid = list.find(id => G.num[id] === m.n);
     if (pid) {
@@ -1200,7 +1241,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function splashView() {
     return '<section class="splash intro"><div class="lg">' + FULL + '</div>' +
       '<h1 class="sr">أقنعني!</h1><div class="ar">نادييك</div>' +
-      '<p class="introtx">كل لاعب يدير فريق كورة خماسي، تاريخي أو يكتبه بنفسه.<br>تبيع وتشتري لاعبين بسوق انتقالات يمتد لين ٥ مواسم.<br>وبالنهاية تقنع الجمهور يصوّت لفريقك بكأس الأبطال.</p>' +
+      '<p class="introtx">كل لاعب يدير فريق كورة خماسي مع احتياطين، تاريخي أو يكتبه بنفسه.<br>تبيع وتشتري لاعبين بسوق انتقالات يمتد لين ٥ مواسم.<br>وبالنهاية تقنع الجمهور يصوّت لفريقك بكأس الأبطال.</p>' +
       '<button class="btn primary go" data-act="enter">فهمت</button></section>';
   }
   function homeView() {
@@ -1216,12 +1257,13 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<p class="lead">أدر فريق خماسي، فاوض بسوق انتقالات يمتد ٥ مواسم، وبعدها أقنع الجمهور يصوّت لفريقك بكأس الأبطال.</p></section>' +
       me + errBox() + (U.fromLink ? join + host : host + join) +
       '<section class="card"><h2>كيف تُلعب؟</h2><ol class="howto">' +
-      '<li><span>كل لاعب يحط تشكيلتين خماسيتين: «الفريق الأضعف» و«الفريق الأقوى». تاريخية من الدوريات الخمسة، أو يكتب الأسماء بنفسه.</span></li>' +
+      '<li><span>كل لاعب يحط تشكيلتين، كل وحدة ٥ أساسيين واحتياطين: «الفريق الأضعف» و«الفريق الأقوى». تاريخية من الدوريات الخمسة، أو يكتب الأسماء بنفسه.</span></li>' +
       '<li><span>الخماسي: حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم.</span></li>' +
-      '<li><span>تختار سرًّا: الفريق الأقوى (كل لاعب ١٥ مليون + ١٠ ملايين بالمحفظة)، أو الأضعف (كل لاعب ٥ ملايين + ٦٠ مليون). الاثنين يبدون من ٨٥ مليون. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
+      '<li><span>تختار سرًّا: الفريق الأقوى (كل لاعب ١٠ ملايين + ١٥ مليون بالمحفظة)، أو الأضعف (كل لاعب ٥ ملايين + ٥٠ مليون). الاثنين يبدون من ٨٥ مليون. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
       '<li><span>زر «التشكيلات» يوريك فرق الكل بأرقام ثابتة بدون أسماء، عشان تحط عينك على لاعب تبيه.</span></li>' +
       '<li><span>١٠ أسواق انتقالات: بكل سوق تعرض لاعب واحد على الأقل بسعرك، وتزايد على لاعبين غيرك.</span></li>' +
-      '<li><span>تبيع بس إذا يبقى عندك خماسي كامل، يعني البيع يحتاج بديل تشتريه بنفس السوق.</span></li>' +
+      '<li><span>فلوس البيع تنضاف لرصيدك بنفس السوق. تقدر تبيع بدون ما تشتري طالما يبقى عندك خماسي كامل، والفريق بحد أقصى ٩ لاعبين (يعني تقدر تزيد لين ٤ احتياط).</span></li>' +
+      '<li><span>النقاط ١٠٠: ٢٠ للمحفظة، ٢٠ لقيمة لاعبينك، ٢٠ لعدد البيع، ٢٠ لعدد الشراء، و٢٠ للكأس.</span></li>' +
       '<li><span>بعد الموسم الخامس تثبّت خماسيك وتدخل كأس الأبطال.</span></li>' +
       '<li><span>بكل مواجهة تنعرض التشكيلتين بدون اسم النادي، والجمهور يصوّت. والفايز يتأهل.</span></li></ol></section>';
   }
@@ -1237,7 +1279,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function progBox(label, list) {
     const done = G.prog || []; list = list || ids();
     return '<section class="card" style="display:grid;gap:10px"><div class="row-b"><h3>' + label + '</h3><span class="chip num">' + done.filter(id => list.includes(id)).length + ' من ' + list.length + '</span></div><div class="plist">' +
-      list.map(id => '<span class="pchip ' + (done.includes(id) ? 'ok' : '') + '">' + dot(id) + esc(P(id).name) + (done.includes(id) ? ' ✓' : ' …') + '</span>').join('') + '</div></section>';
+      list.map(id => '<span class="pchip ' + (done.includes(id) ? 'ok' : '') + '">' + dot(id) + tdot(id) + esc(P(id).name) + (done.includes(id) ? ' ✓' : ' …') + '</span>').join('') + '</div></section>';
   }
   const waitHost = () => '<p class="muted small" style="text-align:center">بانتظار المضيف ' + esc(P(G.host).name) + ' ينقل اللعبة للمرحلة التالية.</p>';
   const hostBtn = (label, act, extra) => isHost() ? '<button class="btn xl primary" data-act="' + act + '"' + (extra || '') + '>' + label + '</button>' : waitHost();
@@ -1259,7 +1301,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       (host && p.id !== ME_ID ? '<button class="x" data-act="kick" data-id="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">×</button>' : '') + '</div>').join('');
     const modeSeg = '<div class="seg-wide" role="group">' + Object.keys(MODE).map(m => '<button data-act="setMode" data-v="' + m + '" class="' + ((s.mode || 'hist') === m ? 'on' : '') + '" aria-pressed="' + ((s.mode || 'hist') === m) + '">' + MODE[m] + '</button>').join('') + '</div>';
     const settings = host ? '<section class="card" style="display:grid;gap:16px"><h2>الإعدادات</h2>' +
-      '<div class="labelled"><span class="lbl">نوع التشكيلات</span>' + modeSeg + '<span class="muted small">' + ((s.mode || 'hist') === 'custom' ? 'كل لاعب يكتب أسماء خماسيين بنفسه: واحد ضعيف وواحد قوي.' : 'كل لاعب يختار ناديين ومواسم من الدوريات الخمسة، ويطلع له خماسي من الأكثر لعب.') + '</span></div>' +
+      '<div class="labelled"><span class="lbl">نوع التشكيلات</span>' + modeSeg + '<span class="muted small">' + ((s.mode || 'hist') === 'custom' ? 'كل لاعب يكتب أسماء فريقين (٥ أساسيين واحتياطين): واحد ضعيف وواحد قوي.' : 'كل لاعب يختار ناديين ومواسم من الدوريات الخمسة، ويطلع له الخماسي والاحتياطين من الأكثر لعب.') + '</span></div>' +
       '<div class="labelled"><span class="lbl">عدد اللاعبين (التشكيلات)</span>' + stp('players', 3, 32) + '<span class="muted small">إذا دخل لاعبين أقل من هالعدد، اللعبة تكمّل الباقي بلاعبين كمبيوتر لين ٨ بس. فوق ٨ لازم كلهم لاعبين حقيقيين.</span></div>' +
       '<div class="labelled"><span class="lbl">عدد الجولات (المواسم)</span>' + stp('seasons', 1, 5) + '<span class="muted small">كل موسم فيه سوقين انتقالات (صيفي وشتوي)، يعني ' + (s.seasons * 2) + ' أسواق.</span></div>' +
       '<div class="labelled"><span class="lbl">المضيف</span>' + seg2('hostPlays', [[1, 'ألعب'], [0, 'مضيف بس']]) + '<span class="muted small">' + (s.hostPlays === 0 ? 'ما تلعب. تتحكم باللعبة بس، وتحتاج ٣ لاعبين غيرك.' : 'تلعب مثل الباقين، وتتحكم باللعبة بعد.') + '</span></div>' +
@@ -1276,7 +1318,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       (host ? '<button class="btn xl primary" data-act="startGame"' + (real > tgt || real < 1 || (tgt > 8 && real < tgt) ? ' aria-disabled="true"' : '') + '>ابدأ اللعبة</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف يبدأ اللعبة…</p>');
   }
 
-  const blankSide = () => ({ tid: '', ix: [null, null, null, null, null], name: '', names: ['', '', '', '', ''] });
+  const blankSide = () => ({ tid: '', ix: [null, null, null, null, null, null, null], name: '', names: ['', '', '', '', '', '', ''], sp: ['DF', 'MF'] });
+  const spSel = (k, i) => i < 5 ? '' : '<select class="sel" data-bind="pkSP" data-k="' + k + '" data-i="' + (i - 5) + '" aria-label="' + slotN(i) + '">' + ['GK', 'DF', 'MF', 'FW'].map(p => '<option value="' + p + '"' + (((U.pk[k] || {}).sp || [])[i - 5] === p ? ' selected' : '') + '>' + POS[p] + '</option>').join('') + '</select>';
   function picksView() {
     const x = inp(ME_ID).picks, done = x && x.g === G.gameNo && x.s && x.w;
     if (done) return '<section class="card pass"><h2>وصلت تشكيلاتك ✓</h2><p class="muted">تشكيلاتك سرية، ومحد يشوفها إلا بعد ما يكمل الكل.</p></section>' + progBox('مين خلّص') + hostBtn('التالي: اختيار الفئة', 'picksNext');
@@ -1290,33 +1333,33 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
         top = '<select class="sel" id="pt-' + k + '" data-bind="pkTeam" data-k="' + k + '" aria-label="النادي والموسم"><option value="">اختر النادي والموسم</option>' +
           Object.keys(LG).map(lg => '<optgroup label="الدوري ' + LG[lg] + '">' + TEAMS.filter(z => z.lg === lg).map(z => '<option value="' + z.id + '"' + (S.tid === z.id ? ' selected' : '') + (O.tid === z.id ? ' disabled' : '') + '>' + esc(tLabel(z)) + '</option>').join('') + '</optgroup>').join('') + '</select>' +
           (t ? '<span class="muted small" style="text-align:center"><b>' + esc(tLabel(t)) + '</b><br>المدرب: ' + esc(t.coach) + '</span>' : '');
-        boxes = SLOTS.map((ps, i) => {
+        boxes = SLOTS.concat([null, null]).map((ps, i) => {
           const j = S.ix[i];
-          return '<div class="box' + (t && j !== null ? ' set' : '') + '"><span class="bl"><i>' + (i + 1) + '</i>' + SLOT_N[i] + '</span>' +
-            (t ? '<select class="sel" dir="ltr" id="pp-' + k + i + '" data-bind="pkPl" data-k="' + k + '" data-i="' + i + '" aria-label="' + SLOT_N[i] + '"><option value="">—</option>' +
-              t.pl.map((r, jj) => SLOTS[i].includes(r[2]) ? '<option value="' + jj + '"' + (j === jj ? ' selected' : '') + '>' + esc(shortName(r[1])) + ' (' + r[3] + ')</option>' : '').join('') + '</select>'
+          return '<div class="box' + (t && j !== null ? ' set' : '') + '"><span class="bl"><i>' + (i + 1) + '</i>' + slotN(i) + '</span>' +
+            (t ? '<select class="sel" dir="ltr" id="pp-' + k + i + '" data-bind="pkPl" data-k="' + k + '" data-i="' + i + '" aria-label="' + slotN(i) + '"><option value="">—</option>' +
+              t.pl.map((r, jj) => (i >= 5 || SLOTS[i].includes(r[2])) ? '<option value="' + jj + '"' + (j === jj ? ' selected' : '') + '>' + esc(shortName(r[1])) + ' (' + r[3] + ')' + (i >= 5 ? ' · ' + POS[r[2]] : '') + '</option>' : '').join('') + '</select>'
               : '<b class="muted small">اختر النادي</b>') + '</div>';
         }).join('');
       } else {
         top = '<input class="sel" id="pnm-' + k + '" data-bind="pkName" data-k="' + k + '" maxlength="30" autocomplete="off" placeholder="اسم الفريق (اختياري)" value="' + esc(S.name) + '">';
-        boxes = SLOTS.map((ps, i) => '<div class="box' + (S.names[i].trim().length >= 2 ? ' set' : '') + '"><label class="bl" for="pn-' + k + i + '"><i>' + (i + 1) + '</i>' + SLOT_N[i] + '</label>' +
-          '<input class="sel" id="pn-' + k + i + '" data-bind="pkN" data-k="' + k + '" data-i="' + i + '" maxlength="30" autocomplete="off" placeholder="اسم اللاعب" value="' + esc(S.names[i]) + '"></div>').join('');
+        boxes = SLOTS.concat([null, null]).map((ps, i) => '<div class="box' + (S.names[i].trim().length >= 2 ? ' set' : '') + '"><label class="bl" for="pn-' + k + i + '"><i>' + (i + 1) + '</i>' + slotN(i) + '</label>' +
+          '<input class="sel" id="pn-' + k + i + '" data-bind="pkN" data-k="' + k + '" data-i="' + i + '" maxlength="30" autocomplete="off" placeholder="اسم اللاعب" value="' + esc(S.names[i]) + '">' + spSel(k, i) + '</div>').join('');
       }
       return '<div class="tcol ' + k + '"><h3>' + TIER[k].name + '</h3>' + top + boxes + '</div>';
     };
-    return '<section class="card action"><h2 style="margin:0 0 6px">حط تشكيلتين خماسيتين</h2><p class="muted">' +
-      (hist ? 'لكل فريق اختر نادي وموسم، ويطلع لك الخماسي الأكثر بداية بكل خانة. تقدر تغيّر أي لاعب من نفس الفريق (الرقم بين القوسين = عدد مرات البداية).' : 'اكتب ٥ أسماء لكل فريق حسب الخانات. اكتب أسماء لاعبين حقيقيين.') +
+    return '<section class="card action"><h2 style="margin:0 0 6px">حط تشكيلتين: ٥ أساسيين واحتياطين</h2><p class="muted">' +
+      (hist ? 'لكل فريق اختر نادي وموسم، ويطلع لك الخماسي الأكثر بداية بكل خانة. تقدر تغيّر أي لاعب من نفس الفريق (الرقم بين القوسين = عدد مرات البداية). والاحتياطين من أي مركز.' : 'اكتب ٧ أسماء لكل فريق: ٥ حسب الخانات، واحتياطين تختار مركزهم. اكتب أسماء لاعبين حقيقيين.') +
       ' بعدها كل لاعب ياخذ فريق عشوائي من تشكيلات غيره.</p>' +
       '<div class="ten">' + col('w') + col('s') + '</div>' +
       '<button class="btn xl primary" data-act="sendPicks">تأكيد التشكيلتين</button></section>' + (hist ? srcNote() : '') + progBox('مين خلّص');
   }
-  const srcNote = () => '<p class="src">المصدر: صفحات مواسم الأندية على ويكيبيديا الإنجليزية. الخماسي المقترح هم الأكثر بداية بكل خانة بذاك الموسم.</p>';
+  const srcNote = () => '<p class="src">المصدر: صفحات مواسم الأندية على ويكيبيديا الإنجليزية. الخماسي المقترح هم الأكثر بداية بكل خانة بذاك الموسم، والاحتياطين هم اللي بعدهم.</p>';
   function tierView() {
     const x = inp(ME_ID).tier, done = x && x.g === G.gameNo && x.v;
     if (done) return '<section class="card pass"><h2>اخترت: ' + TIER[x.v].name + ' ✓</h2><p class="muted">اختيارك سري. لما يختار الكل، تنعرض الفرق.</p></section>' + progBox('مين اختار الفئة') + hostBtn('اكشف الفرق', 'tierNext');
     const opt = (v, d) => '<button class="tier ' + v + (U.tierPick === v ? ' on' : '') + '" data-act="tierPick" data-v="' + v + '"><b>' + TIER[v].name + '</b><span class="big num">' + TIER[v].bal + ' مليون</span><span class="muted">' + d + '</span></button>';
     return '<section class="card action"><h2 style="margin:0 0 6px">اختر فئتك سرًّا</h2><p class="muted">بتاخذ تشكيلة عشوائية من اختيارات اللاعبين الثانيين بنفس الفئة، وما تطلع لك أي وحدة من تشكيلتيك.</p>' +
-      '<div class="tiers">' + opt('s', 'كل لاعب ١٥ مليون. المجموع ٨٥ مليون') + opt('w', 'كل لاعب ٥ ملايين. المجموع ٨٥ مليون') + '</div>' +
+      '<div class="tiers">' + opt('s', 'كل لاعب ١٠ ملايين. المجموع ٨٥ مليون') + opt('w', 'كل لاعب ٥ ملايين. المجموع ٨٥ مليون') + '</div>' +
       '<button class="btn xl primary" data-act="sendTier"' + (U.tierPick ? '' : ' aria-disabled="true"') + '>تأكيد</button></section>' + progBox('مين اختار الفئة');
   }
   function pitch(list, form, mini) {
@@ -1340,7 +1383,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   }
   function teamHead(pid) {
     const q = sqOf(pid) || { lbl: '' };
-    return '<section class="card teamhead"><div class="row-b"><div><span class="muted small">فريقك</span><h2 style="margin:0">' + esc(q.lbl) + '</h2><span class="muted small">' + (q.hist ? esc(q.club) + ' · المدرب: ' + esc(q.coach) : 'تشكيلة كتبها لاعب') + ' · خماسي</span></div></div>' +
+    return '<section class="card teamhead"><div class="row-b"><div><span class="muted small">فريقك</span><h2 style="margin:0">' + tdot(pid) + esc(q.lbl) + '</h2><span class="muted small">' + (q.hist ? esc(q.club) + ' · المدرب: ' + esc(q.coach) : 'تشكيلة كتبها لاعب') + ' · خماسي</span></div></div>' +
       '<div class="kpis"><div><span>الرصيد</span><b class="num">' + mil(bal(pid)) + '</b></div><div><span>اللاعبين</span><b class="num">' + roster(pid).length + '</b></div><div><span>قيمة المحفظة</span><b class="num">' + mil(assets(pid)) + '</b></div></div></section>';
   }
   function revealView() {
@@ -1367,7 +1410,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       else {
         const n = Object.keys(U.lst).length;
         body = '<section class="card action"><h2 style="margin:0 0 4px">اعرض لاعبين للبيع</h2><p class="muted">لازم لاعب واحد على الأقل، وبحد أقصى ١٠. حط السعر اللي تبيه، والمزايدة تبدأ منه. العرض ما يضمن البيع.</p>' +
-          '<div class="note">البيع يمشي بس إذا بعد السوق يبقى عندك خماسي كامل (حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم). يعني إذا بعت لاعب، لازم تشتري بديل له بنفس السوق.</div>' +
+          '<div class="note">فلوس البيع تنضاف لرصيدك بنفس السوق، وتقدر تشتري فيها. البيع يمشي طالما يبقى عندك خماسي كامل (حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم)، والاحتياط يسد مكان اللي تبيعه. الفريق بحد أقصى ٩ لاعبين.</div>' +
           rosterTable(me, {
             act: 'toggleList', sel: k => k in U.lst,
             right: k => k in U.lst ? '<span class="ask" data-stop="1"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="-1" aria-label="أقل">−</button><input class="field num askin" data-bind="ask" data-k="' + k + '" inputmode="numeric" value="' + U.lst[k] + '"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="1" aria-label="أكثر">+</button></span>' : ''
@@ -1384,15 +1427,18 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const total = Object.keys(U.bids).reduce((s, l) => s + (+U.bids[l] || 0), 0), nb = Object.keys(U.bids).length;
       const card = l => {
         const L = mk.lst[l], p = PL(L.pk), b = U.bids[l], top = mk.top && mk.top[l];
-        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + posL(p) + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.lbl : '') + '</small></div><div class="ref"><span>السعر المرجعي</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
+        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + posL(p) + '</span><div class="nm"><b>' + tdot(L.seller) + esc(p.name) + '</b><small>' + esc(p.team ? p.team.lbl : '') + '</small></div><div class="ref"><span>السعر المرجعي</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
           (L.seller === me ? '<div class="muted small">لاعبك. ' + (top ? 'أعلى عرض الحين: <b class="num">' + mil(top[0]) + '</b> (' + top[1] + ' عروض)' : 'ما فيه عروض للحين.') + '</div>' :
             '<div class="lc-bid">' + (top ? '<span class="muted small">أعلى عرض: <b class="num">' + mil(top[0]) + '</b></span>' : '<span class="muted small">ما فيه عروض</span>') +
             (b ? '<span class="bidctl"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="-1">−</button><input class="field num askin" data-bind="bid" data-l="' + l + '" inputmode="numeric" value="' + b + '"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="1">+</button><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="5"><span dir="ltr">+5</span></button><button class="x" data-act="bidDel" data-l="' + l + '" aria-label="إلغاء العرض">×</button></span>'
               : '<button class="btn sm primary" data-act="bidNew" data-l="' + l + '"' + (done || nb >= 10 ? ' aria-disabled="true"' : '') + '>زايد</button>') + '</div>') + '</div>';
       };
-      const warn = total > bal(me) ? '<div class="alert">مجموع عروضك (' + mil(total) + ') أكبر من رصيدك. اللعبة ما تتم أي شراء يتجاوز رصيدك وقت التنفيذ.</div>' : '';
+      const myOut = mine.map(l => mk.lst[l].pk), myIn = Object.keys(U.bids).filter(l => mk.lst[l]).map(l => mk.lst[l].pk);
+      const fullW = roster(me).length - mine.length + nb > NSQ ? '<div class="alert">فريقك بحد أقصى ٩ لاعبين. إذا ما انباع من لاعبينك المعروضين، تنلغي الصفقات الزايدة.</div>' : '';
+      const needRep = mine.length && !canFill(roster(me).filter(k => !myOut.includes(k)).concat(myIn)) ? '<div class="alert">لو انباع اللي عارضهم، ما يبقى عندك خماسي كامل حتى مع الاحتياط، فالبيع بينلغي. زايد على لاعب يقدر ياخذ مكانه، أو قلّل اللي تعرضهم.</div>' : '';
+      const warn = total > bal(me) ? '<div class="alert">مجموع عروضك (' + mil(total) + ') أكبر من رصيدك. فلوس لاعبينك اللي تنباع بنفس السوق تنحسب، وإذا ما كفّت تنلغي الصفقات اللي فوق رصيدك.</div>' : '';
       return head + '<section class="card"><div class="row-b"><h2 style="margin:0">المعروض بالسوق</h2><span class="chip num">' + lids.length + ' لاعب</span></div><p class="muted small">المزايدة تبدأ من السعر المرجعي. أعلى عرض يقدر صاحبه يدفعه يفوز، والتعادل بالقرعة. بحد أقصى ١٠ صفقات.</p>' +
-        '<div class="kpis"><div><span>عروضك</span><b class="num">' + nb + ' / ١٠</b></div><div><span>مجموعها</span><b class="num">' + mil(total) + '</b></div><div><span>رصيدك</span><b class="num">' + mil(bal(me)) + '</b></div></div></section>' + warn +
+        '<div class="kpis"><div><span>عروضك</span><b class="num">' + nb + ' / ١٠</b></div><div><span>مجموعها</span><b class="num">' + mil(total) + '</b></div><div><span>رصيدك</span><b class="num">' + mil(bal(me)) + '</b></div></div></section>' + warn + needRep + fullW +
         (others.length ? '<section class="lgrid">' + others.map(card).join('') + '</section>' : '<section class="card muted">ما فيه لاعبين من غيرك بالسوق.</section>') +
         (mine.length ? '<section class="card"><h3 style="margin-bottom:8px">لاعبينك المعروضين</h3><div class="lgrid">' + mine.map(card).join('') + '</div>' + (mk.auto.includes(me) ? '<p class="muted small">انعرض لاعبك تلقائيًا لأنك ما عرضت بالوقت.</p>' : '') + '</section>' : '') +
         (done ? '<section class="card pass"><h3>ثبّت عروضك ✓</h3><p class="muted small">تقدر تعدل لين يخلص الوقت.</p><button class="btn" data-act="bidEdit">تعديل</button></section>' : '<button class="btn xl primary" data-act="sendBids">' + (nb ? 'ثبّت عروضي' : 'ما أبي أشتري') + '</button>') +
@@ -1400,7 +1446,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     }
     if (mk.stage === 'review') {
       const deals = mk.res.filter(r => r.buyer), uns = mk.res.filter(r => !r.buyer);
-      const why = { nobid: 'ما وصله عرض', keep5: 'انرفض: البائع ما يبقى عنده خماسي كامل', nomoney: 'ما فيه عرض يقدر صاحبه يدفعه' };
+      const why = { nobid: 'ما وصله عرض', keep5: 'انرفض: البائع ما يبقى عنده خماسي كامل', nomoney: 'ما فيه عرض يقدر صاحبه يدفعه', full: 'انرفض: فريق المشتري وصل ٩ لاعبين' };
       const ready = (inp(me).ready || {}).k === mk.key;
       const last = mk.no >= G.settings.seasons * 2;
       return head + '<section class="card"><h2 style="margin-bottom:10px">نتائج السوق</h2>' +
@@ -1470,10 +1516,10 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     return '<section class="winner"><span class="muted">البطل العام</span><h2>' + esc(P(w.id).name) + '</h2><span class="chip gold num">' + w.total + ' من ١٠٠</span></section>' +
       '<div class="grid2"><section class="card award"><span class="muted small">بطل سوق الانتقالات</span><b>' + esc(P(mkc.id).name) + '</b><span class="num">' + mkc.market + ' نقطة</span></section>' +
       '<section class="card award"><span class="muted small">بطل كأس الأبطال</span><b>' + (champ ? esc(P(champ).name) : '—') + '</b><span>' + (champ ? esc(sqLbl(champ)) : '') + '</span></section></div>' +
-      '<section class="card"><h2 style="margin-bottom:10px">جدول النقاط</h2><div class="tbl" role="table"><div class="tr th" role="row"><span>#</span><span>اللاعب</span><span>بيع</span><span>شراء</span><span>محفظة</span><span>كأس</span><span>المجموع</span></div>' +
-      tot.map((r, i) => '<div class="tr' + (i === 0 ? ' win' : '') + (r.id === ME_ID ? ' me' : '') + '" role="row"><span class="num">' + (i + 1) + '</span><span class="nm">' + esc(P(r.id).name) + '</span><span class="num">' + r.sold + '</span><span class="num">' + r.bought + '</span><span class="num">' + r.port + '</span><span class="num">' + r.cup + '</span><span class="num tot">' + r.total + '</span></div>').join('') + '</div>' +
-      '<p class="muted small" style="margin-top:8px">البيع والشراء: لين ١٠ نقاط حسب الترتيب بعدد الصفقات. المحفظة: لين ٣٠ نقطة حسب نسبة النمو (الرصيد + قيمة اللاعبين) مقارنة بالبداية. الكأس: من ١٠ نقاط لأول دور لين ٥٠ للبطل. التعادل: المحفظة الأعلى، ثم بطل الكأس.</p></section>' +
-      '<section class="card"><h3 style="margin-bottom:8px">المحافظ النهائية</h3><div class="deals">' + tot.map(r => '<div class="deal"><b>' + esc(P(r.id).name) + '</b><span class="muted small">' + esc(sqLbl(r.id)) + ' · ' + roster(r.id).length + ' لاعب · الرصيد ' + mil(bal(r.id)) + ' · ' + (G.stats[r.id] || {}).sold + ' بيع / ' + (G.stats[r.id] || {}).bought + ' شراء</span><b class="num price">' + mil(r.assets) + ' <small>(' + (r.growth >= 0 ? '+' : '') + Math.round(r.growth * 100) + '٪)</small></b></div>').join('') + '</div></section>' +
+      '<section class="card"><h2 style="margin-bottom:10px">جدول النقاط</h2><div class="tbl" role="table"><div class="tr th" role="row"><span class="nm">اللاعب</span><span>بيع</span><span>شراء</span><span>محفظة</span><span>أصول</span><span>كأس</span><span>المجموع</span></div>' +
+      tot.map((r, i) => '<div class="tr' + (i === 0 ? ' win' : '') + (r.id === ME_ID ? ' me' : '') + '" role="row"><span class="nm"><b class="num">' + (i + 1) + '.</b> ' + tdot(r.id) + esc(P(r.id).name) + '</span><span class="num">' + r.sold + '</span><span class="num">' + r.bought + '</span><span class="num">' + r.port + '</span><span class="num">' + r.pv + '</span><span class="num">' + r.cup + '</span><span class="num tot">' + r.total + '</span></div>').join('') + '</div>' +
+      '<p class="muted small" style="margin-top:8px">كل قسم ٢٠ نقطة. البيع والشراء: حسب الترتيب بعدد الصفقات. المحفظة: حسب الفرق بين رصيدك بالنهاية وبالبداية. الأصول: حسب مجموع قيمة لاعبينك (أساسي واحتياط). الكأس: من ٤ نقاط لأول دور لين ٢٠ للبطل. التعادل: الأصول الأعلى، ثم بطل الكأس. (الرقم بين القوسين = فرق الرصيد)</p></section>' +
+      '<section class="card"><h3 style="margin-bottom:8px">المحافظ النهائية</h3><div class="deals">' + tot.map(r => '<div class="deal"><b>' + tdot(r.id) + esc(P(r.id).name) + '</b><span class="muted small">' + esc(sqLbl(r.id)) + ' · ' + roster(r.id).length + ' لاعب · الرصيد ' + mil(bal(r.id)) + ' · ' + (G.stats[r.id] || {}).sold + ' بيع / ' + (G.stats[r.id] || {}).bought + ' شراء</span><b class="num price">' + mil(r.assets) + ' <small>(' + (r.wdiff >= 0 ? '+' : '') + Math.round(r.wdiff * 10) / 10 + ' بالرصيد)</small></b></div>').join('') + '</div></section>' +
       bracket() + srcNote() +
       (isHost() ? '<div class="btn-row"><button class="btn xl primary" data-act="rematch">لعبة جديدة بنفس اللاعبين</button><button class="btn xl" data-act="toLobby">رجوع للغرفة</button></div>' : waitHost());
   }
@@ -1713,7 +1759,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   ACT.lg = d => { U.lg = d.v; };
   ACT.sendPicks = async () => {
     const mode = G.settings.mode, s = cleanSide(U.pk.s, mode), w = cleanSide(U.pk.w, mode);
-    if (!s || !w) { toast(mode === 'custom' ? 'اكتب ٥ أسماء لكل فريق (حرفين على الأقل لكل اسم).' : 'اختر نادي وموسم لكل فريق، وكمّل الخانات الخمس.'); return false; }
+    if (!s || !w) { toast(mode === 'custom' ? 'اكتب ٧ أسماء لكل فريق (حرفين على الأقل لكل اسم).' : 'اختر نادي وموسم لكل فريق، وكمّل الخانات السبع.'); return false; }
     if (s.tid && s.tid === w.tid) { toast('اختر فريقين مختلفين.'); return false; }
     mine().picks = { g: G.gameNo, s, w }; render(); await saveMe();
   };
@@ -1875,7 +1921,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const el = e.target;
     if (el.dataset && el.dataset.bind === 'bid') { const L = G.mk && G.mk.lst[el.dataset.l]; if (L) { U.bids[el.dataset.l] = Math.max(L.ask, +U.bids[el.dataset.l] || L.ask); pushBids(false); } }
     if (el.dataset && el.dataset.bind === 'ask') render();
-    if (el.dataset && el.dataset.bind === 'pkTeam' && U.pk[el.dataset.k]) { const S = U.pk[el.dataset.k], t = TM[el.value]; S.tid = t ? t.id : ''; S.ix = t ? histFive(t) : [null, null, null, null, null]; render(); }
+    if (el.dataset && el.dataset.bind === 'pkSP' && U.pk[el.dataset.k]) { const S = U.pk[el.dataset.k]; S.sp = S.sp || ['DF', 'MF']; S.sp[+el.dataset.i] = el.value; }
+    if (el.dataset && el.dataset.bind === 'pkTeam' && U.pk[el.dataset.k]) { const S = U.pk[el.dataset.k], t = TM[el.value]; S.tid = t ? t.id : ''; S.ix = t ? histSeven(t) : [null, null, null, null, null, null, null]; render(); }
     if (el.dataset && el.dataset.bind === 'pkPl' && U.pk[el.dataset.k]) { const S = U.pk[el.dataset.k], i = +el.dataset.i, v = el.value === '' ? null : +el.value; S.ix = S.ix.map((x, j) => (j !== i && x === v ? null : x)); S.ix[i] = v; render(); }
     if (el.dataset && el.dataset.bind === 'xi') { const i = +el.dataset.i, v = el.value || null; U.xi = U.xi.map((x, j) => (j !== i && x === v ? null : x)); U.xi[i] = v; render(); }
   });
