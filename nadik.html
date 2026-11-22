@@ -704,7 +704,12 @@ body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260
     const g = G.gameNo, mk = G.mk, cup = G.cup, rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
     bots.forEach(p => {
       const b = BOT[p.id] = BOT[p.id] || {};
-      if (G.phase === 'picks' && !(b.picks && b.picks.g === g)) { const t = shuffle(TEAMS.map(x => x.id)); b.picks = { g, s: t[0], w: t[1] }; }
+      if (G.phase === 'picks' && !(b.picks && b.picks.g === g)) {
+          /* bots label sensibly: their "strong" pick is a title-winning side, their "weak" pick is not */
+          const STRONG = ['t0', 't1', 't2', 't4', 't5', 't6', 't7', 't8', 't10', 't13', 't14', 't16', 't18', 't20', 't24'].filter(x => TM[x]);
+          const WEAK = TEAMS.map(x => x.id).filter(x => !STRONG.includes(x));
+          b.picks = { g, s: shuffle(STRONG)[0], w: shuffle(WEAK)[0] };
+        }
       if (G.phase === 'tier' && !(b.tier && b.tier.g === g)) b.tier = { g, v: Math.random() < .5 ? 's' : 'w' };
       if (G.phase === 'reveal') b.ready = { k: 'reveal' + g };
       if (G.phase === 'market' && mk) {
