@@ -338,9 +338,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 .aqback{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #E1E5EC;background:#fff;color:#111;font:700 .95rem/1 var(--font-d,inherit);cursor:pointer;text-decoration:none;flex:none;white-space:nowrap}
 .aqback:focus-visible{outline:3px solid #FBC611;outline-offset:2px}
 .aqfix{position:absolute;top:max(12px,env(safe-area-inset-top));inset-inline-start:12px;z-index:5}
-.intro .aqlogo{width:min(64vw,250px)!important}
 .top{padding-inline-end:78px}
 @media (max-width:460px){.aqhasb>b{display:none}}
+section.splash.intro .lg svg.aqlogo{width:min(56vw,220px)!important;height:auto!important}
+section.splash.intro .aqlogo *{animation:none!important}
+section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921!important;background:none!important;padding:0!important;border-radius:0!important;box-shadow:none!important;font-size:clamp(2.2rem,10vw,2.9rem)!important;font-weight:800!important}
 </style><script>window.__AQ_LANG=(document.documentElement.getAttribute("lang")||"ar").slice(0,2);</script></head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -919,7 +921,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const errBox = () => (U.err ? '<div class="alert" role="alert">' + esc(U.err) + '</div>' : '');
   function noticeView() {
     return '<section class="notice"><div class="nbox"><h2>A friendly note before you play</h2>' +
-      '<p>Welcome, everyone! This is a trial version of “Aqnieni” and its three games: Murafaat, Almazad and Nadiyyek, created and developed by Abdulrahman Al-Fahad, dated 26/11/26.</p>' +
+      '<p>Welcome, everyone! This is a trial version of “Aqnieni” and its three games: Murafaat, Almazad and Nadik, created and developed by Abdulrahman Al-Fahad, dated 26/11/26.</p>' +
       '<p>I wanted to share it with you before releasing it to the public, so we can have fun and try it together. All rights to the game’s content, design and materials are reserved. Please don’t copy it, republish it, or make a similar version of it, even with small changes. Any use of its content without permission may force me to take appropriate action.</p>' +
       '<p>Enjoy, and your feedback matters to me!</p>' +
       '<button class="nbtn" data-act="noticeOk">I promise, let’s play</button></div></section>';
