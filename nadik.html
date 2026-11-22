@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>أقنعني! | ناديك</title>
+<title>أقنعني! | نادييك</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800;900&family=Readex+Pro:wght@400;500;600;700&display=swap">
 <style>
 :root{
@@ -429,6 +429,20 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 .bigcode{background:none!important;color:#12203A!important;-webkit-text-fill-color:#12203A;text-decoration:underline 6px #FBC611;text-underline-offset:10px}
 .seg-wide button.on,.seg button.on{background:#FBC611!important;color:#12203A!important;border-color:#FBC611!important}
 .top:has(.top-r .chip) .brand span{display:none!important}
+.ten{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.tcol{display:grid;gap:7px;align-content:start;border-radius:14px;padding:8px 6px;border:2px solid var(--line);min-width:0}
+.tcol.s{border-color:var(--gold);background:rgba(225,29,46,.04)}
+.tcol.w{border-color:var(--blue);background:rgba(29,78,216,.04)}
+.tcol h3{margin:0;text-align:center;font-size:.95rem}
+.tcol.s h3{color:var(--gold)}.tcol.w h3{color:var(--blue)}
+.box{border:2px dashed var(--line);border-radius:12px;padding:6px 7px;background:#fff;display:grid;gap:4px;min-width:0}
+.box.set{border-style:solid;border-color:var(--blue)}
+.tcol.s .box.set{border-color:var(--gold)}
+.box .bl{font-size:.72rem;color:var(--muted);font-weight:700}
+.box .bl i{font-style:normal;display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--yel);color:#0E1630;margin-inline-end:4px;font-size:.7rem}
+.sel{width:100%;min-width:0;min-height:42px;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:4px 8px;background:var(--bg);color:var(--text);font-family:inherit}
+.fivebox{display:grid;gap:8px;margin:10px 0}
+.pp.empty i{background:rgba(255,255,255,.25);color:#fff;border-style:dashed}
 </style>
 </head>
 <body>
@@ -503,7 +517,13 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const LG = { ENG: 'الإنجليزي', ESP: 'الإسباني', GER: 'الألماني', ITA: 'الإيطالي', FRA: 'الفرنسي' };
   const POS = { GK: 'حارس', DF: 'دفاع', MF: 'وسط', FW: 'هجوم' };
   const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
-  const TIER = { s: { name: 'تشكيلة قوية', bal: 10 }, w: { name: 'تشكيلة أضعف', bal: 60 } };
+  const TIER = { s: { name: 'الفريق الأقوى', bal: 10 }, w: { name: 'الفريق الأضعف', bal: 60 } };
+  /* five-a-side: slot 1 GK, 2 DF, 3 DF or MF, 4 MF or FW, 5 FW */
+  const SLOTS = [['GK'], ['DF'], ['DF', 'MF'], ['MF', 'FW'], ['FW']];
+  const SLOT_N = ['حارس', 'مدافع', 'مدافع أو وسط', 'وسط أو مهاجم', 'مهاجم'];
+  const FILL_ORDER = [0, 1, 4, 2, 3];
+  const fits = (ps, i) => (ps || []).some(x => SLOTS[i].includes(x));
+  const MODE = { hist: 'تشكيلات تاريخية', custom: 'تشكيلات يكتبها اللاعبين' };
   const MAXP = 500;
   const app = document.getElementById('app');
   const toastEl = document.getElementById('toast');
@@ -555,12 +575,73 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 
   /* ---------- squad data ---------- */
   const tLabel = t => t ? (t.ar + ' ' + t.season) : '؟';
-  const PL = pk => { const [tid, i] = pk.split('.'); const t = TM[tid]; const r = t && t.pl[+i]; return r ? { pk, num: r[0], name: r[1], pos: r[2], starts: r[3], xi: !!r[4], tid, team: t } : { pk, num: '-', name: '؟', pos: 'MF', starts: 0, xi: false, tid, team: null }; };
+  const PL = pk => {
+    const d = String(pk).lastIndexOf('.'), sid = String(pk).slice(0, d), i = +String(pk).slice(d + 1);
+    const q = G && G.sq && G.sq[sid], r = q && q.five[i];
+    return r ? { pk, num: r.num, name: r.n, ps: r.ps, pos: r.ps[0], starts: r.st || 0, xi: false, sid, team: q } : { pk, num: '-', name: '؟', ps: ['MF'], pos: 'MF', starts: 0, xi: false, sid, team: null };
+  };
+  const posL = p => p.ps.map(x => POS[x]).join(' / ');
+  const sqOf = pid => (G && G.sq && G.sq[G.team[pid]]) || null;
+  const sqLbl = pid => { const q = sqOf(pid); return q ? q.lbl : ''; };
+  /* the season's most-started player for each slot (strict slots first) */
+  function histFive(t) {
+    const used = new Set(), out = [null, null, null, null, null];
+    FILL_ORDER.forEach(i => {
+      let best = -1;
+      t.pl.forEach((r, j) => {
+        if (used.has(j) || !SLOTS[i].includes(r[2])) return;
+        if (best < 0) { best = j; return; }
+        const b = t.pl[best];
+        if ((r[4] - b[4]) > 0 || (r[4] === b[4] && r[3] > b[3])) best = j;
+      });
+      if (best >= 0) { used.add(best); out[i] = best; }
+    });
+    return out;
+  }
+  function cleanSide(x, mode) {
+    if (!x) return null;
+    if (mode !== 'custom') {
+      const t = TM[x.tid]; if (!t || !Array.isArray(x.ix) || x.ix.length !== 5) return null;
+      const ix = x.ix.map(v => (v === null || v === '' ? -1 : +v));
+      if (new Set(ix).size !== 5 || !ix.every((j, i) => t.pl[j] && SLOTS[i].includes(t.pl[j][2]))) return null;
+      return { tid: t.id, ix };
+    }
+    const nm = (Array.isArray(x.names) ? x.names : []).map(v => String(v || '').trim().slice(0, 30));
+    if (nm.length !== 5 || nm.some(v => v.length < 2)) return null;
+    return { name: String(x.name || '').trim().slice(0, 30), names: nm };
+  }
+  function makeSquad(side) {
+    if (side.tid) {
+      const t = TM[side.tid];
+      return { lbl: tLabel(t), club: t.club, coach: t.coach, src: t.src, hist: true, five: side.ix.map(j => ({ n: t.pl[j][1], ps: [t.pl[j][2]], num: t.pl[j][0], st: t.pl[j][3] })) };
+    }
+    return { lbl: side.name || 'تشكيلة بدون اسم', hist: false, five: side.names.map((n, i) => ({ n, ps: SLOTS[i].slice(), num: String(i + 1), st: 0 })) };
+  }
+  /* best valid five from a list of players (highest value first); missing slots stay null */
+  function bestFive(list) {
+    const c = list.slice().sort((a, b) => (val(b) - val(a)) || (PL(b).starts - PL(a).starts));
+    const out = [null, null, null, null, null], used = new Set();
+    const go = k => {
+      if (k === 5) return true;
+      const i = FILL_ORDER[k];
+      for (const pk of c) {
+        if (used.has(pk) || !fits(PL(pk).ps, i)) continue;
+        used.add(pk); out[i] = pk;
+        if (go(k + 1)) return true;
+        used.delete(pk); out[i] = null;
+      }
+      return false;
+    };
+    if (go(0)) return out;
+    const o2 = [null, null, null, null, null], u2 = new Set();
+    FILL_ORDER.forEach(i => { const pk = c.find(k => !u2.has(k) && fits(PL(k).ps, i)); if (pk) { u2.add(pk); o2[i] = pk; } });
+    return o2;
+  }
+  const canFill = list => bestFive(list).every(Boolean);
   const val = pk => (G && G.val && G.val[pk] != null ? G.val[pk] : (G ? G.settings.base : 5));
   const roster = pid => (G && G.own ? Object.keys(G.own).filter(k => G.own[k] === pid) : []).sort((a, b) => (POS_ORDER[PL(a).pos] - POS_ORDER[PL(b).pos]) || (PL(b).starts - PL(a).starts));
   const bal = pid => (G && G.bal ? (G.bal[pid] || 0) : 0);
   const assets = pid => bal(pid) + roster(pid).reduce((s, k) => s + val(k), 0);
-  const gkCount = list => list.filter(k => PL(k).pos === 'GK').length;
   const mkLabel = no => 'الموسم ' + Math.ceil(no / 2) + ' · السوق ' + (no % 2 ? 'الصيفي' : 'الشتوي');
 
   /* ---------- logo ---------- */
@@ -607,8 +688,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   function freshRoom(code) {
     return {
       v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {}, online: [],
-      settings: { seasons: 5, listSec: 30, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
-      picks: {}, tier: {}, team: {}, note: {}, own: {}, val: {}, bal: {}, start: {}, stats: {}, mk: null, hist: [], xi: {}, cup: null, prog: []
+      settings: { mode: 'hist', seasons: 5, listSec: 30, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
+      picks: {}, tier: {}, team: {}, sq: {}, note: {}, own: {}, val: {}, bal: {}, start: {}, stats: {}, mk: null, hist: [], xi: {}, cup: null, prog: []
     };
   }
   function blankMe(code) { return { room: code, name: U.name.trim(), at: Date.now(), hb: Date.now(), reqN: 0, reqs: [] }; }
@@ -736,11 +817,12 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     bots.forEach(p => {
       const b = BOT[p.id] = BOT[p.id] || {};
       if (G.phase === 'picks' && !(b.picks && b.picks.g === g)) {
-          /* bots label sensibly: their "strong" pick is a title-winning side, their "weak" pick is not */
-          const STRONG = ['t0', 't1', 't2', 't4', 't5', 't6', 't7', 't8', 't10', 't13', 't14', 't16', 't18', 't20', 't24'].filter(x => TM[x]);
-          const WEAK = TEAMS.map(x => x.id).filter(x => !STRONG.includes(x));
-          b.picks = { g, s: shuffle(STRONG)[0], w: shuffle(WEAK)[0] };
-        }
+        /* bots label sensibly: their "strong" pick is a title-winning side, their "weak" pick is not */
+        const STRONG = ['t0', 't1', 't2', 't4', 't5', 't6', 't7', 't8', 't10', 't13', 't14', 't16', 't18', 't20', 't24'].filter(x => TM[x] && histFive(TM[x]).every(v => v !== null));
+        const WEAK = TEAMS.map(x => x.id).filter(x => !STRONG.includes(x) && histFive(TM[x]).every(v => v !== null));
+        const side = tid => { const t = TM[tid], ix = histFive(t); return G.settings.mode === 'custom' ? { name: tLabel(t), names: ix.map(j => t.pl[j][1]) } : { tid, ix }; };
+        b.picks = { g, s: side(shuffle(STRONG)[0]), w: side(shuffle(WEAK)[0]) };
+      }
       if (G.phase === 'tier' && !(b.tier && b.tier.g === g)) b.tier = { g, v: Math.random() < .5 ? 's' : 'w' };
       if (G.phase === 'reveal') b.ready = { k: 'reveal' + g };
       if (G.phase === 'market' && mk) {
@@ -809,27 +891,27 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   /* phase transitions */
   function startGame() {
     G.gameNo = (G.gameNo || 0) + 1;
-    ['picks', 'tier', 'team', 'note', 'own', 'val', 'bal', 'start', 'stats', 'xi'].forEach(k => { G[k] = {}; });
+    ['picks', 'tier', 'team', 'sq', 'note', 'own', 'val', 'bal', 'start', 'stats', 'xi'].forEach(k => { G[k] = {}; });
     G.mk = null; G.hist = []; G.cup = null; G.prog = [];
     G.phase = 'picks';
   }
   function lockPicks() {
+    const mode = G.settings.mode;
     G.players.forEach(p => {
       const x = inp(p.id).picks;
-      G.picks[p.id] = x && x.g === G.gameNo && TM[x.s] && TM[x.w] && x.s !== x.w ? { s: x.s, w: x.w } : null;
+      const s = x && x.g === G.gameNo ? cleanSide(x.s, mode) : null, w = x && x.g === G.gameNo ? cleanSide(x.w, mode) : null;
+      G.picks[p.id] = s && w && !(s.tid && s.tid === w.tid) ? { s, w } : null;
     });
     G.phase = 'tier'; G.prog = [];
   }
   function assignTeams() {
     const pl = ids();
     pl.forEach(id => { const x = inp(id).tier; G.tier[id] = x && x.g === G.gameNo && (x.v === 's' || x.v === 'w') ? x.v : 'w'; });
-    const own = id => { const k = G.picks[id]; return k ? [k.s, k.w] : []; };
-    const poolFor = (id, tier) => {
-      let pool = [];
-      pl.forEach(o => { if (o !== id && G.picks[o]) pool.push(G.picks[o][tier]); });
-      pool = pool.filter(t => !own(id).includes(t));
-      return pool;
-    };
+    const ownT = id => { const k = G.picks[id]; return k && k.s.tid ? [k.s.tid, k.w.tid] : []; };
+    /* a pool entry points to another player's pick: { o: owner, t: 's' | 'w' } */
+    const poolFor = (id, tier) => pl.filter(o => o !== id && G.picks[o]).map(o => ({ o, t: tier, r: o + '#' + tier }))
+      .filter(e => { const sd = G.picks[e.o][e.t]; return !(sd.tid && ownT(id).includes(sd.tid)); });
+    const LIB = TEAMS.filter(t => histFive(t).every(v => v !== null));
     let best = null;
     for (let tries = 0; tries < 300; tries++) {
       const used = new Set(), res = {}, note = {};
@@ -838,25 +920,28 @@ html,body{background:#FFFFFF!important;background-image:none!important}
         const t = G.tier[id];
         let pool = poolFor(id, t), why = '';
         if (!pool.length) { pool = poolFor(id, t === 's' ? 'w' : 's'); why = 'other'; }
-        if (!pool.length) { pool = TEAMS.map(x => x.id).filter(x => !own(id).includes(x)); why = 'lib'; }
-        const fresh = pool.filter(x => !used.has(x));
+        if (!pool.length) {
+          const lt = shuffle(LIB.filter(x => !ownT(id).includes(x.id)))[0];
+          res[id] = { side: { tid: lt.id, ix: histFive(lt) } }; note[id] = 'lib'; return;
+        }
+        const fresh = pool.filter(e => !used.has(e.r));
         const pickFrom = fresh.length ? fresh : pool;
         if (!fresh.length) dup++;
-        const tid = pickFrom[Math.floor(Math.random() * pickFrom.length)];
-        used.add(tid); res[id] = tid; note[id] = why;
+        const e = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+        used.add(e.r); res[id] = { side: G.picks[e.o][e.t] }; note[id] = why;
       });
       if (!best || dup < best.dup) best = { dup, res, note };
       if (!dup) break;
     }
-    G.own = {}; G.val = {}; G.stats = {};
+    G.own = {}; G.val = {}; G.stats = {}; G.sq = {};
     pl.forEach(id => {
-      const tid = best.res[id];
-      G.team[id] = tid; G.note[id] = best.note[id];
-      TM[tid].pl.forEach((r, i) => { G.own[tid + '.' + i + (best.dup ? '.' + id.slice(-4) : '')] = id; });
+      const sid = uid('q');
+      G.sq[sid] = makeSquad(best.res[id].side);
+      G.team[id] = sid; G.note[id] = best.note[id];
+      G.sq[sid].five.forEach((r, i) => { G.own[sid + '.' + i] = id; });
       G.bal[id] = TIER[G.tier[id]].bal;
       G.stats[id] = { sold: 0, bought: 0 };
     });
-    // duplicate squads get their own copies (key suffix) so ownership stays unique
     pl.forEach(id => { G.start[id] = G.bal[id] + roster(id).length * G.settings.base; });
     G.phase = 'reveal'; G.prog = [];
   }
@@ -896,24 +981,40 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const mk = G.mk, res = [];
     const lids = Object.keys(mk.lst);
     const tops = {}; lids.forEach(l => { tops[l] = Math.max(0, ...bidsOn(l).map(b => b.a)); });
-    const buys = {};
+    /* money from sales arrives after the market, so every bid is checked against the balance at the start */
+    const spent = {}, buys = {};
     shuffle(lids).sort((a, b) => tops[b] - tops[a]).forEach(lid => {
-      const L = mk.lst[lid], P_ = PL(L.pk);
+      const L = mk.lst[lid];
       const bs = shuffle(bidsOn(lid)).sort((a, b) => b.a - a.a);
-      if (!bs.length) { res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null, why: 'nobid' }); return; }
-      const left = roster(L.seller).filter(k => k !== L.pk);
-      if (left.length < 11 || !gkCount(left)) { res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null, why: 'keep11' }); return; }
-      let win = null, tie = false;
-      for (let i = 0; i < bs.length; i++) {
-        const b = bs[i];
-        if (bal(b.id) >= b.a && (buys[b.id] || 0) < 10) { win = b; tie = bs.some((o, j) => j !== i && o.a === b.a && bal(o.id) >= o.a); break; }
-      }
-      if (!win) { res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null, why: 'nomoney' }); return; }
-      G.bal[win.id] -= win.a; G.bal[L.seller] += win.a;
-      G.own[L.pk] = win.id; G.val[L.pk] = win.a;
-      G.stats[win.id].bought++; G.stats[L.seller].sold++;
-      buys[win.id] = (buys[win.id] || 0) + 1;
-      res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: win.a, buyer: win.id, n: bs.length, tie, pos: P_.pos });
+      const base = { pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null };
+      if (!bs.length) { res.push(Object.assign(base, { why: 'nobid' })); return; }
+      const ok = b => bal(b.id) - (spent[b.id] || 0) >= b.a && (buys[b.id] || 0) < 10;
+      const i = bs.findIndex(ok);
+      if (i < 0) { res.push(Object.assign(base, { why: 'nomoney' })); return; }
+      const win = bs[i], tie = bs.some((o, j) => j !== i && o.a === win.a && ok(o));
+      spent[win.id] = (spent[win.id] || 0) + win.a; buys[win.id] = (buys[win.id] || 0) + 1;
+      res.push(Object.assign(base, { price: win.a, buyer: win.id, n: bs.length, tie }));
+    });
+    /* a sale only stands if the seller can still field a full five after this market's deals */
+    const after = () => {
+      const a = {}; ids().forEach(id => { a[id] = roster(id); });
+      res.forEach(r => { if (!r.buyer) return; a[r.seller] = a[r.seller].filter(k => k !== r.pk); a[r.buyer].push(r.pk); });
+      return a;
+    };
+    for (let guard = 0; guard < 400; guard++) {
+      const a = after();
+      const bad = ids().find(id => res.some(r => r.buyer && r.seller === id) && !canFill(a[id]));
+      if (!bad) break;
+      const sales = res.filter(r => r.buyer && r.seller === bad).sort((x, y) => x.price - y.price);
+      const fix = sales.find(r => canFill(a[bad].concat([r.pk]))) || sales[0];
+      fix.buyer = null; fix.price = 0; fix.why = 'keep5';
+    }
+    res.forEach(r => {
+      if (!r.buyer) return;
+      G.bal[r.buyer] -= r.price; G.bal[r.seller] += r.price;
+      G.own[r.pk] = r.buyer; G.val[r.pk] = r.price;
+      G.stats[r.buyer].bought++; G.stats[r.seller].sold++;
+      r.pos = PL(r.pk).pos;
     });
     mk.res = res;
     G.hist.push({ no: mk.no, deals: res.filter(r => r.buyer).map(r => ({ pk: r.pk, s: r.seller, b: r.buyer, p: r.price })) });
@@ -928,17 +1029,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 
   /* lineup & cup */
   function validXI(id, list) {
-    if (!Array.isArray(list) || list.length !== 11) return false;
-    if (new Set(list).size !== 11) return false;
-    if (!list.every(k => G.own[k] === id)) return false;
-    return gkCount(list) === 1;
+    if (!Array.isArray(list) || list.length !== 5 || !list.every(Boolean)) return false;
+    if (new Set(list).size !== 5) return false;
+    return list.every((k, i) => G.own[k] === id && fits(PL(k).ps, i));
   }
-  function suggestXI(id) {
-    const r = roster(id);
-    const gks = r.filter(k => PL(k).pos === 'GK').sort((a, b) => PL(b).starts - PL(a).starts);
-    const of = r.filter(k => PL(k).pos !== 'GK').sort((a, b) => (PL(b).xi - PL(a).xi) || (PL(b).starts - PL(a).starts) || (val(b) - val(a)));
-    return (gks.length ? [gks[0]] : []).concat(of.slice(0, 10));
-  }
+  const suggestXI = id => bestFive(roster(id));
   function startCup() {
     G.players.forEach(p => { const x = inp(p.id).xi; G.xi[p.id] = x && x.g === G.gameNo && validXI(p.id, x.list) ? x.list : suggestXI(p.id); });
     const pl = shuffle(ids());
@@ -1030,7 +1125,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   }
   function topbar() {
     const inG = !!G && !!U.code;
-    return '<header class="top"><div class="brand">' + LOGO + '<b>أقنعني!</b><span>ناديك</span></div><div class="top-r">' +
+    return '<header class="top"><div class="brand">' + LOGO + '<b>أقنعني!</b><span>نادييك</span></div><div class="top-r">' +
       (inG ? '<span class="chip live num">غرفة ' + esc(U.code) + '</span><button class="btn sm ghost" data-act="menu">القائمة</button>' : '') + '</div></header>' +
       (U.offline === 'net' ? '<div class="alert" role="alert">الاتصال ضعيف. التحديثات بتوصل أول ما يرجع الاتصال.</div>' : '') +
       (U.offline === 'perm' ? '<div class="alert" role="alert">ما نقدر نحفظ في قاعدة البيانات من هذا الجهاز.</div>' : '') +
@@ -1040,7 +1135,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   function splashView() {
     return '<section class="splash"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>' +
       '<div class="lg">' + FULL + '</div>' +
-      '<h1 class="sr">أقنعني!</h1><div class="ar">ناديك</div>' +
+      '<h1 class="sr">أقنعني!</h1><div class="ar">نادييك</div>' +
       '<button class="btn primary go" data-act="enter">نبدأ</button></section>';
   }
   function homeView() {
@@ -1052,14 +1147,16 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       '<button class="btn xl ' + (U.fromLink ? 'primary' : '') + '" data-act="join"' + (U.busy ? ' aria-disabled="true"' : '') + '>انضمام</button></section>';
     const host = '<section class="card" style="display:grid;gap:12px"><h2 style="margin:0">أو أنشئ غرفة جديدة</h2><p class="muted">تكون أنت المضيف وتشارك رمز الغرفة مع ربعك.</p>' +
       '<button class="btn xl ' + (U.fromLink ? '' : 'primary') + '" data-act="create"' + (U.busy ? ' aria-disabled="true"' : '') + '>إنشاء غرفة</button></section>';
-    return '<section class="card hero">' + FULL + '<h1 class="sr">أقنعني!</h1><div class="sub">ناديك</div>' +
-      '<p class="lead">أدر تشكيلة تاريخية، فاوض بسوق انتقالات يمتد ٥ مواسم، وبعدها أقنع الجمهور يصوّت لفريقك بكأس الأبطال.</p></section>' +
+    return '<section class="card hero">' + FULL + '<h1 class="sr">أقنعني!</h1><div class="sub">نادييك</div>' +
+      '<p class="lead">أدر فريق خماسي، فاوض بسوق انتقالات يمتد ٥ مواسم، وبعدها أقنع الجمهور يصوّت لفريقك بكأس الأبطال.</p></section>' +
       me + errBox() + (U.fromLink ? join + host : host + join) +
       '<section class="card"><h2>كيف تُلعب؟</h2><ol class="howto">' +
-      '<li><span>كل لاعب يختار تشكيلتين تاريخيتين من الدوريات الخمسة: «الأقوى» و«الأضعف».</span></li>' +
+      '<li><span>كل لاعب يحط تشكيلتين خماسيتين: «الفريق الأضعف» و«الفريق الأقوى». تاريخية من الدوريات الخمسة، أو يكتب الأسماء بنفسه.</span></li>' +
+      '<li><span>الخماسي: حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم.</span></li>' +
       '<li><span>تختار سرًّا: تشكيلة قوية مع ١٠ ملايين، أو أضعف مع ٦٠ مليون. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
       '<li><span>١٠ أسواق انتقالات: بكل سوق تعرض لاعب واحد على الأقل بسعرك، وتزايد على لاعبين غيرك.</span></li>' +
-      '<li><span>بعد الموسم الخامس تختار ١١ لاعب بينهم حارس، وتدخل كأس الأبطال.</span></li>' +
+      '<li><span>تبيع بس إذا يبقى عندك خماسي كامل، يعني البيع يحتاج بديل تشتريه بنفس السوق.</span></li>' +
+      '<li><span>بعد الموسم الخامس تثبّت خماسيك وتدخل كأس الأبطال.</span></li>' +
       '<li><span>بكل مواجهة تنعرض التشكيلتين بدون اسم النادي، والجمهور يصوّت. والفايز يتأهل.</span></li></ol></section>';
   }
   function joinView() {
@@ -1091,13 +1188,15 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const rows = G.players.map(p => '<div class="prow">' + dot(p.id) + '<b style="flex:1">' + esc(p.name) + (p.id === ME_ID ? ' <span class="muted small">(أنت)</span>' : '') + '</b>' +
       (p.id === G.host ? '<span class="chip gold">المضيف</span>' : '') + '<span class="muted small">' + (isBot(p.id) ? 'لاعب تجريبي' : ((G.online || []).includes(p.id) ? 'متصل' : 'غير متصل')) + '</span>' +
       (host && p.id !== ME_ID ? '<button class="x" data-act="kick" data-id="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">×</button>' : '') + '</div>').join('');
+    const modeSeg = '<div class="seg-wide" role="group">' + Object.keys(MODE).map(m => '<button data-act="setMode" data-v="' + m + '" class="' + ((s.mode || 'hist') === m ? 'on' : '') + '" aria-pressed="' + ((s.mode || 'hist') === m) + '">' + MODE[m] + '</button>').join('') + '</div>';
     const settings = host ? '<section class="card" style="display:grid;gap:16px"><h2>الإعدادات</h2>' +
+      '<div class="labelled"><span class="lbl">نوع التشكيلات</span>' + modeSeg + '<span class="muted small">' + ((s.mode || 'hist') === 'custom' ? 'كل لاعب يكتب أسماء خماسيين بنفسه: واحد ضعيف وواحد قوي.' : 'كل لاعب يختار ناديين ومواسم من الدوريات الخمسة، ويطلع له خماسي من الأكثر لعب.') + '</span></div>' +
       '<div class="labelled"><span class="lbl">عدد المواسم</span>' + seg('seasons', [5, 3, 1]) + '<span class="muted small">اللعبة الكاملة ٥ مواسم (١٠ أسواق). ٣ أو ١ للتجربة السريعة.</span></div>' +
       '<div class="labelled"><span class="lbl">وقت عرض اللاعبين للبيع</span>' + seg('listSec', [20, 30, 45], ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت السوق (المزايدة)</span>' + seg('mkSec', [60, 90, 120], ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت المراجعة</span>' + seg('revSec', [60, 30], ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت تصويت الكأس</span>' + seg('voteSec', [30, 45, 20], ' ث') + '</div></section>'
-      : '<section class="card"><h3>الإعدادات</h3><p class="muted">' + s.seasons + ' مواسم · العرض ' + s.listSec + ' ث · السوق ' + s.mkSec + ' ث · المراجعة ' + s.revSec + ' ث · التصويت ' + s.voteSec + ' ث</p></section>';
+      : '<section class="card"><h3>الإعدادات</h3><p class="muted">' + MODE[s.mode || 'hist'] + ' · ' + s.seasons + ' مواسم · العرض ' + s.listSec + ' ث · السوق ' + s.mkSec + ' ث · المراجعة ' + s.revSec + ' ث · التصويت ' + s.voteSec + ' ث</p></section>';
     return '<section class="card roomcard"><span class="muted">رمز الغرفة</span><div class="bigcode" dir="ltr">' + esc(G.code) + '</div>' +
       '<div class="linkrow"><input class="field" id="lnk" readonly value="' + esc(link) + '" dir="ltr" aria-label="رابط الدعوة"><button class="btn" data-act="copyLink">نسخ الرابط</button></div></section>' +
       '<section class="card"><div class="row-b" style="margin-bottom:10px"><h2 style="margin:0">غرفة الانتظار</h2><span class="chip num">' + n + ' لاعبين</span></div><div style="display:grid;gap:8px">' + rows + '</div>' +
@@ -1106,23 +1205,41 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       (host ? '<button class="btn xl primary" data-act="startGame"' + (n < 3 ? ' aria-disabled="true"' : '') + '>ابدأ اللعبة</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف يبدأ اللعبة…</p>');
   }
 
-  function teamCard(t, extra) {
-    return '<div class="tcard"><div><b>' + esc(t.ar) + '</b><span class="muted small"> · ' + esc(t.season) + '</span><div class="muted small">' + esc(t.club) + ' · المدرب: ' + esc(t.coach) + '</div></div>' + (extra || '') + '</div>';
-  }
+  const blankSide = () => ({ tid: '', ix: [null, null, null, null, null], name: '', names: ['', '', '', '', ''] });
   function picksView() {
     const x = inp(ME_ID).picks, done = x && x.g === G.gameNo && x.s && x.w;
-    if (done) return '<section class="card pass"><h2>وصلت اختياراتك ✓</h2><p class="muted">اختياراتك سرية، ومحد يشوفها إلا بعد ما يكمل الكل.</p></section>' + progBox('مين اختار') + hostBtn('التالي: اختيار الفئة', 'picksNext');
-    const key = G.code + G.gameNo;
-    if (U.pkKey !== key) { U.pkKey = key; U.pk = { s: null, w: null }; }
-    const slot = k => '<button class="slot ' + (U.pk[k] ? 'set' : '') + '" data-act="clearPick" data-k="' + k + '"><span>' + (k === 's' ? 'الأقوى' : 'الأضعف') + '</span><b>' + (U.pk[k] ? esc(tLabel(TM[U.pk[k]])) : 'ما اخترت') + '</b></button>';
-    const list = TEAMS.filter(t => t.lg === U.lg).map(t => teamCard(t,
-      '<div class="pkbtns"><button class="btn sm ' + (U.pk.s === t.id ? 'on' : '') + '" data-act="pickTeam" data-k="s" data-id="' + t.id + '">الأقوى</button><button class="btn sm ' + (U.pk.w === t.id ? 'on' : '') + '" data-act="pickTeam" data-k="w" data-id="' + t.id + '">الأضعف</button></div>')).join('');
-    return '<section class="card action"><h2 style="margin:0 0 6px">اختر تشكيلتين تاريخيتين</h2><p class="muted">وحدة «الأقوى» ووحدة «الأضعف». بعدها كل لاعب ياخذ فريق عشوائي من اختيارات غيره.</p><div class="slots">' + slot('s') + slot('w') + '</div>' +
-      '<button class="btn xl primary" data-act="sendPicks"' + (U.pk.s && U.pk.w ? '' : ' aria-disabled="true"') + '>تأكيد الاختيار</button></section>' +
-      '<div class="tabs" role="tablist">' + Object.keys(LG).map(k => '<button role="tab" class="' + (U.lg === k ? 'on' : '') + '" aria-selected="' + (U.lg === k) + '" data-act="lg" data-v="' + k + '">' + LG[k] + '</button>').join('') + '</div>' +
-      '<section class="card" style="display:grid;gap:8px">' + list + '</section>' + srcNote() + progBox('مين اختار');
+    if (done) return '<section class="card pass"><h2>وصلت تشكيلاتك ✓</h2><p class="muted">تشكيلاتك سرية، ومحد يشوفها إلا بعد ما يكمل الكل.</p></section>' + progBox('مين خلّص') + hostBtn('التالي: اختيار الفئة', 'picksNext');
+    const hist = G.settings.mode !== 'custom';
+    const key = G.code + G.gameNo + (G.settings.mode || 'hist');
+    if (U.pkKey !== key) { U.pkKey = key; U.pk = { s: blankSide(), w: blankSide() }; }
+    const col = k => {
+      const S = U.pk[k], O = U.pk[k === 's' ? 'w' : 's'], t = TM[S.tid];
+      let top = '', boxes = '';
+      if (hist) {
+        top = '<select class="sel" id="pt-' + k + '" data-bind="pkTeam" data-k="' + k + '" aria-label="النادي والموسم"><option value="">اختر النادي والموسم</option>' +
+          Object.keys(LG).map(lg => '<optgroup label="الدوري ' + LG[lg] + '">' + TEAMS.filter(z => z.lg === lg).map(z => '<option value="' + z.id + '"' + (S.tid === z.id ? ' selected' : '') + (O.tid === z.id ? ' disabled' : '') + '>' + esc(tLabel(z)) + '</option>').join('') + '</optgroup>').join('') + '</select>' +
+          (t ? '<span class="muted small" style="text-align:center"><b>' + esc(tLabel(t)) + '</b><br>المدرب: ' + esc(t.coach) + '</span>' : '');
+        boxes = SLOTS.map((ps, i) => {
+          const j = S.ix[i];
+          return '<div class="box' + (t && j !== null ? ' set' : '') + '"><span class="bl"><i>' + (i + 1) + '</i>' + SLOT_N[i] + '</span>' +
+            (t ? '<select class="sel" dir="ltr" id="pp-' + k + i + '" data-bind="pkPl" data-k="' + k + '" data-i="' + i + '" aria-label="' + SLOT_N[i] + '"><option value="">—</option>' +
+              t.pl.map((r, jj) => SLOTS[i].includes(r[2]) ? '<option value="' + jj + '"' + (j === jj ? ' selected' : '') + '>' + esc(shortName(r[1])) + ' (' + r[3] + ')</option>' : '').join('') + '</select>'
+              : '<b class="muted small">اختر النادي</b>') + '</div>';
+        }).join('');
+      } else {
+        top = '<input class="sel" id="pnm-' + k + '" data-bind="pkName" data-k="' + k + '" maxlength="30" autocomplete="off" placeholder="اسم الفريق (اختياري)" value="' + esc(S.name) + '">';
+        boxes = SLOTS.map((ps, i) => '<div class="box' + (S.names[i].trim().length >= 2 ? ' set' : '') + '"><label class="bl" for="pn-' + k + i + '"><i>' + (i + 1) + '</i>' + SLOT_N[i] + '</label>' +
+          '<input class="sel" id="pn-' + k + i + '" data-bind="pkN" data-k="' + k + '" data-i="' + i + '" maxlength="30" autocomplete="off" placeholder="اسم اللاعب" value="' + esc(S.names[i]) + '"></div>').join('');
+      }
+      return '<div class="tcol ' + k + '"><h3>' + TIER[k].name + '</h3>' + top + boxes + '</div>';
+    };
+    return '<section class="card action"><h2 style="margin:0 0 6px">حط تشكيلتين خماسيتين</h2><p class="muted">' +
+      (hist ? 'لكل فريق اختر نادي وموسم، ويطلع لك الخماسي الأكثر بداية بكل خانة. تقدر تغيّر أي لاعب من نفس الفريق (الرقم بين القوسين = عدد مرات البداية).' : 'اكتب ٥ أسماء لكل فريق حسب الخانات. اكتب أسماء لاعبين حقيقيين.') +
+      ' بعدها كل لاعب ياخذ فريق عشوائي من تشكيلات غيره.</p>' +
+      '<div class="ten">' + col('w') + col('s') + '</div>' +
+      '<button class="btn xl primary" data-act="sendPicks">تأكيد التشكيلتين</button></section>' + (hist ? srcNote() : '') + progBox('مين خلّص');
   }
-  const srcNote = () => '<p class="src">المصدر: صفحات مواسم الأندية على ويكيبيديا الإنجليزية. الأساسيين هم الأكثر بداية بمراكزهم بذاك الموسم، والخطة مستنتجة من مراكزهم.</p>';
+  const srcNote = () => '<p class="src">المصدر: صفحات مواسم الأندية على ويكيبيديا الإنجليزية. الخماسي المقترح هم الأكثر بداية بكل خانة بذاك الموسم.</p>';
   function tierView() {
     const x = inp(ME_ID).tier, done = x && x.g === G.gameNo && x.v;
     if (done) return '<section class="card pass"><h2>اخترت: ' + TIER[x.v].name + ' ✓</h2><p class="muted">اختيارك سري. لما يختار الكل، تنعرض الفرق.</p></section>' + progBox('مين اختار الفئة') + hostBtn('اكشف الفرق', 'tierNext');
@@ -1132,9 +1249,14 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       '<button class="btn xl primary" data-act="sendTier"' + (U.tierPick ? '' : ' aria-disabled="true"') + '>تأكيد</button></section>' + progBox('مين اختار الفئة');
   }
   function pitch(list, form, mini) {
-    const rows = { GK: [], DF: [], MF: [], FW: [] };
-    list.forEach(k => rows[PL(k).pos].push(k));
-    return '<div class="pitch' + (mini ? ' mini' : '') + '">' + ['FW', 'MF', 'DF', 'GK'].map(r => '<div class="line">' + rows[r].map(k => { const p = PL(k); return '<span class="pp"><i class="num">' + esc(p.num) + '</i><b>' + esc(shortName(p.name)) + '</b></span>'; }).join('') + '</div>').join('') + '</div>' + (form ? '<div class="muted small" style="text-align:center">الخطة: <span dir="ltr">' + esc(form) + '</span></div>' : '');
+    list = list || [];
+    const cell = i => {
+      const k = list[i];
+      if (!k) return '<span class="pp empty"><i>–</i><b>' + SLOT_N[i] + '</b></span>';
+      const p = PL(k);
+      return '<span class="pp"><i class="num">' + esc(p.num) + '</i><b>' + esc(shortName(p.name)) + '</b></span>';
+    };
+    return '<div class="pitch five' + (mini ? ' mini' : '') + '">' + [[4, 3], [2, 1], [0]].map(r => '<div class="line">' + r.map(cell).join('') + '</div>').join('') + '</div>';
   }
   const shortName = n => { const s = String(n).split(' '); return s.length > 2 ? s[0] + ' ' + s[s.length - 1] : n; };
   function rosterTable(pid, opts) {
@@ -1142,26 +1264,24 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const r = roster(pid);
     return '<div class="rtable">' + r.map(k => {
       const p = PL(k), sel = opts.sel && opts.sel(k);
-      return '<div class="rr' + (sel ? ' sel' : '') + (p.xi ? ' xi' : '') + '"' + (opts.act ? ' data-act="' + opts.act + '" data-k="' + k + '" role="button" tabindex="0"' : '') + '><span class="num nb">' + esc(p.num) + '</span><span class="nm"><b>' + esc(p.name) + '</b><small>' + POS[p.pos] + (p.xi ? ' · أساسي' : '') + ' · ' + esc(p.team ? p.team.ar + ' ' + p.team.season : '') + '</small></span><span class="num vl">' + mil(val(k)) + '</span>' + (opts.right ? opts.right(k) : '') + '</div>';
+      return '<div class="rr' + (sel ? ' sel' : '') + (p.xi ? ' xi' : '') + '"' + (opts.act ? ' data-act="' + opts.act + '" data-k="' + k + '" role="button" tabindex="0"' : '') + '><span class="num nb">' + esc(p.num) + '</span><span class="nm"><b>' + esc(p.name) + '</b><small>' + posL(p) + ' · ' + esc(p.team ? p.team.lbl : '') + '</small></span><span class="num vl">' + mil(val(k)) + '</span>' + (opts.right ? opts.right(k) : '') + '</div>';
     }).join('') + '</div>';
   }
   function teamHead(pid) {
-    const t = TM[G.team[pid]];
-    return '<section class="card teamhead"><div class="row-b"><div><span class="muted small">فريقك</span><h2 style="margin:0">' + esc(tLabel(t)) + '</h2><span class="muted small">' + esc(t.club) + ' · المدرب: ' + esc(t.coach) + ' · الخطة: <span dir="ltr">' + esc(t.form) + '</span></span></div></div>' +
+    const q = sqOf(pid) || { lbl: '' };
+    return '<section class="card teamhead"><div class="row-b"><div><span class="muted small">فريقك</span><h2 style="margin:0">' + esc(q.lbl) + '</h2><span class="muted small">' + (q.hist ? esc(q.club) + ' · المدرب: ' + esc(q.coach) : 'تشكيلة كتبها لاعب') + ' · خماسي</span></div></div>' +
       '<div class="kpis"><div><span>الرصيد</span><b class="num">' + mil(bal(pid)) + '</b></div><div><span>اللاعبين</span><b class="num">' + roster(pid).length + '</b></div><div><span>قيمة المحفظة</span><b class="num">' + mil(assets(pid)) + '</b></div></div></section>';
   }
   function revealView() {
-    const me = ME_ID, t = TM[G.team[me]];
-    if (!t) return '';
-    const xi = roster(me).filter(k => PL(k).xi);
+    const me = ME_ID, q = sqOf(me);
+    if (!q) return '';
     const ready = (inp(me).ready || {}).k === 'reveal' + G.gameNo;
-    const note = G.note[me] === 'other' ? '<div class="note">ما كان فيه تشكيلات كافية بفئتك، فطلع لك فريق من الفئة الثانية.</div>' : G.note[me] === 'lib' ? '<div class="note">ما كان فيه اختيارات كافية، فطلع لك فريق عشوائي من المكتبة.</div>' : '';
-    return '<section class="card reveal"><span class="muted">طلع لك</span><h1 class="big2">' + esc(t.ar) + '</h1><div class="chip gold num">' + esc(t.season) + '</div><p class="muted">' + esc(t.club) + ' · المدرب: <b>' + esc(t.coach) + '</b> · ' + TIER[G.tier[me]].name + '</p></section>' + note +
-      '<section class="card"><h3 style="margin-bottom:8px">التشكيلة الأساسية</h3>' + pitch(xi, t.form) + '</section>' +
+    const note = G.note[me] === 'other' ? '<div class="note">ما كان فيه تشكيلات كافية بفئتك، فطلع لك فريق من الفئة الثانية.</div>' : G.note[me] === 'lib' ? '<div class="note">ما كان فيه اختيارات كافية، فطلع لك فريق تاريخي عشوائي من المكتبة.</div>' : '';
+    return '<section class="card reveal"><span class="muted">طلع لك</span><h1 class="big2">' + esc(q.lbl) + '</h1><p class="muted">' + (q.hist ? esc(q.club) + ' · المدرب: <b>' + esc(q.coach) + '</b>' : 'تشكيلة كتبها واحد من اللاعبين') + ' · ' + TIER[G.tier[me]].name + '</p></section>' + note +
+      '<section class="card"><h3 style="margin-bottom:8px">الخماسي</h3>' + pitch(suggestXI(me)) + '</section>' +
       teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">قائمة اللاعبين</h3>' + rosterTable(me) +
       '<p class="muted small" style="margin-top:8px">القيمة المبدئية لكل لاعب ' + mil(G.settings.base) + ' للحساب بس. السعر الحقيقي يحدده صاحب النادي لما يعرضه بالسوق، وبعدها قيمة اللاعب = آخر سعر انباع فيه.</p></section>' +
-      (t.mode !== 'LEAGUE' && t.mode !== 'TOTAL' ? '<p class="src">هالموسم ما فيه أرقام «بداية» بويكيبيديا، فاخترنا الأساسيين حسب عدد المشاركات.</p>' : '') +
-      '<p class="src">المصدر: <span dir="ltr">' + esc(t.src.replace('https://', '')) + '</span></p>' +
+      (q.hist && q.src ? '<p class="src">المصدر: <span dir="ltr">' + esc(q.src.replace('https://', '')) + '</span></p>' : '') +
       (ready ? progBox('مين جاهز') + hostBtn('افتح السوق الأول', 'revealNext') : '<button class="btn xl primary" data-act="ready" data-k="reveal' + G.gameNo + '">جاهز للسوق</button>' + progBox('مين جاهز'));
   }
 
@@ -1176,7 +1296,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       else {
         const n = Object.keys(U.lst).length;
         body = '<section class="card action"><h2 style="margin:0 0 4px">اعرض لاعبين للبيع</h2><p class="muted">لازم لاعب واحد على الأقل، وبحد أقصى ١٠. حط السعر اللي تبيه، والمزايدة تبدأ منه. العرض ما يضمن البيع.</p>' +
-          (roster(me).length <= 11 ? '<div class="note">عندك ' + roster(me).length + ' لاعبين بس. أي بيعة تخليك أقل من ١١ أو بدون حارس تنرفض تلقائيًا.</div>' : '') +
+          '<div class="note">البيع يمشي بس إذا بعد السوق يبقى عندك خماسي كامل (حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم). يعني إذا بعت لاعب، لازم تشتري بديل له بنفس السوق.</div>' +
           rosterTable(me, {
             act: 'toggleList', sel: k => k in U.lst,
             right: k => k in U.lst ? '<span class="ask" data-stop="1"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="-1" aria-label="أقل">−</button><input class="field num askin" data-bind="ask" data-k="' + k + '" inputmode="numeric" value="' + U.lst[k] + '"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="1" aria-label="أكثر">+</button></span>' : ''
@@ -1193,7 +1313,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const total = Object.keys(U.bids).reduce((s, l) => s + (+U.bids[l] || 0), 0), nb = Object.keys(U.bids).length;
       const card = l => {
         const L = mk.lst[l], p = PL(L.pk), b = U.bids[l], top = mk.top && mk.top[l];
-        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + POS[p.pos] + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.ar + ' ' + p.team.season : '') + ' · البائع: ' + esc(P(L.seller).name) + '</small></div><div class="ref"><span>السعر المرجعي</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
+        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + posL(p) + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.lbl : '') + ' · البائع: ' + esc(P(L.seller).name) + '</small></div><div class="ref"><span>السعر المرجعي</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
           (L.seller === me ? '<div class="muted small">لاعبك. ' + (top ? 'أعلى عرض الحين: <b class="num">' + mil(top[0]) + '</b> (' + top[1] + ' عروض)' : 'ما فيه عروض للحين.') + '</div>' :
             '<div class="lc-bid">' + (top ? '<span class="muted small">أعلى عرض: <b class="num">' + mil(top[0]) + '</b></span>' : '<span class="muted small">ما فيه عروض</span>') +
             (b ? '<span class="bidctl"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="-1">−</button><input class="field num askin" data-bind="bid" data-l="' + l + '" inputmode="numeric" value="' + b + '"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="1">+</button><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="5"><span dir="ltr">+5</span></button><button class="x" data-act="bidDel" data-l="' + l + '" aria-label="إلغاء العرض">×</button></span>'
@@ -1209,11 +1329,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     }
     if (mk.stage === 'review') {
       const deals = mk.res.filter(r => r.buyer), uns = mk.res.filter(r => !r.buyer);
-      const why = { nobid: 'ما وصله عرض', keep11: 'انرفض: لازم يبقى ١١ لاعب بينهم حارس', nomoney: 'ما فيه عرض يقدر صاحبه يدفعه' };
+      const why = { nobid: 'ما وصله عرض', keep5: 'انرفض: البائع ما يبقى عنده خماسي كامل', nomoney: 'ما فيه عرض يقدر صاحبه يدفعه' };
       const ready = (inp(me).ready || {}).k === mk.key;
       const last = mk.no >= G.settings.seasons * 2;
       return head + '<section class="card"><h2 style="margin-bottom:10px">نتائج السوق</h2>' +
-        (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal' + (r.buyer === me || r.seller === me ? ' me' : '') + '"><b>' + esc(p.name) + '</b><span class="muted small">' + POS[p.pos] + ' · من ' + esc(P(r.seller).name) + ' إلى ' + esc(P(r.buyer).name) + (r.tie ? ' · بالقرعة' : '') + '</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">ما تمت أي صفقة بهالسوق.</p>') +
+        (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal' + (r.buyer === me || r.seller === me ? ' me' : '') + '"><b>' + esc(p.name) + '</b><span class="muted small">' + posL(p) + ' · من ' + esc(P(r.seller).name) + ' إلى ' + esc(P(r.buyer).name) + (r.tie ? ' · بالقرعة' : '') + '</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">ما تمت أي صفقة بهالسوق.</p>') +
         (uns.length ? '<details style="margin-top:10px"><summary class="muted">ما انباعوا (' + uns.length + ')</summary><div class="deals">' + uns.map(r => '<div class="deal"><b>' + esc(PL(r.pk).name) + '</b><span class="muted small">' + esc(P(r.seller).name) + ' · ' + why[r.why] + '</span></div>').join('') + '</div></details>' : '') + '</section>' +
         teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">لاعبينك</h3>' + rosterTable(me) + '</section>' +
         (ready ? '' : '<button class="btn xl primary" data-act="ready" data-k="' + mk.key + '">جاهز</button>') +
@@ -1223,17 +1343,19 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   }
 
   function lineupView() {
-    const me = ME_ID, x = inp(me).xi, done = x && x.g === G.gameNo && validXI(me, x.list);
-    const key = G.gameNo + ':' + roster(me).length;
-    if (U.xiKey !== key) { U.xiKey = key; U.xi = done ? x.list.slice() : suggestXI(me); }
-    const sel = U.xi, gk = gkCount(sel), ok = sel.length === 11 && gk === 1;
-    const msg = sel.length !== 11 ? 'اخترت ' + sel.length + ' من ١١' : gk !== 1 ? 'لازم حارس واحد بالضبط' : 'تشكيلتك جاهزة';
-    return '<section class="card action"><h2 style="margin:0 0 4px">اختر تشكيلة الكأس</h2><p class="muted">١١ لاعب صالحين للعب، بينهم حارس مرمى. اضغط على اللاعب عشان تضيفه أو تشيله.</p>' +
-      '<div class="row-b"><span class="chip ' + (ok ? 'ok' : 'bad') + '">' + msg + '</span><button class="btn sm" data-act="xiAuto">اقتراح تلقائي</button></div></section>' +
+    const me = ME_ID, x = inp(me).xi, r = roster(me);
+    const key = G.gameNo + ':' + r.join(',');
+    const sent = x && x.g === G.gameNo && validXI(me, x.list);
+    if (U.xiKey !== key) { U.xiKey = key; U.xi = sent ? x.list.slice() : suggestXI(me); }
+    const sel = U.xi, ok = validXI(me, sel), done = sent && JSON.stringify(x.list) === JSON.stringify(sel);
+    const boxes = SLOTS.map((ps, i) => '<div class="box' + (sel[i] ? ' set' : '') + '"><span class="bl"><i>' + (i + 1) + '</i>' + SLOT_N[i] + '</span><select class="sel" id="xi' + i + '" data-bind="xi" data-i="' + i + '" aria-label="' + SLOT_N[i] + '"><option value="">—</option>' +
+      r.filter(k => fits(PL(k).ps, i)).map(k => '<option value="' + k + '"' + (sel[i] === k ? ' selected' : '') + '>' + esc(PL(k).name) + ' · ' + mil(val(k)) + '</option>').join('') + '</select></div>').join('');
+    return '<section class="card action"><h2 style="margin:0 0 4px">ثبّت خماسي الكأس</h2><p class="muted">٥ لاعبين من فريقك: حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم.</p>' +
+      '<div class="row-b"><span class="chip ' + (ok ? 'ok' : 'bad') + '">' + (ok ? 'خماسيك جاهز' : 'كمّل الخانات الخمس') + '</span><button class="btn sm" data-act="xiAuto">اقتراح تلقائي</button></div>' +
+      '<div class="fivebox">' + boxes + '</div></section>' +
       '<section class="card">' + pitch(sel, '', true) + '</section>' +
-      '<section class="card">' + rosterTable(me, { act: 'xiToggle', sel: k => sel.includes(k) }) + '</section>' +
-      (done ? '<section class="card pass"><h3>ثبّت تشكيلتك ✓</h3></section>' : '<button class="btn xl primary" data-act="sendXI"' + (ok ? '' : ' aria-disabled="true"') + '>ثبّت التشكيلة</button>') +
-      progBox('مين ثبّت تشكيلته') + hostBtn('ابدأ كأس الأبطال', 'cupStart') + (isHost() ? '<p class="muted small" style="text-align:center">اللي ما ثبّت، تنختار له أفضل ١١ تلقائيًا.</p>' : '');
+      (done ? '<section class="card pass"><h3>ثبّت خماسيك ✓</h3><p class="muted small">تقدر تغيّر وتثبّت مرة ثانية قبل بداية الكأس.</p></section>' : '<button class="btn xl primary" data-act="sendXI"' + (ok ? '' : ' aria-disabled="true"') + '>ثبّت الخماسي</button>') +
+      progBox('مين ثبّت خماسيه') + hostBtn('ابدأ كأس الأبطال', 'cupStart') + (isHost() ? '<p class="muted small" style="text-align:center">اللي ما ثبّت، ينختار له أغلى خماسي تلقائيًا.</p>' : '');
   }
   function bracket() {
     const c = G.cup;
@@ -1247,7 +1369,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const c = G.cup, m = curMatch();
     if (!m) return bracket();
     const left = c.flip ? m.b : m.a, right = c.flip ? m.a : m.b;
-    const side = (id, lab) => { const t = TM[G.team[id]]; return '<div class="side"><h3>' + lab + '</h3>' + pitch(G.xi[id] || [], '', true) + '</div>'; };
+    const side = (id, lab) => { return '<div class="side"><h3>' + lab + '</h3>' + pitch(G.xi[id] || [], '', true) + '</div>'; };
     const head = '<section class="mkhead"><div><span class="chip gold">' + roundName(c.r, c.R) + '</span><h2>مواجهة</h2></div></section>';
     const vs = '<section class="card vs">' + side(left, 'الفريق أ') + side(right, 'الفريق ب') + '</section>';
     const iAmIn = m.a === ME_ID || m.b === ME_ID;
@@ -1275,11 +1397,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const w = tot[0];
     return '<section class="winner"><span class="muted">البطل العام</span><h2>' + esc(P(w.id).name) + '</h2><span class="chip gold num">' + w.total + ' من ١٠٠</span></section>' +
       '<div class="grid2"><section class="card award"><span class="muted small">بطل سوق الانتقالات</span><b>' + esc(P(mkc.id).name) + '</b><span class="num">' + mkc.market + ' نقطة</span></section>' +
-      '<section class="card award"><span class="muted small">بطل كأس الأبطال</span><b>' + (champ ? esc(P(champ).name) : '—') + '</b><span>' + (champ ? esc(tLabel(TM[G.team[champ]])) : '') + '</span></section></div>' +
+      '<section class="card award"><span class="muted small">بطل كأس الأبطال</span><b>' + (champ ? esc(P(champ).name) : '—') + '</b><span>' + (champ ? esc(sqLbl(champ)) : '') + '</span></section></div>' +
       '<section class="card"><h2 style="margin-bottom:10px">جدول النقاط</h2><div class="tbl" role="table"><div class="tr th" role="row"><span>#</span><span>اللاعب</span><span>بيع</span><span>شراء</span><span>محفظة</span><span>كأس</span><span>المجموع</span></div>' +
       tot.map((r, i) => '<div class="tr' + (i === 0 ? ' win' : '') + (r.id === ME_ID ? ' me' : '') + '" role="row"><span class="num">' + (i + 1) + '</span><span class="nm">' + esc(P(r.id).name) + '</span><span class="num">' + r.sold + '</span><span class="num">' + r.bought + '</span><span class="num">' + r.port + '</span><span class="num">' + r.cup + '</span><span class="num tot">' + r.total + '</span></div>').join('') + '</div>' +
       '<p class="muted small" style="margin-top:8px">البيع والشراء: لين ١٠ نقاط حسب الترتيب بعدد الصفقات. المحفظة: لين ٣٠ نقطة حسب نسبة النمو (الرصيد + قيمة اللاعبين) مقارنة بالبداية. الكأس: من ١٠ نقاط لأول دور لين ٥٠ للبطل. التعادل: المحفظة الأعلى، ثم بطل الكأس.</p></section>' +
-      '<section class="card"><h3 style="margin-bottom:8px">المحافظ النهائية</h3><div class="deals">' + tot.map(r => '<div class="deal"><b>' + esc(P(r.id).name) + '</b><span class="muted small">' + esc(tLabel(TM[G.team[r.id]])) + ' · ' + roster(r.id).length + ' لاعب · الرصيد ' + mil(bal(r.id)) + ' · ' + (G.stats[r.id] || {}).sold + ' بيع / ' + (G.stats[r.id] || {}).bought + ' شراء</span><b class="num price">' + mil(r.assets) + ' <small>(' + (r.growth >= 0 ? '+' : '') + Math.round(r.growth * 100) + '٪)</small></b></div>').join('') + '</div></section>' +
+      '<section class="card"><h3 style="margin-bottom:8px">المحافظ النهائية</h3><div class="deals">' + tot.map(r => '<div class="deal"><b>' + esc(P(r.id).name) + '</b><span class="muted small">' + esc(sqLbl(r.id)) + ' · ' + roster(r.id).length + ' لاعب · الرصيد ' + mil(bal(r.id)) + ' · ' + (G.stats[r.id] || {}).sold + ' بيع / ' + (G.stats[r.id] || {}).bought + ' شراء</span><b class="num price">' + mil(r.assets) + ' <small>(' + (r.growth >= 0 ? '+' : '') + Math.round(r.growth * 100) + '٪)</small></b></div>').join('') + '</div></section>' +
       bracket() + srcNote() +
       (isHost() ? '<div class="btn-row"><button class="btn xl primary" data-act="rematch">لعبة جديدة بنفس اللاعبين</button><button class="btn xl" data-act="toLobby">رجوع للغرفة</button></div>' : waitHost());
   }
@@ -1450,6 +1572,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     setTimeout(hostStep, 50);
   });
   ACT.set = H(d => { G.settings[d.k] = +d.v; });
+  ACT.setMode = H(d => { if (G.phase !== 'lobby' || !MODE[d.v]) return false; G.settings.mode = d.v; });
   ACT.startGame = H(() => { if (G.players.length < 3) { U.err = 'تحتاج ٣ لاعبين على الأقل.'; return false; } U.err = ''; startGame(); });
   ACT.picksNext = H(() => {
     if (G.phase !== 'picks') return false;
@@ -1473,9 +1596,12 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   /* my inputs */
   function mine() { ME = ME || blankMe(U.code); return ME; }
   ACT.lg = d => { U.lg = d.v; };
-  ACT.pickTeam = d => { const o = d.k === 's' ? 'w' : 's'; if (U.pk[o] === d.id) U.pk[o] = null; U.pk[d.k] = d.id; };
-  ACT.clearPick = d => { U.pk[d.k] = null; };
-  ACT.sendPicks = async () => { if (!U.pk.s || !U.pk.w) return false; mine().picks = { g: G.gameNo, s: U.pk.s, w: U.pk.w }; render(); await saveMe(); };
+  ACT.sendPicks = async () => {
+    const mode = G.settings.mode, s = cleanSide(U.pk.s, mode), w = cleanSide(U.pk.w, mode);
+    if (!s || !w) { toast(mode === 'custom' ? 'اكتب ٥ أسماء لكل فريق (حرفين على الأقل لكل اسم).' : 'اختر نادي وموسم لكل فريق، وكمّل الخانات الخمس.'); return false; }
+    if (s.tid && s.tid === w.tid) { toast('اختر فريقين مختلفين.'); return false; }
+    mine().picks = { g: G.gameNo, s, w }; render(); await saveMe();
+  };
   ACT.tierPick = d => { U.tierPick = d.v; };
   ACT.sendTier = async () => { if (!U.tierPick) return false; mine().tier = { g: G.gameNo, v: U.tierPick }; render(); await saveMe(); };
   ACT.ready = async d => { mine().ready = { k: d.k }; render(); await saveMe(); };
@@ -1510,11 +1636,6 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     render();
     clearTimeout(bidT); bidT = setTimeout(saveMe, 250);
   }
-  ACT.xiToggle = d => {
-    const i = U.xi.indexOf(d.k);
-    if (i >= 0) U.xi.splice(i, 1);
-    else { if (U.xi.length >= 11) { toast('عندك ١١ لاعب. شيل واحد أول.'); return false; } U.xi.push(d.k); }
-  };
   ACT.xiAuto = () => { U.xi = suggestXI(ME_ID); };
   ACT.sendXI = async () => { if (!validXI(ME_ID, U.xi)) return false; mine().xi = { g: G.gameNo, list: U.xi.slice() }; render(); await saveMe(); };
   ACT.pick = d => { U.pick = d.v; };
@@ -1541,12 +1662,17 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     if (b === 'name') { U.name = el.value; lsSet({ name: el.value.trim() }); }
     else if (b === 'code') U.draft.code = el.value.toUpperCase();
     else if (b === 'ask') U.lst[el.dataset.k] = Math.min(MAXP, Math.max(1, Math.round(+el.value.replace(/[^\d]/g, '') || 1)));
+    else if (b === 'pkName' && U.pk[el.dataset.k]) U.pk[el.dataset.k].name = el.value;
+    else if (b === 'pkN' && U.pk[el.dataset.k]) { U.pk[el.dataset.k].names[+el.dataset.i] = el.value; const bx = el.closest('.box'); if (bx) bx.classList.toggle('set', el.value.trim().length >= 2); }
     else if (b === 'bid') { const L = G.mk && G.mk.lst[el.dataset.l]; if (L) { U.bids[el.dataset.l] = Math.round(+el.value.replace(/[^\d]/g, '') || 0); } }
   });
   app.addEventListener('change', e => {
     const el = e.target;
     if (el.dataset && el.dataset.bind === 'bid') { const L = G.mk && G.mk.lst[el.dataset.l]; if (L) { U.bids[el.dataset.l] = Math.max(L.ask, +U.bids[el.dataset.l] || L.ask); pushBids(false); } }
     if (el.dataset && el.dataset.bind === 'ask') render();
+    if (el.dataset && el.dataset.bind === 'pkTeam' && U.pk[el.dataset.k]) { const S = U.pk[el.dataset.k], t = TM[el.value]; S.tid = t ? t.id : ''; S.ix = t ? histFive(t) : [null, null, null, null, null]; render(); }
+    if (el.dataset && el.dataset.bind === 'pkPl' && U.pk[el.dataset.k]) { const S = U.pk[el.dataset.k], i = +el.dataset.i, v = el.value === '' ? null : +el.value; S.ix = S.ix.map((x, j) => (j !== i && x === v ? null : x)); S.ix[i] = v; render(); }
+    if (el.dataset && el.dataset.bind === 'xi') { const i = +el.dataset.i, v = el.value || null; U.xi = U.xi.map((x, j) => (j !== i && x === v ? null : x)); U.xi[i] = v; render(); }
   });
   window.addEventListener('hashchange', () => {
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
