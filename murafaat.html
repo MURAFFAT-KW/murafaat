@@ -339,7 +339,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 const MZ = (function () {
   const PERKS = [
     { id: 'team', name: 'تكوين فريق', desc: 'اختر لاعبًا مساعدًا يرافع معك. يخرج المساعد من هيئة المحلفين في هذه القضية.' },
-    { id: 'swap', name: 'تبديل السؤال', desc: 'اطلب قضية أخرى قبل بدء المرافعة، بسؤال بديل وطرفين جديدين.' },
+    { id: 'swap', name: 'تبديل السؤال', desc: 'اطلب سؤالًا بديلًا قبل بدء المرافعة، ونفس الطرفين يكملون.' },
     { id: 'extend', name: 'تمديد الوقت', desc: 'أضف 30 ثانية إلى وقت مرافعتك، مرة واحدة في القضية.' },
     { id: 'reply', name: 'حق الرد الإضافي', desc: 'أضف 30 ثانية إلى وقت ردك.' },
     { id: 'double', name: 'مضاعفة النقاط', desc: 'إذا فزت بالقضية تحصل على ضعف النقاط.' },
@@ -808,7 +808,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     let list;
     if (G.settings.source === 'custom') list = shuffle(G.questions || []);
     else list = shuffle(PACKS[G.settings.pack].qs.map((x, i) => ({ id: 'k' + G.settings.pack + i, text: x.t, opts: x.o })));
-    const n = Math.min(list.length, G.settings.cases + swaps);
+    const n = Math.min(list.length, G.settings.cases + swaps * 2);
     const pool = list.slice(0, n);
     G.qmap = {};
     pool.forEach(x => (G.qmap[x.id] = { id: x.id, text: x.text, opts: x.opts || null }));
@@ -874,7 +874,12 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const c = G.cur, taken = [c.A, c.B, c.helper.A, c.helper.B];
     return G.players.filter(p => !taken.includes(p.id));
   }
-  function spareFor() { for (const qid of G.spares) if (pairFor(qid)) return qid; return null; }
+  /* swap keeps the same two players: the new question must have different answers from both of them */
+  function spareFor() {
+    const c = G.cur; if (!c) return null;
+    for (const qid of G.spares) { const a = ANS[qid] || {}, x = norm(a[c.A]), y = norm(a[c.B]); if (x && y && x !== y) return qid; }
+    return null;
+  }
   const no = r => ({ ok: false, reason: r });
   function speakerSide() { const s = G.cur.stage; return s === 'plea1' || s === 'reply1' ? 'A' : (s === 'plea2' || s === 'reply2' ? 'B' : null); }
   function perkState(side, id) {
@@ -892,7 +897,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
         break;
       case 'swap':
         if (i > 1) return no('تُستخدم قبل بدء المرافعات.');
-        if (!spareFor()) return no('لا توجد قضية بديلة صالحة.');
+        if (!spareFor()) return no('ما فيه سؤال بديل يناسب نفس الطرفين (لازم إجاباتهم عليه تكون مختلفة).');
         break;
       case 'witness':
         if (i > 1) return no('تُستخدم قبل بدء المرافعات.');
@@ -1005,8 +1010,11 @@ if (typeof module !== 'undefined') module.exports = MZ;
     c.used[c[side] + ':swap'] = true;
     const prev = c.used, by = P(c[side]).name;
     G.order[G.caseNo] = qid;
-    G.cur = newCase(qid, pairFor(qid), prev);
-    G.cur.notes.push('بُدّلت القضية بطلب من ' + by + '.');
+    const pair = { A: c.A, B: c.B };
+    G.appear[pair.A] = Math.max(0, (G.appear[pair.A] || 1) - 1);
+    G.appear[pair.B] = Math.max(0, (G.appear[pair.B] || 1) - 1);
+    G.cur = newCase(qid, pair, prev);
+    G.cur.notes.push('تبدّل السؤال بطلب من ' + by + '، ونفس الطرفين يكملون.');
   }
 
   /* Every in-case request from a player's phone lands here (the host's own too). */
@@ -1756,4 +1764,5 @@ if (typeof module !== 'undefined') module.exports = MZ;
 
 </script>
 
+<style>#langsw{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;z-index:60;background:#fff;border:1.5px solid #D5DBE5;border-radius:99px;padding:5px 14px;font:700 .9rem/1.4 "Readex Pro","Alexandria",system-ui,sans-serif;color:#12203A;text-decoration:none;box-shadow:0 3px 10px rgba(18,32,58,.1)}#langsw[hidden]{display:none}</style><a id="langsw" href="murafaat-en.html" lang="en">English</a><script>(function(){var a=document.getElementById('langsw');a.addEventListener('click',function(e){try{localStorage.setItem('aqnieni.lang','en')}catch(x){}a.href='murafaat-en.html'+location.hash;});setInterval(function(){a.hidden=!!document.querySelector('.top .chip.live')||!!document.querySelector('.top [data-act=menu]');},400);})();</script>
 </body></html>
