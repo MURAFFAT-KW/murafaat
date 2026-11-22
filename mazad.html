@@ -336,6 +336,18 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 @keyframes aq-word{0%,76%{opacity:0;transform:translateY(40px)}90%,100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.aq-red,.aq-blue,.aq-arrow,.aq-sp,.aq-word{animation:none}}
 .aqback{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #E1E5EC;background:#fff;color:#111;font:700 .95rem/1 var(--font-d,inherit);cursor:pointer;text-decoration:none;flex:none;white-space:nowrap}
+html.aqguest .aqback{display:none!important}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin-top:4px}
+.pod{flex:1;max-width:120px;display:grid;justify-items:center;gap:4px;text-align:center;min-width:0}
+.pod .md{font-size:2rem;line-height:1}
+.pod b{font-size:.95rem;overflow-wrap:anywhere}
+.pod .pp{font-size:.85rem;color:#6B7489}
+.pod .blk{width:100%;border-radius:12px 12px 0 0;display:grid;place-items:center;font:800 1.5rem/1 system-ui,sans-serif;color:#fff}
+.pod.p1 .blk{height:110px;background:linear-gradient(#F5C518,#D9A400)}
+.pod.p2 .blk{height:80px;background:linear-gradient(#CDD2DA,#9AA3AF)}
+.pod.p3 .blk{height:58px;background:linear-gradient(#DDA06B,#B0703C)}
+.rest{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px}
+.rest li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;border:1px solid #E3E8F0;border-radius:12px;background:#fff}
 .aqback:focus-visible{outline:3px solid #FBC611;outline-offset:2px}
 .aqfix{position:absolute;top:max(12px,env(safe-area-inset-top));inset-inline-start:12px;z-index:5}
 .top{padding-inline-end:78px}
@@ -455,6 +467,18 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const norm = s => String(s || '').trim().replace(/\s+/g, ' ').replace(/[أإآ]/g, 'ا').replace(/ة/g, 'ه').replace(/ى/g, 'ي').toLowerCase();
   const shuffle = a => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
   const other = s => (s === 'a' ? 'b' : 'a');
+  /* trial lock: a phone that opened an invite link only plays through invite links */
+  const isGuest = () => { try { return localStorage.getItem('aqnieni.guest') === '1'; } catch (e) { return false; } };
+  const markGuest = () => { try { localStorage.setItem('aqnieni.guest', '1'); } catch (e) { } document.documentElement.classList.add('aqguest'); };
+  if (isGuest()) document.documentElement.classList.add('aqguest');
+  const lockCard = () => '<section class="card" style="display:grid;gap:10px;text-align:center"><h2 style="margin:0">فترة تجريبية</h2><p class="muted" style="margin:0">ادخل عن طريق رابط الدعوة من المضيف.</p></section>';
+  function podiumCard(list) {
+    let pos = 0, prev = null;
+    const L = list.map((x, i) => { if (x.pts !== prev) { pos = i + 1; prev = x.pts; } return Object.assign({ pos }, x); });
+    const cell = (x, k) => x ? '<div class="pod p' + k + '"><span class="md">' + ['', '🥇', '🥈', '🥉'][k] + '</span><b>' + x.name + '</b><span class="pp num">' + x.pts + ' نقطة</span><div class="blk">' + x.pos + '</div></div>' : '<div class="pod p' + k + '"></div>';
+    return '<section class="card"><h2 style="margin:0 0 12px;text-align:center">منصة التتويج</h2><div class="podium">' + cell(L[1], 2) + cell(L[0], 1) + cell(L[2], 3) + '</div>' +
+      (L.length > 3 ? '<ol class="rest">' + L.slice(3).map(x => '<li><span><b class="num">' + x.pos + '.</b> ' + x.name + '</span><span class="num">' + x.pts + ' نقطة</span></li>').join('') + '</ol>' : '') + '</section>';
+  }
   function lsGet() { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; } }
   function lsSet(o) { try { localStorage.setItem(LS, JSON.stringify(Object.assign(lsGet(), o))); } catch (e) { } }
   function toast(msg) {
@@ -948,7 +972,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<button class="btn xl ' + (U.fromLink ? '' : 'primary') + '" data-act="create"' + (U.busy ? ' aria-disabled="true"' : '') + '>إنشاء غرفة</button></section>';
     return '<section class="card hero" style="padding-block:24px 20px">' + FULL + '<h1 class="sr">أقنعني!</h1><div class="sub">المزاد</div>' +
       '<p class="lead">كل لاعب على تلفونه. بِع أغراض المكان لربعك بأحلى كلام، واشتري بذكاء.</p></section>' +
-      me + errBox() + (U.fromLink ? join + host : host + join) +
+      me + errBox() + (U.fromLink ? join : (isGuest() ? lockCard() : host + join)) +
       '<section class="card"><h2>كيف تُلعب؟</h2><ol class="howto">' +
       '<li><span>كل لاعب يبدأ بمحفظة فيها ' + kd(20) + '. الأغراض اللي تنباع: يكتبها اللاعبين من الأشياء الموجودة بالمكان، أو تختارها اللعبة عشوائيًا من قائمة جاهزة.</span></li>' +
       '<li><span>كل لاعب يختار ٣ مزايا سرًّا يستخدمها لما يكون بائع: تنزيلات، رفع أو تنزيل سعر خصمه، مسؤول مبيعات، اعتراض على البيعة، تغيير الخصم أو المنتج.</span></li>' +
@@ -1197,7 +1221,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const topSeller = G.players.slice().sort((x, y) => E(y.id).p - E(x.id).p)[0];
     const topBuyer = G.players.slice().sort((x, y) => (E(y.id).items.length - E(x.id).items.length) || (E(y.id).w - E(x.id).w))[0];
     const tie = r.length > 1 && score(r[1].id) === score(w.id);
-    return '<section class="winner">' + avatar(w, 84) + '<span class="muted">' + (tie ? 'تعادل بالمجموع، وفاز بأكثر أغراض' : 'الفائز') + '</span><h2>' + esc(w.name) + '</h2><span class="chip gold num">' + score(w.id) + ' نقطة</span></section>' +
+    return podiumCard(r.map(p => ({ name: esc(p.name), pts: score(p.id) }))) +
       '<div class="grid2"><section class="card award"><span class="muted small">أشطر بائع</span><b>' + esc(topSeller.name) + '</b><span class="num">أرباح ' + kd(E(topSeller.id).p) + '</span></section>' +
       '<section class="card award"><span class="muted small">أشطر مشتري</span><b>' + esc(topBuyer.name) + '</b><span class="num">' + E(topBuyer.id).items.length + ' أغراض</span></section></div>' +
       standings(true) +
@@ -1215,7 +1239,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       body = '<h2>القائمة</h2><p class="muted">الغرفة <b dir="ltr">' + esc(U.code) + '</b>' + (G ? ' · المضيف: ' + esc(P(G.host).name) : '') + '</p>' +
         (!host && G && inRoom(ME_ID) ? '<button class="btn" data-act="askTake">المضيف ما يرد؟ استلم الاستضافة</button>' : '') +
         (host && others.length ? '<button class="btn" data-act="askHand">نقل الاستضافة للاعب آخر</button>' : '') +
-        '<button class="btn danger" data-act="askLeave">الخروج من الغرفة</button><button class="btn ghost" data-act="closeModal">إغلاق</button>';
+        (isGuest() && G && G.phase === 'final' ? '' : '<button class="btn danger" data-act="askLeave">الخروج من الغرفة</button>') + '<button class="btn ghost" data-act="closeModal">إغلاق</button>';
     } else if (m.type === 'perk') {
       const k = PERKS.find(x => x.id === m.id), c = G.cur, st = G.cur ? perkState(ME_ID, m.id) : { ok: false };
       if (!st.ok) { U.modal = null; return ''; }
@@ -1329,6 +1353,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   };
 
   ACT.create = async () => {
+    if (U.fromLink || isGuest()) return false;
     const name = U.name.trim();
     if (!name) { U.err = 'اكتب اسمك أو لقبك أول.'; return; }
     if (U.busy) return false;
@@ -1517,6 +1542,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       return 0;
     }
     function goBack() {
+      if (isGuest() && level() !== 2) return false;
       switch (level()) {
         case 1: location.href = T.hub; return false;
         case 2: U.modal = null; U.err = ''; return;
@@ -1565,7 +1591,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   });
   window.addEventListener('hashchange', () => {
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
-    if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; if (!U.code) render(); }
+    if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); if (!U.code) render(); }
   });
 
   /* ---------- start ---------- */
@@ -1573,7 +1599,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const saved = lsGet();
     U.name = saved.name || ''; U.gender = saved.gender === 'f' ? 'f' : 'm';
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
-    if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; }
+    if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); }
     if (h) { try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
     render();
     const cl = typeof window.claude !== 'undefined' && window.claude && window.claude.use ? window.claude : null;

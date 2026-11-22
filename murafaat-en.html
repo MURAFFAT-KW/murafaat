@@ -17,6 +17,18 @@
 @keyframes aq-word{0%,76%{opacity:0;transform:translateY(40px)}90%,100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.aq-red,.aq-blue,.aq-arrow,.aq-sp,.aq-word{animation:none}}
 .aqback{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #E1E5EC;background:#fff;color:#111;font:700 .95rem/1 var(--font-d,inherit);cursor:pointer;text-decoration:none;flex:none;white-space:nowrap}
+html.aqguest .aqback{display:none!important}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin-top:4px}
+.pod{flex:1;max-width:120px;display:grid;justify-items:center;gap:4px;text-align:center;min-width:0}
+.pod .md{font-size:2rem;line-height:1}
+.pod b{font-size:.95rem;overflow-wrap:anywhere}
+.pod .pp{font-size:.85rem;color:#6B7489}
+.pod .blk{width:100%;border-radius:12px 12px 0 0;display:grid;place-items:center;font:800 1.5rem/1 system-ui,sans-serif;color:#fff}
+.pod.p1 .blk{height:110px;background:linear-gradient(#F5C518,#D9A400)}
+.pod.p2 .blk{height:80px;background:linear-gradient(#CDD2DA,#9AA3AF)}
+.pod.p3 .blk{height:58px;background:linear-gradient(#DDA06B,#B0703C)}
+.rest{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px}
+.rest li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;border:1px solid #E3E8F0;border-radius:12px;background:#fff}
 .aqback:focus-visible{outline:3px solid #FBC611;outline-offset:2px}
 .aqfix{position:absolute;top:max(12px,env(safe-area-inset-top));inset-inline-start:12px;z-index:5}
 .top{padding-inline-end:78px}
@@ -602,6 +614,18 @@ if (typeof module !== 'undefined') module.exports = MZ;
   const nowH = () => (isHost() ? Date.now() : Date.now() - (skew || 0));
   const inp = id => (id === ME_ID ? ME : INP[id]) || {};
   const ansOf = (qid, pid) => String(((ANS[qid] || {})[pid]) || '').trim();
+  /* trial lock: a phone that opened an invite link only plays through invite links */
+  const isGuest = () => { try { return localStorage.getItem('aqnieni.guest') === '1'; } catch (e) { return false; } };
+  const markGuest = () => { try { localStorage.setItem('aqnieni.guest', '1'); } catch (e) { } document.documentElement.classList.add('aqguest'); };
+  if (isGuest()) document.documentElement.classList.add('aqguest');
+  const lockCard = () => '<section class="card" style="display:grid;gap:10px;text-align:center"><h2 style="margin:0">Trial period</h2><p class="muted" style="margin:0">Join using the invite link from the host.</p></section>';
+  function podiumCard(list) {
+    let pos = 0, prev = null;
+    const L = list.map((x, i) => { if (x.pts !== prev) { pos = i + 1; prev = x.pts; } return Object.assign({ pos }, x); });
+    const cell = (x, k) => x ? '<div class="pod p' + k + '"><span class="md">' + ['', '🥇', '🥈', '🥉'][k] + '</span><b>' + x.name + '</b><span class="pp num">' + x.pts + ' pts</span><div class="blk">' + x.pos + '</div></div>' : '<div class="pod p' + k + '"></div>';
+    return '<section class="card"><h2 style="margin:0 0 12px;text-align:center">Podium</h2><div class="podium">' + cell(L[1], 2) + cell(L[0], 1) + cell(L[2], 3) + '</div>' +
+      (L.length > 3 ? '<ol class="rest">' + L.slice(3).map(x => '<li><span><b class="num">' + x.pos + '.</b> ' + x.name + '</span><span class="num">' + x.pts + ' pts</span></li>').join('') + '</ol>' : '') + '</section>';
+  }
   function lsGet() { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; } }
   function lsSet(o) { try { localStorage.setItem(LS, JSON.stringify(Object.assign(lsGet(), o))); } catch (e) { } }
   function toast(msg) {
@@ -1177,7 +1201,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       '<button class="btn xl ' + (U.fromLink ? '' : 'primary') + '" data-act="create"' + (U.busy ? ' aria-disabled="true"' : '') + '>Create room</button></section>';
     return '<section class="card hero" style="padding-block:24px 20px">' + FULL + '<h1 class="sr">Aqnieni!</h1><div class="sub">Murafaat</div>' +
       '<p class="lead">Everyone on their own phone. Defend an opinion you don’t agree with, and the jury votes for the strongest case.</p></section>' +
-      me + errBox() + (U.fromLink ? join + host : host + join) +
+      me + errBox() + (U.fromLink ? join : (isGuest() ? lockCard() : host + join)) +
       '<section class="card"><h2>How to play</h2><ol class="howto">' +
       '<li><span>The host creates a room and sends the code or link; everyone joins from their phone.</span></li>' +
       '<li><span>Each player writes their answers secretly on their phone; answers are never shown with names.</span></li>' +
@@ -1486,7 +1510,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
         r.rounds.map(x => '<span class="chip gold">' + (x.kind === 'appeal' ? 'Appeal' : 'Tie-break') + ': ' + x.A + ' - ' + x.B + '</span>').join('') + '</div>' +
         '<div class="v"><span class="chip ' + (r.pts ? 'ok' : '') + '">' + oc + '</span><span class="chip">' + (r.by === 'appeal' ? 'Decided on appeal' : 'Decided by the first vote') + '</span>' + (r.pts ? '<span class="chip gold">' + r.pts + ' Points of' + (r.doubled ? ' (doubled)' : '') + '</span>' : '') + '</div></div>';
     }).join('');
-    return head + '<section class="card" style="display:grid;gap:12px"><h2>Final standings</h2><ol class="rank">' + rows.map(({ p, pos }) => '<li class="' + (top > 0 && p.score === top ? 'win' : '') + '"><span class="pos">' + pos + '</span>' + avatar(p, 44) + '<span><b>' + esc(p.name) + '</b> <span class="muted small">' + gLabel(p) + '</span></span><span class="pts">' + p.score + '</span></li>').join('') + '</ol></section>' +
+    return podiumCard(ps.map(p => ({ name: esc(p.name), pts: p.score }))) +
       '<section class="card" style="display:grid;gap:12px"><h2>Question results</h2><div class="cases">' + (cases || '<p class="muted">No questions.</p>') + '</div></section>' +
       (isHost() ? '<div class="btn-row"><button class="btn primary" data-act="rematch">Play again with the same players</button><button class="btn" data-act="toLobby">Back to lobby</button></div>' : '<p class="muted" style="text-align:center">The host can start a new round.</p>');
   }
@@ -1500,7 +1524,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       body = '<h2>Menu</h2><p class="muted">Room <b dir="ltr">' + esc(U.code) + '</b>' + (G ? ' · Host: ' + esc(P(G.host).name) : '') + '</p>' +
         (!host && G && inRoom(ME_ID) ? '<button class="btn" data-act="askTake">Host not responding? Take over hosting</button>' : '') +
         (host && others.length ? '<button class="btn" data-act="askHand">Hand hosting to another player</button>' : '') +
-        '<button class="btn danger" data-act="askLeave">Leave the room</button><button class="btn ghost" data-act="closeModal">Close</button>';
+        (isGuest() && G && G.phase === 'final' ? '' : '<button class="btn danger" data-act="askLeave">Leave the room</button>') + '<button class="btn ghost" data-act="closeModal">Close</button>';
     } else if (m.type === 'take') {
       body = '<h2>Take over hosting?</h2><p class="muted">Only use this if the host left or their phone disconnected. You’ll be the one moving the game between stages.</p><div class="btn-row"><button class="btn primary" data-act="takeHost">Take over</button><button class="btn" data-act="closeModal">Cancel</button></div>';
     } else if (m.type === 'hand') {
@@ -1603,6 +1627,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   };
 
   ACT.create = async () => {
+    if (U.fromLink || isGuest()) return false;
     const name = U.name.trim();
     if (!name) { U.err = 'Type your name or nickname first.'; return; }
     if (U.busy) return false;
@@ -1881,6 +1906,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       return 0;
     }
     function goBack() {
+      if (isGuest() && level() !== 2) return false;
       switch (level()) {
         case 1: location.href = T.hub; return false;
         case 2: U.modal = null; U.err = ''; return;
@@ -1932,7 +1958,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   });
   window.addEventListener('hashchange', () => {
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
-    if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; if (!U.code) render(); }
+    if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); if (!U.code) render(); }
   });
 
   /* ---------- start ---------- */
@@ -1940,7 +1966,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const saved = lsGet();
     U.name = saved.name || ''; U.gender = saved.gender === 'f' ? 'f' : 'm';
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
-    if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; }
+    if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); }
     if (h) { try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
     render();
     const cl = typeof window.claude !== 'undefined' && window.claude && window.claude.use ? window.claude : null;

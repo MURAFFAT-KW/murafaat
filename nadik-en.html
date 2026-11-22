@@ -480,6 +480,18 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 @keyframes aq-word{0%,76%{opacity:0;transform:translateY(40px)}90%,100%{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.aq-red,.aq-blue,.aq-arrow,.aq-sp,.aq-word{animation:none}}
 .aqback{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #E1E5EC;background:#fff;color:#111;font:700 .95rem/1 var(--font-d,inherit);cursor:pointer;text-decoration:none;flex:none;white-space:nowrap}
+html.aqguest .aqback{display:none!important}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;margin-top:4px}
+.pod{flex:1;max-width:120px;display:grid;justify-items:center;gap:4px;text-align:center;min-width:0}
+.pod .md{font-size:2rem;line-height:1}
+.pod b{font-size:.95rem;overflow-wrap:anywhere}
+.pod .pp{font-size:.85rem;color:#6B7489}
+.pod .blk{width:100%;border-radius:12px 12px 0 0;display:grid;place-items:center;font:800 1.5rem/1 system-ui,sans-serif;color:#fff}
+.pod.p1 .blk{height:110px;background:linear-gradient(#F5C518,#D9A400)}
+.pod.p2 .blk{height:80px;background:linear-gradient(#CDD2DA,#9AA3AF)}
+.pod.p3 .blk{height:58px;background:linear-gradient(#DDA06B,#B0703C)}
+.rest{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:6px}
+.rest li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;border:1px solid #E3E8F0;border-radius:12px;background:#fff}
 .aqback:focus-visible{outline:3px solid #FBC611;outline-offset:2px}
 .aqfix{position:absolute;top:max(12px,env(safe-area-inset-top));inset-inline-start:12px;z-index:5}
 .top{padding-inline-end:78px}
@@ -608,6 +620,18 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const inp = id => (id === ME_ID ? ME : (isBot(id) ? BOT[id] : INP[id])) || {};
   const norm = s => String(s || '').trim().toLowerCase();
   const shuffle = a => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+  /* trial lock: a phone that opened an invite link only plays through invite links */
+  const isGuest = () => { try { return localStorage.getItem('aqnieni.guest') === '1'; } catch (e) { return false; } };
+  const markGuest = () => { try { localStorage.setItem('aqnieni.guest', '1'); } catch (e) { } document.documentElement.classList.add('aqguest'); };
+  if (isGuest()) document.documentElement.classList.add('aqguest');
+  const lockCard = () => '<section class="card" style="display:grid;gap:10px;text-align:center"><h2 style="margin:0">Trial period</h2><p class="muted" style="margin:0">Join using the invite link from the host.</p></section>';
+  function podiumCard(list) {
+    let pos = 0, prev = null;
+    const L = list.map((x, i) => { if (x.pts !== prev) { pos = i + 1; prev = x.pts; } return Object.assign({ pos }, x); });
+    const cell = (x, k) => x ? '<div class="pod p' + k + '"><span class="md">' + ['', '🥇', '🥈', '🥉'][k] + '</span><b>' + x.name + '</b><span class="pp num">' + x.pts + ' pts</span><div class="blk">' + x.pos + '</div></div>' : '<div class="pod p' + k + '"></div>';
+    return '<section class="card"><h2 style="margin:0 0 12px;text-align:center">Podium</h2><div class="podium">' + cell(L[1], 2) + cell(L[0], 1) + cell(L[2], 3) + '</div>' +
+      (L.length > 3 ? '<ol class="rest">' + L.slice(3).map(x => '<li><span><b class="num">' + x.pos + '.</b> ' + x.name + '</span><span class="num">' + x.pts + ' pts</span></li>').join('') + '</ol>' : '') + '</section>';
+  }
   function lsGet() { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; } }
   function lsSet(o) { try { localStorage.setItem(LS, JSON.stringify(Object.assign(lsGet(), o))); } catch (e) { } }
   function toast(msg) {
@@ -1213,7 +1237,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function squadsBody(m) {
     const list = Object.keys(G.num).filter(id => inRoom(id)).sort((a, b) => G.num[a] - G.num[b]);
     const grid = '<div class="sqgrid">' + list.map(id => '<button class="sqb' + (m.n === G.num[id] ? ' on' : '') + (id === ME_ID ? ' mine' : '') + '" data-act="sqOpen" data-n="' + G.num[id] + '">' + tdot(id) + '<b class="num">' + G.num[id] + '</b>' + (id === ME_ID ? '<small>Your team</small>' : '') + '</button>').join('') + '</div>';
-    let detail = '<p class="muted small" style="text-align:center">Tap a number to see that squad. Numbers stay the same all game, and owners are never shown.</p>';
+    let detail = '<p class="muted small" style="text-align:center">Tap a number to see that squad. Numbers and colours stay the same all game, and each team’s colour appears next to its owner’s name.</p>';
     const pid = list.find(id => G.num[id] === m.n);
     if (pid) {
       const r = roster(pid);
@@ -1255,12 +1279,12 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<button class="btn xl ' + (U.fromLink ? '' : 'primary') + '" data-act="create"' + (U.busy ? ' aria-disabled="true"' : '') + '>Create room</button></section>';
     return '<section class="card hero">' + FULL + '<h1 class="sr">Aqnieni!</h1><div class="sub">Nadik</div>' +
       '<p class="lead">Manage a five-a-side team, negotiate in a transfer market that runs for 5 seasons, then convince the crowd to vote for your team in the Champions Cup.</p></section>' +
-      me + errBox() + (U.fromLink ? join + host : host + join) +
+      me + errBox() + (U.fromLink ? join : (isGuest() ? lockCard() : host + join)) +
       '<section class="card"><h2>How to play</h2><ol class="howto">' +
       '<li><span>Each player sets two squads, each with 5 starters and 2 subs: the “Weaker team” and the “Stronger team”. Historical ones from the top 5 leagues, or type the names yourself.</span></li>' +
       '<li><span>The five: goalkeeper, defender, defender or midfielder, midfielder or forward, forward.</span></li>' +
       '<li><span>Choose secretly: the stronger team (each player 10M + 15M in the wallet) or the weaker one (each player 5M + 50M). Both start at 85M. You get a random team from the other players’ picks.</span></li>' +
-      '<li><span>The “Squads” button shows everyone’s teams by fixed numbers, without names, so you can keep an eye on a player you want.</span></li>' +
+      '<li><span>The “Squads” button shows everyone’s teams by number and colour, and each team’s colour appears next to its owner’s name, so you know who to negotiate with.</span></li>' +
       '<li><span>10 transfer windows: in each one you list at least one player at your price, and bid on other players.</span></li>' +
       '<li><span>Sale money goes into your balance in the same window. You can sell without buying as long as you keep a full five, and a squad holds at most 9 players (so up to 4 subs).</span></li>' +
       '<li><span>100 points: 20 for your wallet, 20 for your players’ value, 20 for number of sales, 20 for number of buys, and 20 for the cup.</span></li>' +
@@ -1513,7 +1537,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const mkc = sc.slice().sort((a, b) => (b.market - a.market) || (b.assets - a.assets))[0];
     const champ = G.cup && G.cup.champ;
     const w = tot[0];
-    return '<section class="winner"><span class="muted">Overall champion</span><h2>' + esc(P(w.id).name) + '</h2><span class="chip gold num">' + w.total + ' out of 100</span></section>' +
+    return podiumCard(tot.map(x => ({ name: tdot(x.id) + esc(P(x.id).name), pts: x.total }))) +
       '<div class="grid2"><section class="card award"><span class="muted small">Transfer market champion</span><b>' + esc(P(mkc.id).name) + '</b><span class="num">' + mkc.market + ' pts</span></section>' +
       '<section class="card award"><span class="muted small">Champions Cup winner</span><b>' + (champ ? esc(P(champ).name) : '—') + '</b><span>' + (champ ? esc(sqLbl(champ)) : '') + '</span></section></div>' +
       '<section class="card"><h2 style="margin-bottom:10px">Points table</h2><div class="tbl" role="table"><div class="tr th" role="row"><span class="nm">Player</span><span>Sales</span><span>Buys</span><span>Wallet</span><span>Assets</span><span>Cup</span><span>Total</span></div>' +
@@ -1534,7 +1558,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       body = '<h2>Menu</h2><p class="muted">Room <b dir="ltr">' + esc(U.code) + '</b>' + (G ? ' · Host: ' + esc(P(G.host).name) : '') + '</p>' +
         (!host && G && inRoom(ME_ID) ? '<button class="btn" data-act="askTake">Host not responding? Take over hosting</button>' : '') +
         (host && others.length ? '<button class="btn" data-act="askHand">Hand hosting to another player</button>' : '') +
-        '<button class="btn danger" data-act="askLeave">Leave the room</button><button class="btn ghost" data-act="closeModal">Close</button>';
+        (isGuest() && G && G.phase === 'final' ? '' : '<button class="btn danger" data-act="askLeave">Leave the room</button>') + '<button class="btn ghost" data-act="closeModal">Close</button>';
     } else if (m.type === 'take') {
       body = '<h2>Take over hosting?</h2><p class="muted">Only use this if the host left or their phone disconnected.</p><div class="btn-row"><button class="btn primary" data-act="takeHost">Take over</button><button class="btn" data-act="closeModal">Cancel</button></div>';
     } else if (m.type === 'hand') {
@@ -1653,6 +1677,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     G.host = ME_ID; await flushDirect(); becomeHost(); toast('You’re the host now.'); render();
   };
   ACT.create = async () => {
+    if (U.fromLink || isGuest()) return false;
     const name = U.name.trim();
     if (!name) { U.err = 'Type your name or nickname first.'; return; }
     if (U.busy) return false;
@@ -1867,6 +1892,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       return 0;
     }
     function goBack() {
+      if (isGuest() && level() !== 2) return false;
       switch (level()) {
         case 1: location.href = T.hub; return false;
         case 2: U.modal = null; U.err = ''; return;
@@ -1928,7 +1954,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   });
   window.addEventListener('hashchange', () => {
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
-    if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; if (!U.code) render(); }
+    if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); if (!U.code) render(); }
   });
 
   /* ---------- start ---------- */
@@ -1936,7 +1962,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const saved = lsGet();
     U.name = saved.name || '';
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
-    if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; }
+    if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); }
     if (h) { try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
     if (saved.code && !h) U.splash = false;
     render();
