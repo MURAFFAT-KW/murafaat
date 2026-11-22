@@ -443,6 +443,27 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 .sel{width:100%;min-width:0;min-height:42px;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:4px 8px;background:var(--bg);color:var(--text);font-family:inherit}
 .fivebox{display:grid;gap:8px;margin:10px 0}
 .pp.empty i{background:rgba(255,255,255,.25);color:#fff;border-style:dashed}
+.sqgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.sqb{aspect-ratio:1;border-radius:16px;border:2px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text)}
+.sqb b{font-size:1.7rem;font-weight:800;line-height:1}
+.sqb small{font-size:.68rem;color:var(--muted)}
+.sqb.mine{border-color:var(--p)}
+.sqb.on{background:var(--p);border-color:var(--p);color:var(--p-ink)}
+.sqb.on small{color:var(--p-ink)}
+.dlg>*{flex-shrink:0}
+.top:has(.top-r [data-act=squads]) .brand b{display:none}
+.intro .fulllogo{width:min(36vw,140px)!important}
+.intro .ar{margin-top:2px}
+.introtx{max-width:34ch;color:var(--muted);font-size:1rem;line-height:1.9;margin:6px auto 0}
+.intro .go{margin-top:22px}
+.notice{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:24px 4px;background:#fff}
+.notice .nbox{background:#fff;border:3px solid #DE0921;border-radius:22px;padding:24px 20px;max-width:520px;display:grid;gap:12px;color:#111}
+.notice h2{color:#111;font-size:1.35rem;text-align:center}
+.notice p{color:#111;line-height:1.85;font-size:1rem}
+.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}
+.stepper2{display:flex;align-items:center;justify-content:center;gap:16px}
+.stepper2 b{font-family:var(--font-d);font-size:1.8rem;min-width:2.5ch;text-align:center}
+.stepper2 .btn{width:58px;min-height:52px;font-size:1.6rem;font-weight:800;padding:0}
 </style>
 </head>
 <body>
@@ -517,7 +538,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const LG = { ENG: 'Premier League', ESP: 'La Liga', GER: 'Bundesliga', ITA: 'Serie A', FRA: 'Ligue 1' };
   const POS = { GK: 'GK', DF: 'DEF', MF: 'MID', FW: 'FWD' };
   const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
-  const TIER = { s: { name: 'Stronger team', bal: 10 }, w: { name: 'Weaker team', bal: 60 } };
+  const TIER = { s: { name: 'Stronger team', bal: 10, pv: 15 }, w: { name: 'Weaker team', bal: 60, pv: 5 } };
   /* five-a-side: slot 1 GK, 2 DF, 3 DF or MF, 4 MF or FW, 5 FW */
   const SLOTS = [['GK'], ['DF'], ['DF', 'MF'], ['MF', 'FW'], ['FW']];
   const SLOT_N = ['GK', 'Defender', 'Defender or midfielder', 'Midfielder or forward', 'Forward'];
@@ -525,6 +546,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const fits = (ps, i) => (ps || []).some(x => SLOTS[i].includes(x));
   const MODE = { hist: 'Historical squads', custom: 'Players write their own squads' };
   const MAXP = 500;
+  const TIMES = [30, 60, 90, 120];
   const app = document.getElementById('app');
   const toastEl = document.getElementById('toast');
   const EXT = !(typeof window.claude !== 'undefined' && window.claude && window.claude.use);
@@ -688,7 +710,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   function freshRoom(code) {
     return {
       v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {}, online: [],
-      settings: { mode: 'hist', seasons: 5, listSec: 30, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
+      settings: { mode: 'hist', hostPlays: 1, players: 3, seasons: 5, listSec: 60, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
       picks: {}, tier: {}, team: {}, sq: {}, note: {}, own: {}, val: {}, bal: {}, start: {}, stats: {}, mk: null, hist: [], xi: {}, cup: null, prog: []
     };
   }
@@ -740,7 +762,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   }
   function decideView() {
     if (!G) return;
-    if (inRoom(ME_ID)) U.view = 'game';
+    if (inRoom(ME_ID) || (G.host === ME_ID && G.phase !== 'lobby')) U.view = 'game';
     else if (G.kicked && G.kicked[ME_ID]) U.view = 'kicked';
     else if (G.phase === 'lobby') U.view = ME && ME.room === G.code && ME.name ? 'wait' : 'join';
     else U.view = 'spect';
@@ -792,7 +814,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const p = G.players.find(x => x.id === id);
       if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
       if (d.room !== G.code) return;
-      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 16) {
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 33) {
         G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
     });
@@ -938,11 +960,13 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const sid = uid('q');
       G.sq[sid] = makeSquad(best.res[id].side);
       G.team[id] = sid; G.note[id] = best.note[id];
-      G.sq[sid].five.forEach((r, i) => { G.own[sid + '.' + i] = id; });
+      G.sq[sid].five.forEach((r, i) => { G.own[sid + '.' + i] = id; G.val[sid + '.' + i] = TIER[G.tier[id]].pv; });
       G.bal[id] = TIER[G.tier[id]].bal;
       G.stats[id] = { sold: 0, bought: 0 };
     });
-    pl.forEach(id => { G.start[id] = G.bal[id] + roster(id).length * G.settings.base; });
+    pl.forEach(id => { G.start[id] = assets(id); });
+    /* fixed anonymous squad numbers for the squads page */
+    G.num = {}; shuffle(pl).forEach((id, i) => { G.num[id] = i + 1; });
     G.phase = 'reveal'; G.prog = [];
   }
   function startMarket(no) {
@@ -1123,20 +1147,40 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const i = STEPS.findIndex(s => s[0] === G.phase);
     return '<nav class="steps" aria-label="Game stages">' + STEPS.map((s, k) => '<span class="st ' + (k < i ? 'done' : k === i ? 'on' : '') + '"><i>' + (k + 1) + '</i><b>' + s[1] + '</b></span>').join('') + '</nav>';
   }
+  const sqReady = () => !!(G && G.num && (inRoom(ME_ID) || isHost()) && ['reveal', 'market', 'lineup', 'cup', 'final'].includes(G.phase));
+  function squadsBody(m) {
+    const list = Object.keys(G.num).filter(id => inRoom(id)).sort((a, b) => G.num[a] - G.num[b]);
+    const grid = '<div class="sqgrid">' + list.map(id => '<button class="sqb' + (m.n === G.num[id] ? ' on' : '') + (id === ME_ID ? ' mine' : '') + '" data-act="sqOpen" data-n="' + G.num[id] + '"><b class="num">' + G.num[id] + '</b>' + (id === ME_ID ? '<small>Your team</small>' : '') + '</button>').join('') + '</div>';
+    let detail = '<p class="muted small" style="text-align:center">Tap a number to see that squad. Numbers stay the same all game, and owners are never shown.</p>';
+    const pid = list.find(id => G.num[id] === m.n);
+    if (pid) {
+      const r = roster(pid);
+      detail = '<h3 style="margin:4px 0 8px">Squad ' + m.n + (pid === ME_ID ? ' <span class="chip gold">Your team</span>' : '') + '</h3>' + pitch(bestFive(r), '', true) +
+        '<div class="rtable" style="margin-top:10px">' + r.map(k => { const p = PL(k); return '<div class="rr"><span class="num nb">' + esc(p.num) + '</span><span class="nm"><b>' + esc(p.name) + '</b><small>' + posL(p) + '</small></span><span class="num vl">' + mil(val(k)) + '</span></div>'; }).join('') + '</div>';
+    }
+    return '<h2>Squads</h2>' + grid + detail + '<button class="btn ghost" data-act="closeModal">Back to the game</button>';
+  }
   function topbar() {
     const inG = !!G && !!U.code;
     return '<header class="top"><div class="brand">' + LOGO + '<b>Aqnieni!</b><span>Nadiyyek</span></div><div class="top-r">' +
-      (inG ? '<span class="chip live num">Room ' + esc(U.code) + '</span><button class="btn sm ghost" data-act="menu">Menu</button>' : '') + '</div></header>' +
+      (inG ? '<span class="chip live num">Room ' + esc(U.code) + '</span>' + (sqReady() ? '<button class="btn sm primary" data-act="squads">Squads</button>' : '') + '<button class="btn sm ghost" data-act="menu">Menu</button>' : '') + '</div></header>' +
       (U.offline === 'net' ? '<div class="alert" role="alert">Weak connection. Updates will arrive as soon as you’re back online.</div>' : '') +
       (U.offline === 'perm' ? '<div class="alert" role="alert">Can’t save to the database from this device.</div>' : '') +
       (inG && U.view === 'game' ? stepper() : '');
   }
   const errBox = () => (U.err ? '<div class="alert" role="alert">' + esc(U.err) + '</div>' : '');
+  function noticeView() {
+    return '<section class="notice"><div class="nbox"><h2>A friendly note before you play</h2>' +
+      '<p>Welcome, everyone! This is a trial version of “Aqnieni” and its three games: Murafaat, Almazad and Nadiyyek, created and developed by Abdulrahman Al-Fahad, dated 26/11/26.</p>' +
+      '<p>I wanted to share it with you before releasing it to the public, so we can have fun and try it together. All rights to the game’s content, design and materials are reserved. Please don’t copy it, republish it, or make a similar version of it, even with small changes. Any use of its content without permission may force me to take appropriate action.</p>' +
+      '<p>Enjoy, and your feedback matters to me!</p>' +
+      '<button class="nbtn" data-act="noticeOk">I promise, let’s play</button></div></section>';
+  }
   function splashView() {
-    return '<section class="splash"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>' +
-      '<div class="lg">' + FULL + '</div>' +
+    return '<section class="splash intro"><div class="lg">' + FULL + '</div>' +
       '<h1 class="sr">Aqnieni!</h1><div class="ar">Nadiyyek</div>' +
-      '<button class="btn primary go" data-act="enter">Let’s go</button></section>';
+      '<p class="introtx">Each player runs a five-a-side football team, historical or written by themselves.<br>You buy and sell players in a transfer market that runs up to 5 seasons.<br>In the end, you convince the crowd to vote for your team in the Champions Cup.</p>' +
+      '<button class="btn primary go" data-act="enter">Got it</button></section>';
   }
   function homeView() {
     if (!U.ready) return '<section class="card hero"><h1>Aqnieni!</h1><p class="muted">Loading…</p></section>';
@@ -1153,7 +1197,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       '<section class="card"><h2>How to play</h2><ol class="howto">' +
       '<li><span>Each player sets two five-a-side squads: the “Weaker team” and the “Stronger team”. Historical ones from the top 5 leagues, or type the names yourself.</span></li>' +
       '<li><span>The five: goalkeeper, defender, defender or midfielder, midfielder or forward, forward.</span></li>' +
-      '<li><span>Choose secretly: a strong squad with 10M, or a weaker one with 60M. You get a random team from the other players’ picks.</span></li>' +
+      '<li><span>Choose secretly: the stronger team (each player 15M + 10M in the wallet) or the weaker one (each player 5M + 60M). Both start at 85M. You get a random team from the other players’ picks.</span></li>' +
+      '<li><span>The “Squads” button shows everyone’s teams by fixed numbers, without names, so you can keep an eye on a player you want.</span></li>' +
       '<li><span>10 transfer windows: in each one you list at least one player at your price, and bid on other players.</span></li>' +
       '<li><span>You can only sell if you keep a full five, so selling means buying a replacement in the same window.</span></li>' +
       '<li><span>After season five you lock in your five and enter the Champions Cup.</span></li>' +
@@ -1176,14 +1221,17 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const waitHost = () => '<p class="muted small" style="text-align:center">Waiting for the host ' + esc(P(G.host).name) + ' to move the game to the next stage.</p>';
   const hostBtn = (label, act, extra) => isHost() ? '<button class="btn xl primary" data-act="' + act + '"' + (extra || '') + '>' + label + '</button>' : waitHost();
   const remain = t => Math.max(0, (t - nowH()) / 1000);
-  function clockBox(label, endsAt, dur) {
+  function clockBox(label, endsAt, dur, nxt) {
     return '<section class="card timerbox"><div class="ring" data-ring="' + (dur || 0) + '" data-end="' + (endsAt || 0) + '"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="clock num" data-clock="' + (endsAt || 0) + '">' + fmt(remain(endsAt)) + '</div></div>' +
-      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn" data-act="skip">Skip timer</button>' : '') + '</div></section>';
+      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn primary" data-act="skip">Finish' + (nxt ? ' (' + nxt + ')' : '') + '</button>' : '') + '</div></section>';
   }
 
   function lobbyView() {
     const s = G.settings, host = isHost(), n = G.players.length;
     const link = ART_URL + '#room-' + G.code;
+    const seg2 = (k, pairs) => '<div class="seg-wide" role="group">' + pairs.map(([v, t]) => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + t + '</button>').join('') + '</div>';
+    const real = G.players.filter(p => !isBot(p.id)).length - (s.hostPlays === 0 ? 1 : 0), tgt = s.players || 3;
+    const stp = (k, min, max) => '<div class="stepper2"><button class="btn" data-act="step" data-k="' + k + '" data-v="-1"' + (s[k] <= min ? ' aria-disabled="true"' : '') + ' aria-label="Less">−</button><b class="num">' + s[k] + '</b><button class="btn" data-act="step" data-k="' + k + '" data-v="1"' + (s[k] >= max ? ' aria-disabled="true"' : '') + ' aria-label="More">+</button></div>';
     const seg = (k, vals, unit) => '<div class="seg-wide" role="group">' + vals.map(v => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + v + (unit || '') + '</button>').join('') + '</div>';
     const rows = G.players.map(p => '<div class="prow">' + dot(p.id) + '<b style="flex:1">' + esc(p.name) + (p.id === ME_ID ? ' <span class="muted small">(you)</span>' : '') + '</b>' +
       (p.id === G.host ? '<span class="chip gold">Host</span>' : '') + '<span class="muted small">' + (isBot(p.id) ? 'Test player' : ((G.online || []).includes(p.id) ? 'Online' : 'Offline')) + '</span>' +
@@ -1191,18 +1239,20 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const modeSeg = '<div class="seg-wide" role="group">' + Object.keys(MODE).map(m => '<button data-act="setMode" data-v="' + m + '" class="' + ((s.mode || 'hist') === m ? 'on' : '') + '" aria-pressed="' + ((s.mode || 'hist') === m) + '">' + MODE[m] + '</button>').join('') + '</div>';
     const settings = host ? '<section class="card" style="display:grid;gap:16px"><h2>Settings</h2>' +
       '<div class="labelled"><span class="lbl">Squad type</span>' + modeSeg + '<span class="muted small">' + ((s.mode || 'hist') === 'custom' ? 'Each player types two fives: one weak and one strong.' : 'Each player picks two clubs and seasons from the top 5 leagues, and gets the five who played the most.') + '</span></div>' +
-      '<div class="labelled"><span class="lbl">Seasons</span>' + seg('seasons', [5, 3, 1]) + '<span class="muted small">The full game is 5 seasons (10 windows). 3 or 1 for a quick game.</span></div>' +
-      '<div class="labelled"><span class="lbl">Time to list players for sale</span>' + seg('listSec', [20, 30, 45], ' s') + '</div>' +
-      '<div class="labelled"><span class="lbl">Market time (bidding)</span>' + seg('mkSec', [60, 90, 120], ' s') + '</div>' +
-      '<div class="labelled"><span class="lbl">Review time</span>' + seg('revSec', [60, 30], ' s') + '</div>' +
-      '<div class="labelled"><span class="lbl">Cup voting time</span>' + seg('voteSec', [30, 45, 20], ' s') + '</div></section>'
-      : '<section class="card"><h3>Settings</h3><p class="muted">' + MODE[s.mode || 'hist'] + ' · ' + s.seasons + ' seasons · listing ' + s.listSec + ' s · market ' + s.mkSec + ' s · review ' + s.revSec + ' s · voting ' + s.voteSec + ' s</p></section>';
+      '<div class="labelled"><span class="lbl">Players (squads)</span>' + stp('players', 3, 32) + '<span class="muted small">If fewer players join, the game fills the rest with computer players, up to 8 only. Above 8, all must be real players.</span></div>' +
+      '<div class="labelled"><span class="lbl">Rounds (seasons)</span>' + stp('seasons', 1, 5) + '<span class="muted small">Each season has two transfer windows (summer and winter), so ' + (s.seasons * 2) + ' windows.</span></div>' +
+      '<div class="labelled"><span class="lbl">Host</span>' + seg2('hostPlays', [[1, 'I’ll play'], [0, 'Host only']]) + '<span class="muted small">' + (s.hostPlays === 0 ? 'You don’t play. You only run the game, and you need 3 players besides you.' : 'You play like everyone else, and also run the game.') + '</span></div>' +
+      '<div class="labelled"><span class="lbl">Time to list players for sale</span>' + seg('listSec', TIMES, ' s') + '</div>' +
+      '<div class="labelled"><span class="lbl">Market time (bidding)</span>' + seg('mkSec', TIMES, ' s') + '</div>' +
+      '<div class="labelled"><span class="lbl">Review time</span>' + seg('revSec', TIMES, ' s') + '</div>' +
+      '<div class="labelled"><span class="lbl">Cup voting time</span>' + seg('voteSec', TIMES, ' s') + '</div></section>'
+      : '<section class="card"><h3>Settings</h3><p class="muted">' + MODE[s.mode || 'hist'] + ' · ' + (s.players || 3) + ' players · ' + s.seasons + ' seasons · listing ' + s.listSec + ' s · market ' + s.mkSec + ' s · review ' + s.revSec + ' s · voting ' + s.voteSec + ' s</p></section>';
     return '<section class="card roomcard"><span class="muted">Room code</span><div class="bigcode" dir="ltr">' + esc(G.code) + '</div>' +
       '<div class="linkrow"><input class="field" id="lnk" readonly value="' + esc(link) + '" dir="ltr" aria-label="Invite link"><button class="btn" data-act="copyLink">Copy link</button></div></section>' +
       '<section class="card"><div class="row-b" style="margin-bottom:10px"><h2 style="margin:0">Waiting room</h2><span class="chip num">' + n + ' players</span></div><div style="display:grid;gap:8px">' + rows + '</div>' +
-      (n < 3 ? '<p class="muted small" style="margin-top:10px">You need at least 3 players, so there’s a crowd to vote in the cup.</p>' : '') +
-      (host ? '<div class="btn-row" style="margin-top:12px"><button class="btn" data-act="addBot"' + (n >= 8 ? ' aria-disabled="true"' : '') + '>+ Add test player</button></div><p class="muted small">A test player plays on its own (picks, lists, bids and votes at random), so you can try the game alone.</p>' : '') + '</section>' + settings + errBox() +
-      (host ? '<button class="btn xl primary" data-act="startGame"' + (n < 3 ? ' aria-disabled="true"' : '') + '>Start game</button>' : '<p class="muted" style="text-align:center">Waiting for the host to start the game…</p>');
+      '<p class="muted small" style="margin-top:10px">Joined ' + real + ' of ' + tgt + ' players' + (s.hostPlays === 0 ? ' (besides the host)' : '') + '. ' + (real > tgt ? 'More than the set number. Increase the number of players or remove one.' : real < 1 ? 'At least one player besides the host must join.' : real < tgt && tgt > 8 ? 'Waiting for ' + (tgt - real) + ' players. Bots only fill up to 8.' : real < tgt ? 'The remaining (' + (tgt - real) + ') will be computer players.' : 'All in.') + '</p>' +
+      '</section>' + settings + errBox() +
+      (host ? '<button class="btn xl primary" data-act="startGame"' + (real > tgt || real < 1 || (tgt > 8 && real < tgt) ? ' aria-disabled="true"' : '') + '>Start game</button>' : '<p class="muted" style="text-align:center">Waiting for the host to start the game…</p>');
   }
 
   const blankSide = () => ({ tid: '', ix: [null, null, null, null, null], name: '', names: ['', '', '', '', ''] });
@@ -1245,7 +1295,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     if (done) return '<section class="card pass"><h2>You chose: ' + TIER[x.v].name + ' ✓</h2><p class="muted">Your choice is secret. When everyone has chosen, the teams are revealed.</p></section>' + progBox('Who chose a tier') + hostBtn('Reveal teams', 'tierNext');
     const opt = (v, d) => '<button class="tier ' + v + (U.tierPick === v ? ' on' : '') + '" data-act="tierPick" data-v="' + v + '"><b>' + TIER[v].name + '</b><span class="big num">' + TIER[v].bal + ' M</span><span class="muted">' + d + '</span></button>';
     return '<section class="card action"><h2 style="margin:0 0 6px">Choose your tier secretly</h2><p class="muted">You’ll get a random squad from the other players’ picks in the same tier, never one of your own two.</p>' +
-      '<div class="tiers">' + opt('s', 'Stronger team, small budget') + opt('w', 'Weaker team, big market budget') + '</div>' +
+      '<div class="tiers">' + opt('s', 'Each player 15M. Total 85M') + opt('w', 'Each player 5M. Total 85M') + '</div>' +
       '<button class="btn xl primary" data-act="sendTier"' + (U.tierPick ? '' : ' aria-disabled="true"') + '>Confirm</button></section>' + progBox('Who chose a tier');
   }
   function pitch(list, form, mini) {
@@ -1280,7 +1330,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     return '<section class="card reveal"><span class="muted">You got</span><h1 class="big2">' + esc(q.lbl) + '</h1><p class="muted">' + (q.hist ? esc(q.club) + ' · Coach: <b>' + esc(q.coach) + '</b>' : 'A squad written by one of the players') + ' · ' + TIER[G.tier[me]].name + '</p></section>' + note +
       '<section class="card"><h3 style="margin-bottom:8px">The five</h3>' + pitch(suggestXI(me)) + '</section>' +
       teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">Player list</h3>' + rosterTable(me) +
-      '<p class="muted small" style="margin-top:8px">Starting value per player ' + mil(G.settings.base) + ' for scoring only. The real price is set by the club owner when listing him, and after that a player’s value = the last price he sold for.</p></section>' +
+      '<p class="muted small" style="margin-top:8px">Starting value per player ' + mil(TIER[G.tier[me]].pv) + ' for scoring only. The real price is set by the club owner when listing him, and after that a player’s value = the last price he sold for.</p></section>' +
       (q.hist && q.src ? '<p class="src">Source: <span dir="ltr">' + esc(q.src.replace('https://', '')) + '</span></p>' : '') +
       (ready ? progBox('Who’s ready') + hostBtn('Open the first window', 'revealNext') : '<button class="btn xl primary" data-act="ready" data-k="reveal' + G.gameNo + '">Ready for the market</button>' + progBox('Who’s ready'));
   }
@@ -1303,7 +1353,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
           }) +
           '<button class="btn xl primary" data-act="sendList"' + (n ? '' : ' aria-disabled="true"') + '>List ' + (n || '') + ' for sale</button><p class="muted small">If time runs out and you haven’t listed anyone, the game lists a random player of yours at his value.</p></section>';
       }
-      return head + body + clockBox('Listing time', mk.endsAt, mk.dur) + progBox('Who listed');
+      return head + body + clockBox('Listing time', mk.endsAt, mk.dur, 'go to bidding') + progBox('Who listed');
     }
     if (mk.stage === 'bid') {
       const x = inp(me).bids, done = x && x.key === mk.key && x.done;
@@ -1313,7 +1363,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const total = Object.keys(U.bids).reduce((s, l) => s + (+U.bids[l] || 0), 0), nb = Object.keys(U.bids).length;
       const card = l => {
         const L = mk.lst[l], p = PL(L.pk), b = U.bids[l], top = mk.top && mk.top[l];
-        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + posL(p) + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.lbl : '') + ' · Seller: ' + esc(P(L.seller).name) + '</small></div><div class="ref"><span>Reference price</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
+        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + posL(p) + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.lbl : '') + '</small></div><div class="ref"><span>Reference price</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
           (L.seller === me ? '<div class="muted small">Your player. ' + (top ? 'Top bid now: <b class="num">' + mil(top[0]) + '</b> (' + top[1] + ' bids)' : 'No bids yet.') + '</div>' :
             '<div class="lc-bid">' + (top ? '<span class="muted small">Top bid: <b class="num">' + mil(top[0]) + '</b></span>' : '<span class="muted small">No bids</span>') +
             (b ? '<span class="bidctl"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="-1">−</button><input class="field num askin" data-bind="bid" data-l="' + l + '" inputmode="numeric" value="' + b + '"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="1">+</button><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="5"><span dir="ltr">+5</span></button><button class="x" data-act="bidDel" data-l="' + l + '" aria-label="Cancel bid">×</button></span>'
@@ -1325,7 +1375,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
         (others.length ? '<section class="lgrid">' + others.map(card).join('') + '</section>' : '<section class="card muted">No players from others on the market.</section>') +
         (mine.length ? '<section class="card"><h3 style="margin-bottom:8px">Your listed players</h3><div class="lgrid">' + mine.map(card).join('') + '</div>' + (mk.auto.includes(me) ? '<p class="muted small">Your player was listed automatically because you didn’t list in time.</p>' : '') + '</section>' : '') +
         (done ? '<section class="card pass"><h3>Bids locked ✓</h3><p class="muted small">You can edit until time runs out.</p><button class="btn" data-act="bidEdit">Edit</button></section>' : '<button class="btn xl primary" data-act="sendBids">' + (nb ? 'Lock my bids' : 'I don’t want to buy') + '</button>') +
-        clockBox('Market is open', mk.endsAt, mk.dur) + progBox('Who’s done');
+        clockBox('Market is open', mk.endsAt, mk.dur, 'go to window results') + progBox('Who’s done');
     }
     if (mk.stage === 'review') {
       const deals = mk.res.filter(r => r.buyer), uns = mk.res.filter(r => !r.buyer);
@@ -1333,11 +1383,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const ready = (inp(me).ready || {}).k === mk.key;
       const last = mk.no >= G.settings.seasons * 2;
       return head + '<section class="card"><h2 style="margin-bottom:10px">Window results</h2>' +
-        (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal' + (r.buyer === me || r.seller === me ? ' me' : '') + '"><b>' + esc(p.name) + '</b><span class="muted small">' + posL(p) + ' · from ' + esc(P(r.seller).name) + ' to ' + esc(P(r.buyer).name) + (r.tie ? ' · by draw' : '') + '</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">No deals in this window.</p>') +
-        (uns.length ? '<details style="margin-top:10px"><summary class="muted">Unsold (' + uns.length + ')</summary><div class="deals">' + uns.map(r => '<div class="deal"><b>' + esc(PL(r.pk).name) + '</b><span class="muted small">' + esc(P(r.seller).name) + ' · ' + why[r.why] + '</span></div>').join('') + '</div></details>' : '') + '</section>' +
+        (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal' + (r.buyer === me || r.seller === me ? ' me' : '') + '"><b>' + esc(p.name) + '</b><span class="muted small">' + posL(p) + ' · ' + (r.seller === me ? 'You sold him' : r.buyer === me ? 'You bought him' : 'Moved to another team') + (r.tie ? ' · by draw' : '') + '</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">No deals in this window.</p>') +
+        (uns.length ? '<details style="margin-top:10px"><summary class="muted">Unsold (' + uns.length + ')</summary><div class="deals">' + uns.map(r => '<div class="deal"><b>' + esc(PL(r.pk).name) + '</b>' + (r.seller === me ? '<span class="muted small">Your player · ' + why[r.why] + '</span>' : '') + '</div>').join('') + '</div></details>' : '') + '</section>' +
         teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">Your players</h3>' + rosterTable(me) + '</section>' +
         (ready ? '' : '<button class="btn xl primary" data-act="ready" data-k="' + mk.key + '">Ready</button>') +
-        clockBox(last ? 'Review before the cup' : 'Review before the next window', mk.endsAt, mk.dur) + progBox('Who’s ready');
+        clockBox(last ? 'Review before the cup' : 'Review before the next window', mk.endsAt, mk.dur, last ? 'go to picking the cup five' : 'go to ' + mkLabel(mk.no + 1)) + progBox('Who’s ready');
     }
     return head;
   }
@@ -1377,10 +1427,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const x = inp(ME_ID).vote, voted = x && x.key === c.key;
       if (U.pickKey !== c.key) { U.pickKey = c.key; U.pick = null; }
       let body;
-      if (iAmIn) body = '<section class="card pass"><h2>Your team is in this match</h2><p class="muted">Convince the crowd out loud! You can’t vote in your own match.</p></section>';
+      if (!inRoom(ME_ID)) body = '<section class="card pass"><h2>You’re the host</h2><p class="muted">You only watch the match; you don’t vote.</p></section>';
+      else if (iAmIn) body = '<section class="card pass"><h2>Your team is in this match</h2><p class="muted">Convince the crowd out loud! You can’t vote in your own match.</p></section>';
       else if (voted) body = '<section class="card pass"><h2>Vote received ✓</h2></section>';
       else body = '<section class="card action"><h2 style="margin:0 0 8px">Which is stronger?</h2><div class="seg-wide"><button class="' + (U.pick === 'a' ? 'on' : '') + '" data-act="pick" data-v="a">Team A</button><button class="' + (U.pick === 'b' ? 'on' : '') + '" data-act="pick" data-v="b">Team B</button></div><button class="btn xl primary" data-act="sendVote" style="margin-top:10px">Vote</button><p class="muted small">One vote per spectator; names are revealed only after the vote.</p></section>';
-      return head + vs + body + clockBox('Voting time', c.endsAt, c.dur) + progBox('Who voted', voters(m)) + bracket();
+      return head + vs + body + clockBox('Voting time', c.endsAt, c.dur, 'go to the match result') + progBox('Who voted', voters(m)) + bracket();
     }
     if (c.stage === 'result') {
       const v = m.votes || {};
@@ -1410,7 +1461,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const m = U.modal;
     if (!m) return '';
     let body = '';
-    if (m.type === 'menu') {
+    if (m.type === 'squads') body = sqReady() ? squadsBody(m) : '<button class="btn ghost" data-act="closeModal">Close</button>';
+    else if (m.type === 'menu') {
       const host = isHost(), others = G ? G.players.filter(p => p.id !== ME_ID) : [];
       body = '<h2>Menu</h2><p class="muted">Room <b dir="ltr">' + esc(U.code) + '</b>' + (G ? ' · Host: ' + esc(P(G.host).name) : '') + '</p>' +
         (!host && G && inRoom(ME_ID) ? '<button class="btn" data-act="askTake">Host not responding? Take over hosting</button>' : '') +
@@ -1425,7 +1477,30 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     }
     return '<div class="ov" data-act="ovClose"><div class="dlg" role="dialog" aria-modal="true">' + body + '</div></div>';
   }
+  function hostOnlyView() {
+    const note = '<section class="card pass"><h2>You’re the host</h2><p class="muted">You’re not playing this game. You follow the players and move the game between stages.</p></section>';
+    const mk = G.mk;
+    switch (G.phase) {
+      case 'picks': return note + progBox('Who’s done') + hostBtn('Next: choose tier', 'picksNext');
+      case 'tier': return note + progBox('Who chose a tier') + hostBtn('Reveal teams', 'tierNext');
+      case 'reveal': return note + progBox('Who’s ready') + hostBtn('Open the first window', 'revealNext');
+      case 'market': {
+        if (!mk) return note;
+        const head = '<section class="mkhead"><div><span class="chip gold num">Window ' + mk.no + ' of ' + (G.settings.seasons * 2) + '</span><h2>' + mkLabel(mk.no) + '</h2></div></section>';
+        if (mk.stage === 'list') return head + note + clockBox('Listing time', mk.endsAt, mk.dur, 'go to bidding') + progBox('Who listed');
+        if (mk.stage === 'bid') return head + '<section class="card"><h3>On the market: <span class="num">' + Object.keys(mk.lst).length + '</span> Player</h3></section>' + clockBox('Market is open', mk.endsAt, mk.dur, 'go to window results') + progBox('Who’s done');
+        const last = mk.no >= G.settings.seasons * 2, deals = mk.res.filter(r => r.buyer);
+        return head + '<section class="card"><h2 style="margin-bottom:10px">Window results</h2>' + (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal"><b>' + esc(p.name) + '</b><span class="muted small">' + posL(p) + ' · Moved to another team</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">No deals in this window.</p>') + '</section>' +
+          clockBox(last ? 'Review before the cup' : 'Review before the next window', mk.endsAt, mk.dur, last ? 'go to picking the cup five' : 'go to ' + mkLabel(mk.no + 1)) + progBox('Who’s ready');
+      }
+      case 'lineup': return note + progBox('Who locked their five') + hostBtn('Start the Champions Cup', 'cupStart');
+      case 'cup': return G.cup ? cupView() : '';
+      case 'final': return finalView();
+    }
+    return note;
+  }
   function gameView() {
+    if (!inRoom(ME_ID) && isHost() && G.phase !== 'lobby') return hostOnlyView();
     switch (G.phase) {
       case 'lobby': return lobbyView();
       case 'picks': return picksView();
@@ -1442,7 +1517,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   /* ---------- render ---------- */
   function render() {
     let html;
-    if (U.splash) html = splashView();
+    if (U.notice) html = noticeView();
+    else if (U.splash) html = splashView();
     else {
       html = topbar();
       if (!U.code || U.view === 'home') html += homeView();
@@ -1482,9 +1558,12 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const ACT = {};
   const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) { publish(); setTimeout(hostStep, 60); } return r; };
   ACT.enter = () => { U.splash = false; };
+  ACT.noticeOk = () => { U.notice = false; try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
   ACT.closeModal = () => { U.modal = null; U.err = ''; };
   ACT.ovClose = (d, el, ev) => { if (ev.target !== el) return false; U.modal = null; };
   ACT.menu = () => { U.modal = { type: 'menu' }; };
+  ACT.squads = () => { U.modal = { type: 'squads', n: 0 }; };
+  ACT.sqOpen = d => { U.modal = { type: 'squads', n: +d.n }; };
   ACT.askLeave = () => { U.modal = { type: 'leave' }; };
   ACT.askTake = () => { U.modal = { type: 'take' }; };
   ACT.askHand = () => { U.modal = { type: 'hand' }; };
@@ -1573,7 +1652,22 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   });
   ACT.set = H(d => { G.settings[d.k] = +d.v; });
   ACT.setMode = H(d => { if (G.phase !== 'lobby' || !MODE[d.v]) return false; G.settings.mode = d.v; });
-  ACT.startGame = H(() => { if (G.players.length < 3) { U.err = 'You need at least 3 players.'; return false; } U.err = ''; startGame(); });
+  ACT.startGame = H(() => {
+    const tgt = G.settings.players || 3;
+    if (G.settings.hostPlays === 0) { G.hostP = G.players.find(p => p.id === ME_ID) || G.hostP; G.players = G.players.filter(p => p.id !== ME_ID); }
+    const real = G.players.filter(p => !isBot(p.id)).length;
+    if (tgt > 8 && real < tgt) { if (G.hostP && G.hostP.id === ME_ID && !inRoom(ME_ID)) G.players.unshift(G.hostP); U.err = 'Bots only fill up to 8 players. Waiting for ' + (tgt - real) + ' players.'; return false; }
+    if (real > tgt) { if (G.hostP && G.hostP.id === ME_ID && !inRoom(ME_ID)) G.players.unshift(G.hostP); U.err = 'More players joined than the set number. Increase the number of players or remove one.'; return false; }
+    U.err = '';
+    const NM = ['Bot Hilal', 'Bot Star', 'Bot Falcon', 'Bot Rayyan', 'Bot Ghost', 'Bot Captain', 'Bot Coach'];
+    let k = 0;
+    while (G.players.length < tgt) G.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 8), name: uniqueName(NM[k++ % 7], ''), at: Date.now() });
+    startGame();
+  });
+  ACT.step = H(d => {
+    const L = { players: [3, 32], seasons: [1, 5] }[d.k]; if (!L || G.phase !== 'lobby') return false;
+    G.settings[d.k] = Math.min(L[1], Math.max(L[0], (+G.settings[d.k] || L[0]) + (+d.v)));
+  });
   ACT.picksNext = H(() => {
     if (G.phase !== 'picks') return false;
     const done = progList();
@@ -1591,7 +1685,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   ACT.cupStart = H(() => { if (G.phase !== 'lineup') return false; startCup(); });
   ACT.cupNext = H(() => { if (!G.cup || G.cup.stage !== 'result') return false; nextMatch(); });
   ACT.rematch = H(() => { startGame(); });
-  ACT.toLobby = H(() => { G.phase = 'lobby'; G.mk = null; G.cup = null; G.prog = []; });
+  ACT.toLobby = H(() => { G.players = G.players.filter(p => !isBot(p.id)); Object.keys(BOT).forEach(id => delete BOT[id]); if (G.hostP && !inRoom(G.hostP.id) && G.hostP.id === ME_ID) G.players.unshift(G.hostP); G.hostP = null; G.phase = 'lobby'; G.mk = null; G.cup = null; G.prog = []; });
 
   /* my inputs */
   function mine() { ME = ME || blankMe(U.code); return ME; }
@@ -1685,6 +1779,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     U.name = saved.name || '';
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
     if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; }
+    if (h) { try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
     if (saved.code && !h) U.splash = false;
     render();
     const cl = !EXT ? window.claude : null;
@@ -1713,7 +1808,6 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 })();
 
 </script>
-
 <style>#langsw{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:60;background:#fff;border:1.5px solid #D5DBE5;border-radius:99px;padding:5px 14px;font:700 .9rem/1.4 "Readex Pro","Alexandria",system-ui,sans-serif;color:#12203A;text-decoration:none;box-shadow:0 3px 10px rgba(18,32,58,.1)}#langsw[hidden]{display:none}</style><a id="langsw" href="nadik.html" lang="ar">عربي</a><script>(function(){var a=document.getElementById('langsw');a.addEventListener('click',function(e){try{localStorage.setItem('aqnieni.lang','ar')}catch(x){}a.href='nadik.html'+location.hash;});setInterval(function(){a.hidden=!!document.querySelector('.top .chip.live')||!!document.querySelector('.top [data-act=menu]');},400);})();</script>
 </body>
 </html>

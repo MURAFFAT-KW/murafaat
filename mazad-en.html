@@ -309,6 +309,18 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 .top .brand span{letter-spacing:0;font-size:.85rem}
 :root{--p:#0554A4;--p-ink:#FFFFFF;--p-text:#0554A4;--cyan:#0554A4;--blue:#0554A4;--gold:#0554A4;--grad:linear-gradient(#0554A4,#0554A4)}
 .top:has(.top-r .chip) .brand span{display:none!important}
+.intro .fulllogo{width:min(36vw,140px)!important}
+.intro .ar{margin-top:2px}
+.introtx{max-width:34ch;color:var(--muted);font-size:1rem;line-height:1.9;margin:6px auto 0}
+.intro .go{margin-top:22px}
+.notice{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:24px 4px;background:#fff}
+.notice .nbox{background:#fff;border:3px solid #DE0921;border-radius:22px;padding:24px 20px;max-width:520px;display:grid;gap:12px;color:#111}
+.notice h2{color:#111;font-size:1.35rem;text-align:center}
+.notice p{color:#111;line-height:1.85;font-size:1rem}
+.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}
+.stepper2{display:flex;align-items:center;justify-content:center;gap:16px}
+.stepper2 b{font-family:var(--font-d);font-size:1.8rem;min-width:2.5ch;text-align:center}
+.stepper2 .btn{width:58px;min-height:52px;font-size:1.6rem;font-weight:800;padding:0}
 </style>
 </head>
 <body>
@@ -378,7 +390,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const ART_URL = EXT ? (location.origin + location.pathname) : 'https://claude.ai/artifact/NSjKEGjx5Epzqi82BNXPty';
   const LS = 'aqnieni.mazad.v1';
   const TEST = !!window.__MZ_TEST;
-  const VOTE_SEC = TEST ? 6 : 30, PRICE_SEC = TEST ? 6 : 40, BUY_SEC = TEST ? 6 : 30;
+  const TIMES = [30, 60, 90, 120];
+  const SEC = k => (TEST ? 6 : (G && G.settings && G.settings[k]) || 60);
   const PMIN = 1, PMAX = 20;
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const PERKS = [
@@ -442,6 +455,14 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const score = id => { const e = E(id); return e.items.length * G.settings.val + e.w + e.p; };
   function ranking() {
     return G.players.slice().sort((x, y) => (score(y.id) - score(x.id)) || (E(y.id).items.length - E(x.id).items.length) || (E(y.id).w - E(x.id).w));
+  }
+  /* ready-made items for the “ready-made items” option */
+  const READY = ['Phone', 'Wristwatch', 'Pillow', 'TV remote', 'Phone charger', 'Coffee mug', 'Sunglasses', 'Headphones', 'Wallet', 'Pen', 'Notebook', 'Umbrella', 'Backpack', 'Perfume', 'Lighter', 'Car key', 'Blanket', 'Chair', 'Desk lamp', 'Small fan', 'Tea flask', 'Water bottle', 'Tissue box', 'Mirror', 'Comb', 'Toothbrush', 'Bar of soap', 'Towel', 'Sandals', 'Sneakers', 'Cap', 'Ghutra', 'Wall clock', 'Arabic coffee pot', 'Coffee cup', 'Plate', 'Spoon', 'Frying pan', 'Blender', 'Book', 'Laptop', 'Tablet', 'Camera', 'Remote that doesn’t work', 'One flip-flop', 'Battery', 'Broken charger cable', 'Keychain', 'Empty bag', 'Chewing gum', 'Chocolate', 'Box of dates', 'Incense', 'Incense burner', 'Prayer mat', 'Fake flower', 'Kids’ toy', 'Football', 'Losing lottery ticket', 'Pebble from the beach', 'Small air conditioner', 'Rug', 'Smartwatch', 'Prescription glasses', 'Leather wallet', 'Moisturizer', 'Scented candle', 'Coffee machine', 'Bluetooth speaker', 'Power bank', 'Keyboard', 'Mouse', 'USB stick', 'Phone stand', 'Travel pillow', 'Suitcase', 'Notepad', 'Coloured pencils', 'Calculator', 'Ruler', 'Istikana tea glass', 'Serving tray', 'Bowl', 'Fancy fountain pen', 'Hair clip', 'Necktie', 'Socks', 'Gloves', 'Car charger', 'Car air freshener', 'Phone case', 'AC remote', 'Old calendar', 'Chipped mug', 'Pen that doesn’t write', 'Stopped clock', 'Key that opens nothing', 'Electricity bill', 'Empty box', 'Safety pin', 'Plastic spoon'];
+  const SRC = { players: 'Players write items', ready: 'Ready-made items' };
+  function addReady() {
+    const seen = new Set(G.pool.map(x => norm(x.t)));
+    let k = 0; const want = Math.max(2, +G.settings.products || 6);
+    shuffle(READY).forEach(t => { if (k < want && !seen.has(norm(t))) { seen.add(norm(t)); k++; G.pool.push({ id: uid('i'), t, by: null }); } });
   }
   const itemText = id => { const it = (G.pool || []).find(x => x.id === id); return it ? it.t : '?'; };
 
@@ -510,7 +531,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   function freshRoom(code) {
     return {
       v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {},
-      settings: { rounds: 2, start: 20, val: 5, think: 60, pitch: 60 },
+      settings: { src: 'players', hostPlays: 1, players: 3, products: 6, rounds: 2, start: 20, val: 5, voteSec: 30, priceSec: 60, think: 60, pitch: 60, buySec: 30 },
       perks: {}, pused: {}, pool: [], used: [], itemsRound: 0, needMore: false, prog: [], econ: {}, sold: {}, roundNo: 0, total: 0, cur: null, history: [], lastPair: ''
     };
   }
@@ -562,7 +583,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   }
   function decideView() {
     if (!G) return;
-    if (inRoom(ME_ID)) U.view = 'game';
+    if (inRoom(ME_ID) || (G.host === ME_ID && G.phase !== 'lobby')) U.view = 'game';
     else if (G.kicked && G.kicked[ME_ID]) U.view = 'kicked';
     else if (G.phase === 'lobby') U.view = ME && ME.room === G.code && ME.name ? 'wait' : 'join';
     else U.view = 'spect';
@@ -609,7 +630,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const p = G.players.find(x => x.id === id);
       if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
       if (d.room !== G.code) return;
-      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 12) {
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 26) {
         G.players.push({ id, name: uniqueName(d.name, id), gender: d.gender === 'f' ? 'f' : 'm', at: d.at || 0 });
         ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) {
@@ -704,12 +725,12 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const nx = avail[Math.floor(Math.random() * avail.length)];
       G.used = G.used.filter(id => id !== c.item); G.used.push(nx.id);
       const old = itemText(c.item); c.item = nx.id; c.tie = false;
-      c.pv.a++; c.pv.b++; c.endsAt = Date.now() + PRICE_SEC * 1000; c.dur = PRICE_SEC;
+      c.pv.a++; c.pv.b++; c.endsAt = Date.now() + SEC('priceSec') * 1000; c.dur = SEC('priceSec');
       msg = me + ' changed the item: “' + old + '” is now “' + nx.t + '”. Set your prices again.';
     } else if (r.id === 'opp') {
       const cand = buyers(); const nw = cand[Math.floor(Math.random() * cand.length)];
       G.sold[c[os]] = Math.max(0, (G.sold[c[os]] || 1) - 1); G.sold[nw] = (G.sold[nw] || 0) + 1;
-      c[os] = nw; c.pv[os]++; c.endsAt = Date.now() + PRICE_SEC * 1000; c.dur = PRICE_SEC;
+      c[os] = nw; c.pv[os]++; c.endsAt = Date.now() + SEC('priceSec') * 1000; c.dur = SEC('priceSec');
       msg = me + ' changed rival: ' + op + ' is out and ' + P(nw).name + ' is in.';
     } else if (r.id === 'half') {
       const o = c.prices[side]; c.prices[side] = half(o / 2);
@@ -754,7 +775,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     G.gameNo = (G.gameNo || 0) + 1;
     G.econ = {}; G.sold = {};
     G.players.forEach(p => { G.econ[p.id] = { w: G.settings.start, p: 0, items: [] }; G.sold[p.id] = 0; });
-    G.total = Math.ceil(G.players.length * Math.max(2, G.settings.rounds) / 2);
+    G.total = Math.ceil(G.players.length * Math.max(1, G.settings.rounds) / 2);
     G.roundNo = 0; G.pool = []; G.used = []; G.history = []; G.cur = null; G.lastPair = '';
     G.itemsRound = 1; G.needMore = false; G.phase = 'perks'; G.prog = []; G.perks = {}; G.pused = {};
   }
@@ -764,6 +785,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       G.perks[p.id] = x && x.g === G.gameNo && x.done ? (x.list || []).filter(id => PERKS.some(k => k.id === id)).slice(0, 3) : [];
       G.pused[p.id] = [];
     });
+    if (G.settings.src === 'ready') { addReady(); G.prog = []; startRound(); return; }
     G.phase = 'items'; G.prog = [];
   }
   function collectItems() {
@@ -793,11 +815,12 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   function startRound() {
     if (G.roundNo >= G.total) { G.phase = 'final'; G.cur = null; G.prog = []; return; }
     const avail = G.pool.filter(x => !G.used.includes(x.id));
+    if (!avail.length && G.settings.src === 'ready') { G.used = []; G.pool = []; addReady(); return startRound(); }
     if (!avail.length) { G.phase = 'items'; G.itemsRound++; G.needMore = true; G.prog = []; G.cur = null; return; }
     const [a, b] = pickSellers();
     const cands = shuffle(avail).slice(0, 6).map(x => x.id);
     G.phase = 'round'; G.prog = [];
-    G.cur = { key: uid('r'), no: G.roundNo + 1, a, b, cands, item: null, votes: null, stage: 'vote', endsAt: Date.now() + VOTE_SEC * 1000, dur: VOTE_SEC, prices: null, auto: {}, first: 'a', speaker: null, buys: null, pv: { a: 0, b: 0 }, help: {}, log: [], cancel: {}, sales: { a: [], b: [] }, paid: {} };
+    G.cur = { key: uid('r'), no: G.roundNo + 1, a, b, cands, item: null, votes: null, stage: 'vote', endsAt: Date.now() + SEC('voteSec') * 1000, dur: SEC('voteSec'), prices: null, auto: {}, first: 'a', speaker: null, buys: null, pv: { a: 0, b: 0 }, help: {}, log: [], cancel: {}, sales: { a: [], b: [] }, paid: {} };
     if (cands.length === 1) chooseItem({});
   }
   function chooseItem(t) {
@@ -807,7 +830,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     c.item = top[Math.floor(Math.random() * top.length)];
     c.votes = t; c.tie = top.length > 1 && max > 0;
     G.used.push(c.item);
-    setStage('price', PRICE_SEC);
+    setStage('price', SEC('priceSec'));
   }
   function setStage(s, sec) { const c = G.cur; c.stage = s; c.dur = sec || 0; c.endsAt = sec ? Date.now() + sec * 1000 : 0; G.prog = []; }
 
@@ -843,7 +866,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     }
     if (c.stage === 'reveal') { setStage('pitch1', G.settings.pitch); c.speaker = c.first; return true; }
     if (c.stage === 'pitch1') { setStage('pitch2', G.settings.pitch); c.speaker = other(c.first); return true; }
-    if (c.stage === 'pitch2') { setStage('buy', BUY_SEC); c.speaker = null; return true; }
+    if (c.stage === 'pitch2') { setStage('buy', SEC('buySec')); c.speaker = null; return true; }
     if (c.stage === 'buy') { settle(); return true; }
     return false;
   }
@@ -875,11 +898,18 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       (U.offline === 'perm' ? '<div class="alert" role="alert">This account can’t write to the game. The game owner must invite you by email with <b>Editor</b> from the Share button.</div>' : '');
   }
   const errBox = () => (U.err ? '<div class="alert" role="alert">' + esc(U.err) + '</div>' : '');
+  function noticeView() {
+    return '<section class="notice"><div class="nbox"><h2>A friendly note before you play</h2>' +
+      '<p>Welcome, everyone! This is a trial version of “Aqnieni” and its three games: Murafaat, Almazad and Nadiyyek, created and developed by Abdulrahman Al-Fahad, dated 26/11/26.</p>' +
+      '<p>I wanted to share it with you before releasing it to the public, so we can have fun and try it together. All rights to the game’s content, design and materials are reserved. Please don’t copy it, republish it, or make a similar version of it, even with small changes. Any use of its content without permission may force me to take appropriate action.</p>' +
+      '<p>Enjoy, and your feedback matters to me!</p>' +
+      '<button class="nbtn" data-act="noticeOk">I promise, let’s play</button></div></section>';
+  }
   function splashView() {
-    return '<section class="splash"><span class="blob b1"></span><span class="blob b2"></span>' +
-      '<div class="lg">' + FULL + '</div>' +
+    return '<section class="splash intro"><div class="lg">' + FULL + '</div>' +
       '<h1 class="sr">Aqnieni!</h1><div class="ar">Almazad</div>' +
-      '<button class="btn primary go" data-act="enter">Let’s go</button></section>';
+      '<p class="introtx">In each sale, two players sell the same item, each setting a secret price.<br>Each seller gets their turn to convince you to buy from them.<br>Everyone else buys or passes, and the highest total at the end wins.</p>' +
+      '<button class="btn primary go" data-act="enter">Got it</button></section>';
   }
   function genderSeg(cur, act) {
     return '<div class="seg" role="group" aria-label="Character"><button data-act="' + act + '" data-g="m" class="' + (cur === 'm' ? 'on' : '') + '" aria-pressed="' + (cur === 'm') + '">Man</button><button data-act="' + act + '" data-g="f" class="' + (cur === 'f' ? 'on' : '') + '" aria-pressed="' + (cur === 'f') + '">Woman</button></div>';
@@ -899,7 +929,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       '<p class="lead">Everyone on their own phone. Sell things around the room to your friends with your best pitch, and buy smart.</p></section>' +
       me + errBox() + (U.fromLink ? join + host : host + join) +
       '<section class="card"><h2>How to play</h2><ol class="howto">' +
-      '<li><span>Each player starts with a wallet of ' + kd(20) + ' and writes down things around the room.</span></li>' +
+      '<li><span>Each player starts with a wallet of ' + kd(20) + '. Items for sale: players write things around the room, or the game picks them at random from a ready-made list.</span></li>' +
       '<li><span>Each player secretly picks 3 perks to use as a seller: sale, raise or lower the rival’s price, sales rep, objection, change rival or item.</span></li>' +
       '<li><span>Each round: everyone votes on one item to sell, and the game picks two sellers.</span></li>' +
       '<li><span>Each seller secretly sets a price (1 to 20 KD), then prices are revealed.</span></li>' +
@@ -943,29 +973,44 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const rows = G.players.map(p => '<div class="prow"><div>' + avatar(p, 46) + '</div><div class="fields"><b style="flex:1">' + esc(p.name) + (p.id === ME_ID ? ' <span class="muted small">(you)</span>' : '') + '</b>' +
       (p.id === G.host ? '<span class="chip gold">Host</span>' : '') + '<span class="muted small">' + gLabel(p) + '</span>' +
       (host && p.id !== ME_ID ? '<button class="x" data-act="kick" data-id="' + p.id + '" aria-label="Remove ' + esc(p.name) + '">×</button>' : '') + '</div></div>').join('');
-    const total = Math.ceil(Math.max(n, 3) * s.rounds / 2);
+    const tgt = s.players || 3, minProd = tgt * (s.rounds || 1);
+    const real = n - (s.hostPlays === 0 ? 1 : 0);
+    const total = Math.ceil(tgt * s.rounds / 2);
+    const stp = (k, min, max) => '<div class="stepper2"><button class="btn" data-act="step" data-k="' + k + '" data-v="-1"' + (s[k] <= min ? ' aria-disabled="true"' : '') + ' aria-label="Less">−</button><b class="num">' + s[k] + '</b><button class="btn" data-act="step" data-k="' + k + '" data-v="1"' + (s[k] >= max ? ' aria-disabled="true"' : '') + ' aria-label="More">+</button></div>';
+    const seg2 = (k, pairs) => '<div class="seg-wide" role="group">' + pairs.map(([v, t]) => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + t + '</button>').join('') + '</div>';
+    const need = s.hostPlays === 0 ? 4 : 3;
+    const srcSeg = '<div class="seg-wide" role="group">' + Object.keys(SRC).map(k => '<button data-act="setSrc" data-v="' + k + '" class="' + ((s.src || 'players') === k ? 'on' : '') + '" aria-pressed="' + ((s.src || 'players') === k) + '">' + SRC[k] + '</button>').join('') + '</div>';
     const settings = host ? '<section class="card" style="display:grid;gap:18px"><h2>Auction settings</h2>' +
-      '<div class="labelled"><span class="lbl">How many times each player sells</span>' + seg('rounds', [2, 3, 4], ' times') + '<span class="muted small">That’s about ' + total + ' rounds with ' + Math.max(n, 3) + ' players.</span></div>' +
+      '<div class="labelled"><span class="lbl">Host</span>' + seg2('hostPlays', [[1, 'I’ll play'], [0, 'Host only']]) + '<span class="muted small">' + (s.hostPlays === 0 ? 'You don’t play. You only run the game, and you need 3 players besides you.' : 'You play like everyone else, and also run the game.') + '</span></div>' +
+      '<div class="labelled"><span class="lbl">Items for sale</span>' + srcSeg + '<span class="muted small">' + ((s.src || 'players') === 'ready' ? 'The game picks random items from a ready-made list; nobody needs to write anything.' : 'Each player writes things around the room.') + '</span></div>' +
+      '<div class="labelled"><span class="lbl">Players (sales reps)</span>' + stp('players', 3, 25) + '</div>' +
+      '<div class="labelled"><span class="lbl">Rounds</span>' + stp('rounds', 1, 5) + '<span class="muted small">In each round every player sells once, so ' + total + ' sales.</span></div>' +
+      '<div class="labelled"><span class="lbl">Products</span>' + stp('products', minProd, (s.src || 'players') === 'ready' ? READY.length : 100) + '<span class="muted small">At least ' + minProd + ' (players × rounds).' + ((s.src || 'players') === 'players' ? ' Each player writes ' + Math.ceil(s.products / tgt) + '.' : '') + '</span></div>' +
       '<div class="labelled"><span class="lbl">Starting wallet</span>' + seg('start', [10, 20, 30], ' KD') + '</div>' +
       '<div class="labelled"><span class="lbl">Points per item</span>' + seg('val', [3, 5, 7], ' pts') + '</div>' +
-      '<div class="labelled"><span class="lbl">Thinking time</span>' + seg('think', [30, 60, 90], ' s') + '</div>' +
-      '<div class="labelled"><span class="lbl">Pitch time per seller</span>' + seg('pitch', [30, 60, 90], ' s') + '</div></section>'
-      : '<section class="card"><h3>Settings</h3><p class="muted">Each player sells ' + s.rounds + ' times · wallet ' + kd(s.start) + ' · item = ' + s.val + ' pts · thinking ' + s.think + ' s · pitch ' + s.pitch + ' s</p></section>';
+      '<div class="labelled"><span class="lbl">Item voting time</span>' + seg('voteSec', TIMES, ' s') + '</div>' +
+      '<div class="labelled"><span class="lbl">Pricing time</span>' + seg('priceSec', TIMES, ' s') + '</div>' +
+      '<div class="labelled"><span class="lbl">Thinking time</span>' + seg('think', TIMES, ' s') + '</div>' +
+      '<div class="labelled"><span class="lbl">Pitch time per seller</span>' + seg('pitch', TIMES, ' s') + '</div>' +
+      '<div class="labelled"><span class="lbl">Buying decision time</span>' + seg('buySec', TIMES, ' s') + '</div></section>'
+      : '<section class="card"><h3>Settings</h3><p class="muted">' + SRC[s.src || 'players'] + ' · ' + (s.players || 3) + ' players · ' + s.rounds + ' rounds · ' + s.products + ' products · wallet ' + kd(s.start) + ' · item = ' + s.val + ' pts · thinking ' + s.think + ' s · pitch ' + s.pitch + ' s</p></section>';
     return '<section class="card roomcard"><span class="muted">Room code</span><div class="bigcode" dir="ltr">' + esc(G.code) + '</div>' +
       '<p class="muted small">Players open the game link and type this code, or open the invite link directly.</p>' +
       '<div class="linkrow"><input class="field" id="lnk" readonly value="' + esc(link) + '" dir="ltr" aria-label="Invite link"><button class="btn" data-act="copyLink">Copy link</button></div></section>' +
-      '<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px"><h2 style="margin:0">Players</h2><span class="chip num">' + n + ' from 12</span></div><div style="display:grid;gap:10px">' + rows + '</div>' +
-      (n < 3 ? '<p class="muted small" style="margin-top:10px">You need at least 3 players: two sellers and a buyer.</p>' : '') + '</section>' + settings + errBox() +
-      (host ? '<button class="btn xl primary" data-act="startGame"' + (n < 3 ? ' aria-disabled="true"' : '') + '>Start the auction</button>' : '<p class="muted" style="text-align:center">Waiting for the host to start the game…</p>');
+      '<section class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px"><h2 style="margin:0">Players</h2><span class="chip num">' + n + ' from 25</span></div><div style="display:grid;gap:10px">' + rows + '</div>' +
+      '<p class="muted small" style="margin-top:10px">Joined ' + real + ' from ' + tgt + ' players' + (s.hostPlays === 0 ? ' (besides the host)' : '') + '. ' + (real > tgt ? 'More than the set number. Increase the number of players or remove one.' : real < tgt ? 'Waiting for ' + (tgt - real) + ' players.' : 'All in.') + '</p></section>' + settings + errBox() +
+      (host ? '<button class="btn xl primary" data-act="startGame"' + (real !== tgt ? ' aria-disabled="true"' : '') + '>Start the auction</button>' : '<p class="muted" style="text-align:center">Waiting for the host to start the game…</p>');
   }
 
+  const perN = () => Math.min(10, Math.max(1, Math.ceil((+(G && G.settings.products) || 6) / Math.max(1, G ? G.players.length : 3))));
+  const IDX3 = () => Array.from({ length: perN() }, (_, i) => i);
   function itemsView() {
     const mine = inp(ME_ID).items, sent = mine && mine.g === G.gameNo && mine.r === G.itemsRound;
     const head = G.needMore ? '<div class="note"><b>Out of items!</b> Write more things around the room so we can keep going.</div>' : '';
     let body;
     if (!sent) {
-      body = '<section class="card action" style="display:grid;gap:14px"><h2 style="margin:0">What’s around you?</h2><p class="muted">Write up to 3 things around the room. Anything: a tissue box, a remote, a mug, a charger…</p>' +
-        [0, 1, 2].map(k => '<input class="field" id="it' + k + '" data-bind="item" data-k="' + k + '" value="' + esc(U.draft['it' + k] || '') + '" maxlength="40" autocomplete="off" placeholder="item ' + (k + 1) + '">').join('') +
+      body = '<section class="card action" style="display:grid;gap:14px"><h2 style="margin:0">What’s around you?</h2><p class="muted">Write ' + perN() + ' ' + (perN() === 1 ? 'thing' : 'things') + ' around the room. Anything: a tissue box, a remote, a mug, a charger…</p>' +
+        IDX3().map(k => '<input class="field" id="it' + k + '" data-bind="item" data-k="' + k + '" value="' + esc(U.draft['it' + k] || '') + '" maxlength="40" autocomplete="off" placeholder="item ' + (k + 1) + '">').join('') +
         errBox() + '<button class="btn xl primary" data-act="sendItems">Send</button></section>';
     } else {
       body = '<section class="card pass"><h2>Your items are in ✓</h2><p class="muted">' + (mine.list || []).map(esc).join(' · ') + '</p></section>';
@@ -988,7 +1033,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
         '<button class="btn xl primary" data-act="sendPerks" style="margin-top:14px">' + (U.perks.length ? 'Confirm perks' : 'Continue without perks') + '</button></section>';
     }
     const all = (G.prog || []).length >= G.players.length;
-    return body + progBox('Who picked perks') + (isHost() ? '<button class="btn xl primary" data-act="perksNext">' + (all ? 'Next: write items' : 'Continue without the rest') + '</button>' : waitHost());
+    return body + progBox('Who picked perks') + (isHost() ? '<button class="btn xl primary" data-act="perksNext">' + (all ? (G.settings.src === 'ready' ? 'Start the auction' : 'Next: write items') : 'Continue without the rest') + '</button>' : waitHost());
   }
   function perkPanel() {
     const c = G.cur;
@@ -1004,10 +1049,10 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const l = (G.cur && G.cur.log) || [];
     return l.length ? '<section class="perklog">' + l.slice(-3).map(m => '<div>⚡ ' + esc(m) + '</div>').join('') + '</section>' : '';
   }
-  function clockBox(label) {
+  function clockBox(label, nxt) {
     const c = G.cur;
     return '<section class="card timerbox"><div class="ring" data-ring="' + (c.dur || 0) + '"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="clock num" data-clock>' + fmt(remain()) + '</div></div>' +
-      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn" data-act="skip">Skip timer</button>' : '') + '</div></section>';
+      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn primary" data-act="skip">Finish' + (nxt ? ' (' + nxt + ')' : '') + '</button>' : '') + '</div></section>';
   }
   const remain = () => (G && G.cur && G.cur.endsAt ? Math.max(0, (G.cur.endsAt - nowH()) / 1000) : 0);
   function sellersBox(showPrice) {
@@ -1030,19 +1075,20 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   function roundView() {
     const c = G.cur, seller = c.a === ME_ID || c.b === ME_ID, mySide = c.a === ME_ID ? 'a' : (c.b === ME_ID ? 'b' : null);
     const helpFor = c.help ? Object.keys(c.help).find(k => c.help[k] === ME_ID) : null;
-    const head = '<div class="casehead"><span class="chip gold num">Round ' + c.no + ' of ' + G.total + '</span>' + (seller ? '<span class="chip live">You’re a seller this round</span>' : '') + (helpFor ? '<span class="chip live">Sales rep</span>' : '') + '</div>' + walletBar() + logBox() +
+    const head = '<div class="casehead"><span class="chip gold num">Sale ' + c.no + ' of ' + G.total + '</span>' + (seller ? '<span class="chip live">You’re a seller this round</span>' : '') + (helpFor ? '<span class="chip live">Sales rep</span>' : '') + '</div>' + walletBar() + logBox() +
       (helpFor && c.stage !== 'result' ? '<section class="note"><b>You’re the sales rep for ' + esc(P(c[helpFor]).name) + '!</b> ' + 'Help them convince everyone. You can’t buy this round.</section>' : '');
     const pp = perkPanel();
     if (c.stage === 'vote') {
       const v = inp(ME_ID).vote, voted = v && v.key === c.key;
       if (U.pickKey !== c.key) { U.pickKey = c.key; U.pick = null; }
       let body;
-      if (!voted) {
+      if (!inRoom(ME_ID)) body = '<section class="card"><h3 style="margin-bottom:8px">Candidate items</h3><p class="muted">' + c.cands.map(id => esc(itemText(id))).join(' · ') + '</p></section>';
+      else if (!voted) {
         body = '<section class="card action" style="display:grid;gap:14px"><h2 style="margin:0">Vote: what do we sell?</h2><p class="muted">Pick the item you want the sellers to try to sell.</p><div class="vopts">' +
           c.cands.map(id => '<button class="vopt none ' + (U.pick === id ? 'on' : '') + '" data-act="pick" data-v="' + id + '"><span class="vt"><b>' + esc(itemText(id)) + '</b></span><span class="radio">' + (U.pick === id ? '✓' : '') + '</span></button>').join('') +
           '</div><button class="btn xl primary" data-act="sendVote">Confirm my vote</button></section>';
       } else body = '<section class="card pass"><h2>Vote received ✓</h2><p class="muted">Waiting for the others.</p></section>';
-      return head + '<section class="card"><h3 style="margin-bottom:10px">Sellers this round</h3>' + sellersBox(false) + '</section>' + body + clockBox('Voting time') + progBox('Who voted');
+      return head + '<section class="card"><h3 style="margin-bottom:10px">Sellers this round</h3>' + sellersBox(false) + '</section>' + body + clockBox('Voting time', 'go to pricing') + progBox('Who voted');
     }
     if (c.stage === 'price') {
       const pr = inp(ME_ID).price, sent = !!(mySide && pr && pr.key === c.key && pr.side === mySide && pr.ver === c.pv[mySide]);
@@ -1057,24 +1103,25 @@ html,body{background:#FFFFFF!important;background-image:none!important}
           '<button class="btn xl primary" data-act="sendPrice">Lock price</button></section>';
       } else if (seller) body = '<section class="card pass"><h2>Price locked ✓</h2><p class="muted">Waiting for the other seller.</p></section>';
       else body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>Sellers are setting their prices secretly…</h2></section>';
-      return head + itemCard() + sellersBox(false) + body + pp + clockBox('Pricing time') + progBox('Who locked their price', [c.a, c.b]);
+      return head + itemCard() + sellersBox(false) + body + pp + clockBox('Pricing time', 'go to the price reveal') + progBox('Who locked their price', [c.a, c.b]);
     }
     if (c.stage === 'reveal') {
       return head + itemCard() + '<section class="vkind"><b>Prices revealed!</b><span class="muted">Think it over. Then each seller gets ' + G.settings.pitch + ' seconds to convince you. ' + esc(P(c[c.first]).name) + ' goes first.</span></section>' +
-        sellersBox(true) + pp + clockBox('Thinking time');
+        sellersBox(true) + pp + clockBox('Thinking time', 'go to the turn of ' + P(c[c.first]).name);
     }
     if (c.stage === 'pitch1' || c.stage === 'pitch2') {
       const mine = mySide === c.speaker;
       return head + itemCard() + sellersBox(true) +
         (mine ? '<section class="card action pass"><h2>Your turn! Convince them to buy from you</h2><p class="muted">Your price ' + kd(c.prices[mySide]) + '. Say why your item is worth it.</p><button class="btn xl" data-act="pitchDone">I’m done</button></section>'
           : '<section class="card pass"><h2>' + esc(P(c[c.speaker]).name) + ' is pitching now</h2><p class="muted">Listen closely, then decide.</p></section>') +
-        pp + clockBox(c.stage === 'pitch1' ? 'Offer one' : 'Offer two');
+        pp + clockBox(c.stage === 'pitch1' ? 'Offer one' : 'Offer two', c.stage === 'pitch1' ? 'go to the turn of ' + P(c[other(c.first)]).name : 'go to the buying decision');
     }
     if (c.stage === 'buy') {
       const b = inp(ME_ID).buy, sent = b && b.key === c.key;
       if (U.pickKey !== c.key + 'b') { U.pickKey = c.key + 'b'; U.pick = null; }
       let body;
-      if (seller || helpFor) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>People are deciding…</h2><p class="muted">' + (seller ? 'Let’s see how many bought from you.' : 'You’re a sales rep, you don’t buy this round.') + '</p></section>';
+      if (!inRoom(ME_ID)) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>People are deciding…</h2></section>';
+      else if (seller || helpFor) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>People are deciding…</h2><p class="muted">' + (seller ? 'Let’s see how many bought from you.' : 'You’re a sales rep, you don’t buy this round.') + '</p></section>';
       else if (!sent) {
         const w = E(ME_ID).w;
         const opt = s => {
@@ -1086,7 +1133,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
           opt('a') + opt('b') + '<button class="vopt none ' + (U.pick === 'x' ? 'on' : '') + '" data-act="pick" data-v="x"><span class="vt"><b>Pass</b><span>I don’t want to buy this round</span></span><span class="radio">' + (U.pick === 'x' ? '✓' : '') + '</span></button></div>' +
           '<button class="btn xl primary" data-act="sendBuy">Confirm</button><p class="muted small">If time runs out and you haven’t chosen, you count as abstaining.</p></section>';
       } else body = '<section class="card pass"><h2>Decision received ✓</h2><p class="muted">' + (b.v === 'x' ? 'You passed.' : 'You chose to buy from ' + esc(P(c[b.v]).name) + '.') + '</p></section>';
-      return head + itemCard() + sellersBox(true) + body + clockBox('Decision time') + progBox('Who decided', buyers());
+      return head + itemCard() + sellersBox(true) + body + clockBox('Decision time', 'go to the result') + progBox('Who decided', buyers());
     }
     if (c.stage === 'result') {
       const list = s => buyers().filter(id => c.buys[id] === s);
@@ -1105,7 +1152,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       else if (c.buys[ME_ID] === 'x') mine = 'You passed.';
       else if (c.buys[ME_ID] === 'c') mine = 'Your purchase was cancelled by objection, and your money refunded.';
       else if (helpFor) mine = 'You were a sales rep ' + esc(P(c[helpFor]).name) + '.';
-      else mine = 'You didn’t choose, counted as abstaining.';
+      else if (inRoom(ME_ID)) mine = 'You didn’t choose, counted as abstaining.';
       const last = G.roundNo >= G.total;
       return head + '<section class="verdict"><h2>' + (win ? esc(P(c[win]).name) + ' wins the round' : (c.n.a + c.n.b ? 'Tied on profits!' : 'Nobody bought anything!')) + '</h2><p>' + mine + '</p></section>' +
         itemCard() + '<div class="parties">' + col('a') + col('b') + '</div>' +
@@ -1167,7 +1214,14 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     }
     return '<div class="ov" data-act="ovClose"><div class="dlg" role="dialog" aria-modal="true">' + body + '</div></div>';
   }
+  function hostOnlyView() {
+    const note = '<section class="card pass"><h2>You’re the host</h2><p class="muted">You’re not playing this game. You follow the players and move the game between stages.</p></section>';
+    if (G.phase === 'perks') return note + progBox('Who picked perks') + '<button class="btn xl primary" data-act="perksNext">' + ((G.prog || []).length >= G.players.length ? (G.settings.src === 'ready' ? 'Start the auction' : 'Next: write items') : 'Continue without the rest') + '</button>';
+    if (G.phase === 'items') return note + progBox('Who wrote their items') + '<button class="btn xl primary" data-act="itemsNext">' + ((G.prog || []).length >= G.players.length ? 'Let’s start selling' : 'Start without those who didn’t write') + '</button>';
+    return '';
+  }
   function gameView() {
+    if (!inRoom(ME_ID) && isHost() && (G.phase === 'perks' || G.phase === 'items')) return hostOnlyView();
     switch (G.phase) {
       case 'lobby': return lobbyView();
       case 'perks': return perksView();
@@ -1181,7 +1235,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   /* ---------- render ---------- */
   function render() {
     let html;
-    if (U.splash) html = splashView();
+    if (U.notice) html = noticeView();
+    else if (U.splash) html = splashView();
     else {
       html = topbar();
       if (!U.code || U.view === 'home') html += homeView();
@@ -1225,6 +1280,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
 
   ACT.enter = () => { U.splash = false; };
+  ACT.noticeOk = () => { U.notice = false; try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
   ACT.myGender = d => { U.gender = d.g; lsSet({ gender: d.g }); };
   ACT.closeModal = () => { U.modal = null; U.err = ''; };
   ACT.ovClose = (d, el, ev) => { if (ev.target !== el) return false; U.modal = null; U.err = ''; };
@@ -1314,9 +1370,19 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   /* host controls */
   ACT.kick = H(d => { G.players = G.players.filter(p => p.id !== d.id); G.kicked[d.id] = true; });
   ACT.set = H(d => { G.settings[d.k] = +d.v; });
+  ACT.step = H(d => {
+    const s = G.settings; if (G.phase !== 'lobby') return false;
+    const L = { players: [3, 25], rounds: [1, 5], products: [3, (s.src || 'players') === 'ready' ? READY.length : 100] }[d.k]; if (!L) return false;
+    s[d.k] = Math.min(L[1], Math.max(L[0], (+s[d.k] || L[0]) + (+d.v)));
+    s.products = Math.max(s.products || 0, (s.players || 3) * (s.rounds || 1));
+  });
+  ACT.setSrc = H(d => { if (G.phase !== 'lobby' || !SRC[d.v]) return false; G.settings.src = d.v; });
   ACT.startGame = H(() => {
-    if (G.players.length < 3) { U.err = 'You need at least 3 players.'; return false; }
-    U.err = ''; startGame();
+    const tgt = G.settings.players || 3, real = G.players.length - (G.settings.hostPlays === 0 ? 1 : 0);
+    if (real !== tgt) { U.err = real > tgt ? 'More players joined than the set number. Increase the number of players or remove one.' : 'Waiting for ' + (tgt - real) + ' players.'; return false; }
+    U.err = '';
+    if (G.settings.hostPlays === 0) { G.hostP = G.players.find(p => p.id === ME_ID) || G.hostP; G.players = G.players.filter(p => p.id !== ME_ID); }
+    startGame();
   });
   ACT.itemsNext = H(() => {
     collectItems();
@@ -1338,15 +1404,15 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   ACT.skip = H(() => { if (!roundStep(true)) return false; });
   ACT.nextRound = H(() => { if (!G.cur || G.cur.stage !== 'result') return false; startRound(); });
   ACT.rematch = H(() => { startGame(); });
-  ACT.toLobby = H(() => { G.phase = 'lobby'; G.cur = null; G.prog = []; });
+  ACT.toLobby = H(() => { if (G.hostP && !inRoom(G.hostP.id) && G.hostP.id === ME_ID) G.players.unshift(G.hostP); G.hostP = null; G.phase = 'lobby'; G.cur = null; G.prog = []; });
 
   /* my inputs */
   function mine() { ME = ME || blankMe(U.code); return ME; }
   ACT.sendItems = async () => {
-    const list = [0, 1, 2].map(k => String(U.draft['it' + k] || '').trim()).filter(Boolean);
+    const list = IDX3().map(k => String(U.draft['it' + k] || '').trim()).filter(Boolean);
     if (!list.length) { U.err = 'Write at least one item.'; return; }
     U.err = ''; mine().items = { g: G.gameNo, r: G.itemsRound, list };
-    [0, 1, 2].forEach(k => { U.draft['it' + k] = ''; });
+    IDX3().forEach(k => { U.draft['it' + k] = ''; });
     render(); await saveMe();
   };
   ACT.pick = d => { U.pick = d.v; };
@@ -1397,6 +1463,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     U.name = saved.name || ''; U.gender = saved.gender === 'f' ? 'f' : 'm';
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
     if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; }
+    if (h) { try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
     render();
     const cl = typeof window.claude !== 'undefined' && window.claude && window.claude.use ? window.claude : null;
     let user = null;
@@ -1426,7 +1493,6 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 })();
 
 </script>
-
 <style>#langsw{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:60;background:#fff;border:1.5px solid #D5DBE5;border-radius:99px;padding:5px 14px;font:700 .9rem/1.4 "Readex Pro","Alexandria",system-ui,sans-serif;color:#12203A;text-decoration:none;box-shadow:0 3px 10px rgba(18,32,58,.1)}#langsw[hidden]{display:none}</style><a id="langsw" href="mazad.html" lang="ar">عربي</a><script>(function(){var a=document.getElementById('langsw');a.addEventListener('click',function(e){try{localStorage.setItem('aqnieni.lang','ar')}catch(x){}a.href='mazad.html'+location.hash;});setInterval(function(){a.hidden=!!document.querySelector('.top .chip.live')||!!document.querySelector('.top [data-act=menu]');},400);})();</script>
 </body>
 </html>

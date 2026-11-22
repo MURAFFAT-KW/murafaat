@@ -443,6 +443,27 @@ html,body{background:#FFFFFF!important;background-image:none!important}
 .sel{width:100%;min-width:0;min-height:42px;font-size:16px;border:1px solid var(--line);border-radius:10px;padding:4px 8px;background:var(--bg);color:var(--text);font-family:inherit}
 .fivebox{display:grid;gap:8px;margin:10px 0}
 .pp.empty i{background:rgba(255,255,255,.25);color:#fff;border-style:dashed}
+.sqgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.sqb{aspect-ratio:1;border-radius:16px;border:2px solid var(--line);background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;color:var(--text)}
+.sqb b{font-size:1.7rem;font-weight:800;line-height:1}
+.sqb small{font-size:.68rem;color:var(--muted)}
+.sqb.mine{border-color:var(--p)}
+.sqb.on{background:var(--p);border-color:var(--p);color:var(--p-ink)}
+.sqb.on small{color:var(--p-ink)}
+.dlg>*{flex-shrink:0}
+.top:has(.top-r [data-act=squads]) .brand b{display:none}
+.intro .fulllogo{width:min(36vw,140px)!important}
+.intro .ar{margin-top:2px}
+.introtx{max-width:34ch;color:var(--muted);font-size:1rem;line-height:1.9;margin:6px auto 0}
+.intro .go{margin-top:22px}
+.notice{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:24px 4px;background:#fff}
+.notice .nbox{background:#fff;border:3px solid #DE0921;border-radius:22px;padding:24px 20px;max-width:520px;display:grid;gap:12px;color:#111}
+.notice h2{color:#111;font-size:1.35rem;text-align:center}
+.notice p{color:#111;line-height:1.85;font-size:1rem}
+.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}
+.stepper2{display:flex;align-items:center;justify-content:center;gap:16px}
+.stepper2 b{font-family:var(--font-d);font-size:1.8rem;min-width:2.5ch;text-align:center}
+.stepper2 .btn{width:58px;min-height:52px;font-size:1.6rem;font-weight:800;padding:0}
 </style>
 </head>
 <body>
@@ -517,7 +538,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const LG = { ENG: 'الإنجليزي', ESP: 'الإسباني', GER: 'الألماني', ITA: 'الإيطالي', FRA: 'الفرنسي' };
   const POS = { GK: 'حارس', DF: 'دفاع', MF: 'وسط', FW: 'هجوم' };
   const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
-  const TIER = { s: { name: 'الفريق الأقوى', bal: 10 }, w: { name: 'الفريق الأضعف', bal: 60 } };
+  const TIER = { s: { name: 'الفريق الأقوى', bal: 10, pv: 15 }, w: { name: 'الفريق الأضعف', bal: 60, pv: 5 } };
   /* five-a-side: slot 1 GK, 2 DF, 3 DF or MF, 4 MF or FW, 5 FW */
   const SLOTS = [['GK'], ['DF'], ['DF', 'MF'], ['MF', 'FW'], ['FW']];
   const SLOT_N = ['حارس', 'مدافع', 'مدافع أو وسط', 'وسط أو مهاجم', 'مهاجم'];
@@ -525,6 +546,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const fits = (ps, i) => (ps || []).some(x => SLOTS[i].includes(x));
   const MODE = { hist: 'تشكيلات تاريخية', custom: 'تشكيلات يكتبها اللاعبين' };
   const MAXP = 500;
+  const TIMES = [30, 60, 90, 120];
   const app = document.getElementById('app');
   const toastEl = document.getElementById('toast');
   const EXT = !(typeof window.claude !== 'undefined' && window.claude && window.claude.use);
@@ -688,7 +710,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   function freshRoom(code) {
     return {
       v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {}, online: [],
-      settings: { mode: 'hist', seasons: 5, listSec: 30, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
+      settings: { mode: 'hist', hostPlays: 1, players: 3, seasons: 5, listSec: 60, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
       picks: {}, tier: {}, team: {}, sq: {}, note: {}, own: {}, val: {}, bal: {}, start: {}, stats: {}, mk: null, hist: [], xi: {}, cup: null, prog: []
     };
   }
@@ -740,7 +762,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   }
   function decideView() {
     if (!G) return;
-    if (inRoom(ME_ID)) U.view = 'game';
+    if (inRoom(ME_ID) || (G.host === ME_ID && G.phase !== 'lobby')) U.view = 'game';
     else if (G.kicked && G.kicked[ME_ID]) U.view = 'kicked';
     else if (G.phase === 'lobby') U.view = ME && ME.room === G.code && ME.name ? 'wait' : 'join';
     else U.view = 'spect';
@@ -792,7 +814,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const p = G.players.find(x => x.id === id);
       if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
       if (d.room !== G.code) return;
-      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 16) {
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 33) {
         G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
     });
@@ -938,11 +960,13 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const sid = uid('q');
       G.sq[sid] = makeSquad(best.res[id].side);
       G.team[id] = sid; G.note[id] = best.note[id];
-      G.sq[sid].five.forEach((r, i) => { G.own[sid + '.' + i] = id; });
+      G.sq[sid].five.forEach((r, i) => { G.own[sid + '.' + i] = id; G.val[sid + '.' + i] = TIER[G.tier[id]].pv; });
       G.bal[id] = TIER[G.tier[id]].bal;
       G.stats[id] = { sold: 0, bought: 0 };
     });
-    pl.forEach(id => { G.start[id] = G.bal[id] + roster(id).length * G.settings.base; });
+    pl.forEach(id => { G.start[id] = assets(id); });
+    /* fixed anonymous squad numbers for the squads page */
+    G.num = {}; shuffle(pl).forEach((id, i) => { G.num[id] = i + 1; });
     G.phase = 'reveal'; G.prog = [];
   }
   function startMarket(no) {
@@ -1123,20 +1147,40 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const i = STEPS.findIndex(s => s[0] === G.phase);
     return '<nav class="steps" aria-label="مراحل اللعبة">' + STEPS.map((s, k) => '<span class="st ' + (k < i ? 'done' : k === i ? 'on' : '') + '"><i>' + (k + 1) + '</i><b>' + s[1] + '</b></span>').join('') + '</nav>';
   }
+  const sqReady = () => !!(G && G.num && (inRoom(ME_ID) || isHost()) && ['reveal', 'market', 'lineup', 'cup', 'final'].includes(G.phase));
+  function squadsBody(m) {
+    const list = Object.keys(G.num).filter(id => inRoom(id)).sort((a, b) => G.num[a] - G.num[b]);
+    const grid = '<div class="sqgrid">' + list.map(id => '<button class="sqb' + (m.n === G.num[id] ? ' on' : '') + (id === ME_ID ? ' mine' : '') + '" data-act="sqOpen" data-n="' + G.num[id] + '"><b class="num">' + G.num[id] + '</b>' + (id === ME_ID ? '<small>فريقك</small>' : '') + '</button>').join('') + '</div>';
+    let detail = '<p class="muted small" style="text-align:center">اضغط على رقم عشان تشوف التشكيلة. الأرقام ثابتة طول اللعبة، وما ينكتب صاحب أي تشكيلة.</p>';
+    const pid = list.find(id => G.num[id] === m.n);
+    if (pid) {
+      const r = roster(pid);
+      detail = '<h3 style="margin:4px 0 8px">تشكيلة ' + m.n + (pid === ME_ID ? ' <span class="chip gold">فريقك</span>' : '') + '</h3>' + pitch(bestFive(r), '', true) +
+        '<div class="rtable" style="margin-top:10px">' + r.map(k => { const p = PL(k); return '<div class="rr"><span class="num nb">' + esc(p.num) + '</span><span class="nm"><b>' + esc(p.name) + '</b><small>' + posL(p) + '</small></span><span class="num vl">' + mil(val(k)) + '</span></div>'; }).join('') + '</div>';
+    }
+    return '<h2>التشكيلات</h2>' + grid + detail + '<button class="btn ghost" data-act="closeModal">رجوع للعبة</button>';
+  }
   function topbar() {
     const inG = !!G && !!U.code;
     return '<header class="top"><div class="brand">' + LOGO + '<b>أقنعني!</b><span>نادييك</span></div><div class="top-r">' +
-      (inG ? '<span class="chip live num">غرفة ' + esc(U.code) + '</span><button class="btn sm ghost" data-act="menu">القائمة</button>' : '') + '</div></header>' +
+      (inG ? '<span class="chip live num">غرفة ' + esc(U.code) + '</span>' + (sqReady() ? '<button class="btn sm primary" data-act="squads">التشكيلات</button>' : '') + '<button class="btn sm ghost" data-act="menu">القائمة</button>' : '') + '</div></header>' +
       (U.offline === 'net' ? '<div class="alert" role="alert">الاتصال ضعيف. التحديثات بتوصل أول ما يرجع الاتصال.</div>' : '') +
       (U.offline === 'perm' ? '<div class="alert" role="alert">ما نقدر نحفظ في قاعدة البيانات من هذا الجهاز.</div>' : '') +
       (inG && U.view === 'game' ? stepper() : '');
   }
   const errBox = () => (U.err ? '<div class="alert" role="alert">' + esc(U.err) + '</div>' : '');
+  function noticeView() {
+    return '<section class="notice"><div class="nbox"><h2>تنويه ودي قبل اللعب</h2>' +
+      '<p>يا هلا فيكم! هذي نسخة تجريبية من لعبة «أقنعني» بفروعها الثلاثة: مرافعات، المزاد، نادييك، من فكرة وتطوير عبدالرحمن الفهد، بتاريخ 26/11/26.</p>' +
+      '<p>حبيت أشارككم التجربة قبل نشرها للناس، والهدف نستانس ونجرّبها مع بعض. حقوق محتوى اللعبة وتصميمها وموادها محفوظة، وأتمنى ما تنسخونها أو تعيدون نشرها أو تسوّون نسخة مشابهة منها حتى مع تغييرات بسيطة. وأي استخدام لمحتواها بدون إذن قد يضطرني لاتخاذ الإجراءات المناسبة.</p>' +
+      '<p>استمتعوا، وملاحظاتكم تهمني!</p>' +
+      '<button class="nbtn" data-act="noticeOk">أوعدك، يلا نلعب</button></div></section>';
+  }
   function splashView() {
-    return '<section class="splash"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>' +
-      '<div class="lg">' + FULL + '</div>' +
+    return '<section class="splash intro"><div class="lg">' + FULL + '</div>' +
       '<h1 class="sr">أقنعني!</h1><div class="ar">نادييك</div>' +
-      '<button class="btn primary go" data-act="enter">نبدأ</button></section>';
+      '<p class="introtx">كل لاعب يدير فريق كورة خماسي، تاريخي أو يكتبه بنفسه.<br>تبيع وتشتري لاعبين بسوق انتقالات يمتد لين ٥ مواسم.<br>وبالنهاية تقنع الجمهور يصوّت لفريقك بكأس الأبطال.</p>' +
+      '<button class="btn primary go" data-act="enter">فهمت</button></section>';
   }
   function homeView() {
     if (!U.ready) return '<section class="card hero"><h1>أقنعني!</h1><p class="muted">جاري التحميل…</p></section>';
@@ -1153,7 +1197,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       '<section class="card"><h2>كيف تُلعب؟</h2><ol class="howto">' +
       '<li><span>كل لاعب يحط تشكيلتين خماسيتين: «الفريق الأضعف» و«الفريق الأقوى». تاريخية من الدوريات الخمسة، أو يكتب الأسماء بنفسه.</span></li>' +
       '<li><span>الخماسي: حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم.</span></li>' +
-      '<li><span>تختار سرًّا: تشكيلة قوية مع ١٠ ملايين، أو أضعف مع ٦٠ مليون. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
+      '<li><span>تختار سرًّا: الفريق الأقوى (كل لاعب ١٥ مليون + ١٠ ملايين بالمحفظة)، أو الأضعف (كل لاعب ٥ ملايين + ٦٠ مليون). الاثنين يبدون من ٨٥ مليون. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
+      '<li><span>زر «التشكيلات» يوريك فرق الكل بأرقام ثابتة بدون أسماء، عشان تحط عينك على لاعب تبيه.</span></li>' +
       '<li><span>١٠ أسواق انتقالات: بكل سوق تعرض لاعب واحد على الأقل بسعرك، وتزايد على لاعبين غيرك.</span></li>' +
       '<li><span>تبيع بس إذا يبقى عندك خماسي كامل، يعني البيع يحتاج بديل تشتريه بنفس السوق.</span></li>' +
       '<li><span>بعد الموسم الخامس تثبّت خماسيك وتدخل كأس الأبطال.</span></li>' +
@@ -1176,14 +1221,17 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const waitHost = () => '<p class="muted small" style="text-align:center">بانتظار المضيف ' + esc(P(G.host).name) + ' ينقل اللعبة للمرحلة التالية.</p>';
   const hostBtn = (label, act, extra) => isHost() ? '<button class="btn xl primary" data-act="' + act + '"' + (extra || '') + '>' + label + '</button>' : waitHost();
   const remain = t => Math.max(0, (t - nowH()) / 1000);
-  function clockBox(label, endsAt, dur) {
+  function clockBox(label, endsAt, dur, nxt) {
     return '<section class="card timerbox"><div class="ring" data-ring="' + (dur || 0) + '" data-end="' + (endsAt || 0) + '"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="clock num" data-clock="' + (endsAt || 0) + '">' + fmt(remain(endsAt)) + '</div></div>' +
-      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn" data-act="skip">تخطّي الوقت</button>' : '') + '</div></section>';
+      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn primary" data-act="skip">إنهاء' + (nxt ? ' (' + nxt + ')' : '') + '</button>' : '') + '</div></section>';
   }
 
   function lobbyView() {
     const s = G.settings, host = isHost(), n = G.players.length;
     const link = ART_URL + '#room-' + G.code;
+    const seg2 = (k, pairs) => '<div class="seg-wide" role="group">' + pairs.map(([v, t]) => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + t + '</button>').join('') + '</div>';
+    const real = G.players.filter(p => !isBot(p.id)).length - (s.hostPlays === 0 ? 1 : 0), tgt = s.players || 3;
+    const stp = (k, min, max) => '<div class="stepper2"><button class="btn" data-act="step" data-k="' + k + '" data-v="-1"' + (s[k] <= min ? ' aria-disabled="true"' : '') + ' aria-label="أقل">−</button><b class="num">' + s[k] + '</b><button class="btn" data-act="step" data-k="' + k + '" data-v="1"' + (s[k] >= max ? ' aria-disabled="true"' : '') + ' aria-label="أكثر">+</button></div>';
     const seg = (k, vals, unit) => '<div class="seg-wide" role="group">' + vals.map(v => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + v + (unit || '') + '</button>').join('') + '</div>';
     const rows = G.players.map(p => '<div class="prow">' + dot(p.id) + '<b style="flex:1">' + esc(p.name) + (p.id === ME_ID ? ' <span class="muted small">(أنت)</span>' : '') + '</b>' +
       (p.id === G.host ? '<span class="chip gold">المضيف</span>' : '') + '<span class="muted small">' + (isBot(p.id) ? 'لاعب تجريبي' : ((G.online || []).includes(p.id) ? 'متصل' : 'غير متصل')) + '</span>' +
@@ -1191,18 +1239,20 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const modeSeg = '<div class="seg-wide" role="group">' + Object.keys(MODE).map(m => '<button data-act="setMode" data-v="' + m + '" class="' + ((s.mode || 'hist') === m ? 'on' : '') + '" aria-pressed="' + ((s.mode || 'hist') === m) + '">' + MODE[m] + '</button>').join('') + '</div>';
     const settings = host ? '<section class="card" style="display:grid;gap:16px"><h2>الإعدادات</h2>' +
       '<div class="labelled"><span class="lbl">نوع التشكيلات</span>' + modeSeg + '<span class="muted small">' + ((s.mode || 'hist') === 'custom' ? 'كل لاعب يكتب أسماء خماسيين بنفسه: واحد ضعيف وواحد قوي.' : 'كل لاعب يختار ناديين ومواسم من الدوريات الخمسة، ويطلع له خماسي من الأكثر لعب.') + '</span></div>' +
-      '<div class="labelled"><span class="lbl">عدد المواسم</span>' + seg('seasons', [5, 3, 1]) + '<span class="muted small">اللعبة الكاملة ٥ مواسم (١٠ أسواق). ٣ أو ١ للتجربة السريعة.</span></div>' +
-      '<div class="labelled"><span class="lbl">وقت عرض اللاعبين للبيع</span>' + seg('listSec', [20, 30, 45], ' ث') + '</div>' +
-      '<div class="labelled"><span class="lbl">وقت السوق (المزايدة)</span>' + seg('mkSec', [60, 90, 120], ' ث') + '</div>' +
-      '<div class="labelled"><span class="lbl">وقت المراجعة</span>' + seg('revSec', [60, 30], ' ث') + '</div>' +
-      '<div class="labelled"><span class="lbl">وقت تصويت الكأس</span>' + seg('voteSec', [30, 45, 20], ' ث') + '</div></section>'
-      : '<section class="card"><h3>الإعدادات</h3><p class="muted">' + MODE[s.mode || 'hist'] + ' · ' + s.seasons + ' مواسم · العرض ' + s.listSec + ' ث · السوق ' + s.mkSec + ' ث · المراجعة ' + s.revSec + ' ث · التصويت ' + s.voteSec + ' ث</p></section>';
+      '<div class="labelled"><span class="lbl">عدد اللاعبين (التشكيلات)</span>' + stp('players', 3, 32) + '<span class="muted small">إذا دخل لاعبين أقل من هالعدد، اللعبة تكمّل الباقي بلاعبين كمبيوتر لين ٨ بس. فوق ٨ لازم كلهم لاعبين حقيقيين.</span></div>' +
+      '<div class="labelled"><span class="lbl">عدد الجولات (المواسم)</span>' + stp('seasons', 1, 5) + '<span class="muted small">كل موسم فيه سوقين انتقالات (صيفي وشتوي)، يعني ' + (s.seasons * 2) + ' أسواق.</span></div>' +
+      '<div class="labelled"><span class="lbl">المضيف</span>' + seg2('hostPlays', [[1, 'ألعب'], [0, 'مضيف بس']]) + '<span class="muted small">' + (s.hostPlays === 0 ? 'ما تلعب. تتحكم باللعبة بس، وتحتاج ٣ لاعبين غيرك.' : 'تلعب مثل الباقين، وتتحكم باللعبة بعد.') + '</span></div>' +
+      '<div class="labelled"><span class="lbl">وقت عرض اللاعبين للبيع</span>' + seg('listSec', TIMES, ' ث') + '</div>' +
+      '<div class="labelled"><span class="lbl">وقت السوق (المزايدة)</span>' + seg('mkSec', TIMES, ' ث') + '</div>' +
+      '<div class="labelled"><span class="lbl">وقت المراجعة</span>' + seg('revSec', TIMES, ' ث') + '</div>' +
+      '<div class="labelled"><span class="lbl">وقت تصويت الكأس</span>' + seg('voteSec', TIMES, ' ث') + '</div></section>'
+      : '<section class="card"><h3>الإعدادات</h3><p class="muted">' + MODE[s.mode || 'hist'] + ' · ' + (s.players || 3) + ' لاعبين · ' + s.seasons + ' مواسم · العرض ' + s.listSec + ' ث · السوق ' + s.mkSec + ' ث · المراجعة ' + s.revSec + ' ث · التصويت ' + s.voteSec + ' ث</p></section>';
     return '<section class="card roomcard"><span class="muted">رمز الغرفة</span><div class="bigcode" dir="ltr">' + esc(G.code) + '</div>' +
       '<div class="linkrow"><input class="field" id="lnk" readonly value="' + esc(link) + '" dir="ltr" aria-label="رابط الدعوة"><button class="btn" data-act="copyLink">نسخ الرابط</button></div></section>' +
       '<section class="card"><div class="row-b" style="margin-bottom:10px"><h2 style="margin:0">غرفة الانتظار</h2><span class="chip num">' + n + ' لاعبين</span></div><div style="display:grid;gap:8px">' + rows + '</div>' +
-      (n < 3 ? '<p class="muted small" style="margin-top:10px">تحتاج ٣ لاعبين على الأقل، عشان يكون فيه جمهور يصوّت بالكأس.</p>' : '') +
-      (host ? '<div class="btn-row" style="margin-top:12px"><button class="btn" data-act="addBot"' + (n >= 8 ? ' aria-disabled="true"' : '') + '>+ أضف لاعب تجريبي</button></div><p class="muted small">اللاعب التجريبي يلعب لحاله (يختار ويعرض ويزايد ويصوّت عشوائيًا)، عشان تجرب اللعبة بروحك.</p>' : '') + '</section>' + settings + errBox() +
-      (host ? '<button class="btn xl primary" data-act="startGame"' + (n < 3 ? ' aria-disabled="true"' : '') + '>ابدأ اللعبة</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف يبدأ اللعبة…</p>');
+      '<p class="muted small" style="margin-top:10px">دخل ' + real + ' من ' + tgt + ' لاعبين' + (s.hostPlays === 0 ? ' (غير المضيف)' : '') + '. ' + (real > tgt ? 'العدد أكثر من المحدد. زد عدد اللاعبين أو أزل لاعب.' : real < 1 ? 'لازم يدخل لاعب واحد على الأقل غير المضيف.' : real < tgt && tgt > 8 ? 'بانتظار ' + (tgt - real) + ' لاعبين. البوتات تكمّل لين ٨ بس.' : real < tgt ? 'الباقي (' + (tgt - real) + ') بيكمّلونه لاعبين كمبيوتر.' : 'العدد كامل.') + '</p>' +
+      '</section>' + settings + errBox() +
+      (host ? '<button class="btn xl primary" data-act="startGame"' + (real > tgt || real < 1 || (tgt > 8 && real < tgt) ? ' aria-disabled="true"' : '') + '>ابدأ اللعبة</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف يبدأ اللعبة…</p>');
   }
 
   const blankSide = () => ({ tid: '', ix: [null, null, null, null, null], name: '', names: ['', '', '', '', ''] });
@@ -1245,7 +1295,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     if (done) return '<section class="card pass"><h2>اخترت: ' + TIER[x.v].name + ' ✓</h2><p class="muted">اختيارك سري. لما يختار الكل، تنعرض الفرق.</p></section>' + progBox('مين اختار الفئة') + hostBtn('اكشف الفرق', 'tierNext');
     const opt = (v, d) => '<button class="tier ' + v + (U.tierPick === v ? ' on' : '') + '" data-act="tierPick" data-v="' + v + '"><b>' + TIER[v].name + '</b><span class="big num">' + TIER[v].bal + ' مليون</span><span class="muted">' + d + '</span></button>';
     return '<section class="card action"><h2 style="margin:0 0 6px">اختر فئتك سرًّا</h2><p class="muted">بتاخذ تشكيلة عشوائية من اختيارات اللاعبين الثانيين بنفس الفئة، وما تطلع لك أي وحدة من تشكيلتيك.</p>' +
-      '<div class="tiers">' + opt('s', 'فريق أقوى ورصيد قليل') + opt('w', 'فريق أضعف ورصيد كبير للسوق') + '</div>' +
+      '<div class="tiers">' + opt('s', 'كل لاعب ١٥ مليون. المجموع ٨٥ مليون') + opt('w', 'كل لاعب ٥ ملايين. المجموع ٨٥ مليون') + '</div>' +
       '<button class="btn xl primary" data-act="sendTier"' + (U.tierPick ? '' : ' aria-disabled="true"') + '>تأكيد</button></section>' + progBox('مين اختار الفئة');
   }
   function pitch(list, form, mini) {
@@ -1280,7 +1330,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     return '<section class="card reveal"><span class="muted">طلع لك</span><h1 class="big2">' + esc(q.lbl) + '</h1><p class="muted">' + (q.hist ? esc(q.club) + ' · المدرب: <b>' + esc(q.coach) + '</b>' : 'تشكيلة كتبها واحد من اللاعبين') + ' · ' + TIER[G.tier[me]].name + '</p></section>' + note +
       '<section class="card"><h3 style="margin-bottom:8px">الخماسي</h3>' + pitch(suggestXI(me)) + '</section>' +
       teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">قائمة اللاعبين</h3>' + rosterTable(me) +
-      '<p class="muted small" style="margin-top:8px">القيمة المبدئية لكل لاعب ' + mil(G.settings.base) + ' للحساب بس. السعر الحقيقي يحدده صاحب النادي لما يعرضه بالسوق، وبعدها قيمة اللاعب = آخر سعر انباع فيه.</p></section>' +
+      '<p class="muted small" style="margin-top:8px">القيمة المبدئية لكل لاعب ' + mil(TIER[G.tier[me]].pv) + ' للحساب بس. السعر الحقيقي يحدده صاحب النادي لما يعرضه بالسوق، وبعدها قيمة اللاعب = آخر سعر انباع فيه.</p></section>' +
       (q.hist && q.src ? '<p class="src">المصدر: <span dir="ltr">' + esc(q.src.replace('https://', '')) + '</span></p>' : '') +
       (ready ? progBox('مين جاهز') + hostBtn('افتح السوق الأول', 'revealNext') : '<button class="btn xl primary" data-act="ready" data-k="reveal' + G.gameNo + '">جاهز للسوق</button>' + progBox('مين جاهز'));
   }
@@ -1303,7 +1353,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
           }) +
           '<button class="btn xl primary" data-act="sendList"' + (n ? '' : ' aria-disabled="true"') + '>اعرض ' + (n || '') + ' للبيع</button><p class="muted small">إذا خلص الوقت وما عرضت أحد، اللعبة تعرض لاعب عشوائي منك بقيمته.</p></section>';
       }
-      return head + body + clockBox('وقت العرض', mk.endsAt, mk.dur) + progBox('مين عرض');
+      return head + body + clockBox('وقت العرض', mk.endsAt, mk.dur, 'الذهاب للمزايدة') + progBox('مين عرض');
     }
     if (mk.stage === 'bid') {
       const x = inp(me).bids, done = x && x.key === mk.key && x.done;
@@ -1313,7 +1363,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const total = Object.keys(U.bids).reduce((s, l) => s + (+U.bids[l] || 0), 0), nb = Object.keys(U.bids).length;
       const card = l => {
         const L = mk.lst[l], p = PL(L.pk), b = U.bids[l], top = mk.top && mk.top[l];
-        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + posL(p) + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.lbl : '') + ' · البائع: ' + esc(P(L.seller).name) + '</small></div><div class="ref"><span>السعر المرجعي</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
+        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + posL(p) + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.lbl : '') + '</small></div><div class="ref"><span>السعر المرجعي</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
           (L.seller === me ? '<div class="muted small">لاعبك. ' + (top ? 'أعلى عرض الحين: <b class="num">' + mil(top[0]) + '</b> (' + top[1] + ' عروض)' : 'ما فيه عروض للحين.') + '</div>' :
             '<div class="lc-bid">' + (top ? '<span class="muted small">أعلى عرض: <b class="num">' + mil(top[0]) + '</b></span>' : '<span class="muted small">ما فيه عروض</span>') +
             (b ? '<span class="bidctl"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="-1">−</button><input class="field num askin" data-bind="bid" data-l="' + l + '" inputmode="numeric" value="' + b + '"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="1">+</button><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="5"><span dir="ltr">+5</span></button><button class="x" data-act="bidDel" data-l="' + l + '" aria-label="إلغاء العرض">×</button></span>'
@@ -1325,7 +1375,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
         (others.length ? '<section class="lgrid">' + others.map(card).join('') + '</section>' : '<section class="card muted">ما فيه لاعبين من غيرك بالسوق.</section>') +
         (mine.length ? '<section class="card"><h3 style="margin-bottom:8px">لاعبينك المعروضين</h3><div class="lgrid">' + mine.map(card).join('') + '</div>' + (mk.auto.includes(me) ? '<p class="muted small">انعرض لاعبك تلقائيًا لأنك ما عرضت بالوقت.</p>' : '') + '</section>' : '') +
         (done ? '<section class="card pass"><h3>ثبّت عروضك ✓</h3><p class="muted small">تقدر تعدل لين يخلص الوقت.</p><button class="btn" data-act="bidEdit">تعديل</button></section>' : '<button class="btn xl primary" data-act="sendBids">' + (nb ? 'ثبّت عروضي' : 'ما أبي أشتري') + '</button>') +
-        clockBox('السوق مفتوح', mk.endsAt, mk.dur) + progBox('مين خلص');
+        clockBox('السوق مفتوح', mk.endsAt, mk.dur, 'الذهاب لنتائج السوق') + progBox('مين خلص');
     }
     if (mk.stage === 'review') {
       const deals = mk.res.filter(r => r.buyer), uns = mk.res.filter(r => !r.buyer);
@@ -1333,11 +1383,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const ready = (inp(me).ready || {}).k === mk.key;
       const last = mk.no >= G.settings.seasons * 2;
       return head + '<section class="card"><h2 style="margin-bottom:10px">نتائج السوق</h2>' +
-        (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal' + (r.buyer === me || r.seller === me ? ' me' : '') + '"><b>' + esc(p.name) + '</b><span class="muted small">' + posL(p) + ' · من ' + esc(P(r.seller).name) + ' إلى ' + esc(P(r.buyer).name) + (r.tie ? ' · بالقرعة' : '') + '</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">ما تمت أي صفقة بهالسوق.</p>') +
-        (uns.length ? '<details style="margin-top:10px"><summary class="muted">ما انباعوا (' + uns.length + ')</summary><div class="deals">' + uns.map(r => '<div class="deal"><b>' + esc(PL(r.pk).name) + '</b><span class="muted small">' + esc(P(r.seller).name) + ' · ' + why[r.why] + '</span></div>').join('') + '</div></details>' : '') + '</section>' +
+        (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal' + (r.buyer === me || r.seller === me ? ' me' : '') + '"><b>' + esc(p.name) + '</b><span class="muted small">' + posL(p) + ' · ' + (r.seller === me ? 'بعته' : r.buyer === me ? 'اشتريته' : 'انتقل لفريق ثاني') + (r.tie ? ' · بالقرعة' : '') + '</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">ما تمت أي صفقة بهالسوق.</p>') +
+        (uns.length ? '<details style="margin-top:10px"><summary class="muted">ما انباعوا (' + uns.length + ')</summary><div class="deals">' + uns.map(r => '<div class="deal"><b>' + esc(PL(r.pk).name) + '</b>' + (r.seller === me ? '<span class="muted small">لاعبك · ' + why[r.why] + '</span>' : '') + '</div>').join('') + '</div></details>' : '') + '</section>' +
         teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">لاعبينك</h3>' + rosterTable(me) + '</section>' +
         (ready ? '' : '<button class="btn xl primary" data-act="ready" data-k="' + mk.key + '">جاهز</button>') +
-        clockBox(last ? 'مراجعة قبل الكأس' : 'مراجعة قبل السوق الجاي', mk.endsAt, mk.dur) + progBox('مين جاهز');
+        clockBox(last ? 'مراجعة قبل الكأس' : 'مراجعة قبل السوق الجاي', mk.endsAt, mk.dur, last ? 'الذهاب لاختيار خماسي الكأس' : 'الذهاب لـ' + mkLabel(mk.no + 1)) + progBox('مين جاهز');
     }
     return head;
   }
@@ -1377,10 +1427,11 @@ html,body{background:#FFFFFF!important;background-image:none!important}
       const x = inp(ME_ID).vote, voted = x && x.key === c.key;
       if (U.pickKey !== c.key) { U.pickKey = c.key; U.pick = null; }
       let body;
-      if (iAmIn) body = '<section class="card pass"><h2>فريقك بهالمواجهة</h2><p class="muted">أقنع الجمهور بصوتك! ما تقدر تصوّت بمواجهتك.</p></section>';
+      if (!inRoom(ME_ID)) body = '<section class="card pass"><h2>أنت المضيف</h2><p class="muted">تتابع المواجهة بس، وما تصوّت.</p></section>';
+      else if (iAmIn) body = '<section class="card pass"><h2>فريقك بهالمواجهة</h2><p class="muted">أقنع الجمهور بصوتك! ما تقدر تصوّت بمواجهتك.</p></section>';
       else if (voted) body = '<section class="card pass"><h2>وصل صوتك ✓</h2></section>';
       else body = '<section class="card action"><h2 style="margin:0 0 8px">مين الأقوى؟</h2><div class="seg-wide"><button class="' + (U.pick === 'a' ? 'on' : '') + '" data-act="pick" data-v="a">الفريق أ</button><button class="' + (U.pick === 'b' ? 'on' : '') + '" data-act="pick" data-v="b">الفريق ب</button></div><button class="btn xl primary" data-act="sendVote" style="margin-top:10px">صوّت</button><p class="muted small">صوت واحد لكل متفرج، والأسماء ما تنكشف إلا بعد التصويت.</p></section>';
-      return head + vs + body + clockBox('وقت التصويت', c.endsAt, c.dur) + progBox('مين صوّت', voters(m)) + bracket();
+      return head + vs + body + clockBox('وقت التصويت', c.endsAt, c.dur, 'الذهاب لنتيجة المواجهة') + progBox('مين صوّت', voters(m)) + bracket();
     }
     if (c.stage === 'result') {
       const v = m.votes || {};
@@ -1410,7 +1461,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     const m = U.modal;
     if (!m) return '';
     let body = '';
-    if (m.type === 'menu') {
+    if (m.type === 'squads') body = sqReady() ? squadsBody(m) : '<button class="btn ghost" data-act="closeModal">إغلاق</button>';
+    else if (m.type === 'menu') {
       const host = isHost(), others = G ? G.players.filter(p => p.id !== ME_ID) : [];
       body = '<h2>القائمة</h2><p class="muted">الغرفة <b dir="ltr">' + esc(U.code) + '</b>' + (G ? ' · المضيف: ' + esc(P(G.host).name) : '') + '</p>' +
         (!host && G && inRoom(ME_ID) ? '<button class="btn" data-act="askTake">المضيف ما يرد؟ استلم الاستضافة</button>' : '') +
@@ -1425,7 +1477,30 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     }
     return '<div class="ov" data-act="ovClose"><div class="dlg" role="dialog" aria-modal="true">' + body + '</div></div>';
   }
+  function hostOnlyView() {
+    const note = '<section class="card pass"><h2>أنت المضيف</h2><p class="muted">ما تلعب بهذي اللعبة. تتابع اللاعبين وتنقل اللعبة بين المراحل.</p></section>';
+    const mk = G.mk;
+    switch (G.phase) {
+      case 'picks': return note + progBox('مين خلّص') + hostBtn('التالي: اختيار الفئة', 'picksNext');
+      case 'tier': return note + progBox('مين اختار الفئة') + hostBtn('اكشف الفرق', 'tierNext');
+      case 'reveal': return note + progBox('مين جاهز') + hostBtn('افتح السوق الأول', 'revealNext');
+      case 'market': {
+        if (!mk) return note;
+        const head = '<section class="mkhead"><div><span class="chip gold num">السوق ' + mk.no + ' من ' + (G.settings.seasons * 2) + '</span><h2>' + mkLabel(mk.no) + '</h2></div></section>';
+        if (mk.stage === 'list') return head + note + clockBox('وقت العرض', mk.endsAt, mk.dur, 'الذهاب للمزايدة') + progBox('مين عرض');
+        if (mk.stage === 'bid') return head + '<section class="card"><h3>المعروض بالسوق: <span class="num">' + Object.keys(mk.lst).length + '</span> لاعب</h3></section>' + clockBox('السوق مفتوح', mk.endsAt, mk.dur, 'الذهاب لنتائج السوق') + progBox('مين خلص');
+        const last = mk.no >= G.settings.seasons * 2, deals = mk.res.filter(r => r.buyer);
+        return head + '<section class="card"><h2 style="margin-bottom:10px">نتائج السوق</h2>' + (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal"><b>' + esc(p.name) + '</b><span class="muted small">' + posL(p) + ' · انتقل لفريق ثاني</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">ما تمت أي صفقة بهالسوق.</p>') + '</section>' +
+          clockBox(last ? 'مراجعة قبل الكأس' : 'مراجعة قبل السوق الجاي', mk.endsAt, mk.dur, last ? 'الذهاب لاختيار خماسي الكأس' : 'الذهاب لـ' + mkLabel(mk.no + 1)) + progBox('مين جاهز');
+      }
+      case 'lineup': return note + progBox('مين ثبّت خماسيه') + hostBtn('ابدأ كأس الأبطال', 'cupStart');
+      case 'cup': return G.cup ? cupView() : '';
+      case 'final': return finalView();
+    }
+    return note;
+  }
   function gameView() {
+    if (!inRoom(ME_ID) && isHost() && G.phase !== 'lobby') return hostOnlyView();
     switch (G.phase) {
       case 'lobby': return lobbyView();
       case 'picks': return picksView();
@@ -1442,7 +1517,8 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   /* ---------- render ---------- */
   function render() {
     let html;
-    if (U.splash) html = splashView();
+    if (U.notice) html = noticeView();
+    else if (U.splash) html = splashView();
     else {
       html = topbar();
       if (!U.code || U.view === 'home') html += homeView();
@@ -1482,9 +1558,12 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   const ACT = {};
   const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) { publish(); setTimeout(hostStep, 60); } return r; };
   ACT.enter = () => { U.splash = false; };
+  ACT.noticeOk = () => { U.notice = false; try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
   ACT.closeModal = () => { U.modal = null; U.err = ''; };
   ACT.ovClose = (d, el, ev) => { if (ev.target !== el) return false; U.modal = null; };
   ACT.menu = () => { U.modal = { type: 'menu' }; };
+  ACT.squads = () => { U.modal = { type: 'squads', n: 0 }; };
+  ACT.sqOpen = d => { U.modal = { type: 'squads', n: +d.n }; };
   ACT.askLeave = () => { U.modal = { type: 'leave' }; };
   ACT.askTake = () => { U.modal = { type: 'take' }; };
   ACT.askHand = () => { U.modal = { type: 'hand' }; };
@@ -1573,7 +1652,22 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   });
   ACT.set = H(d => { G.settings[d.k] = +d.v; });
   ACT.setMode = H(d => { if (G.phase !== 'lobby' || !MODE[d.v]) return false; G.settings.mode = d.v; });
-  ACT.startGame = H(() => { if (G.players.length < 3) { U.err = 'تحتاج ٣ لاعبين على الأقل.'; return false; } U.err = ''; startGame(); });
+  ACT.startGame = H(() => {
+    const tgt = G.settings.players || 3;
+    if (G.settings.hostPlays === 0) { G.hostP = G.players.find(p => p.id === ME_ID) || G.hostP; G.players = G.players.filter(p => p.id !== ME_ID); }
+    const real = G.players.filter(p => !isBot(p.id)).length;
+    if (tgt > 8 && real < tgt) { if (G.hostP && G.hostP.id === ME_ID && !inRoom(ME_ID)) G.players.unshift(G.hostP); U.err = 'البوتات تكمّل لين ٨ لاعبين بس. بانتظار ' + (tgt - real) + ' لاعبين.'; return false; }
+    if (real > tgt) { if (G.hostP && G.hostP.id === ME_ID && !inRoom(ME_ID)) G.players.unshift(G.hostP); U.err = 'دخل لاعبين أكثر من العدد المحدد. زد عدد اللاعبين أو أزل لاعب.'; return false; }
+    U.err = '';
+    const NM = ['بوت الهلال', 'بوت النجم', 'بوت الصقر', 'بوت الريان', 'بوت الشبح', 'بوت الكابتن', 'بوت المدرب'];
+    let k = 0;
+    while (G.players.length < tgt) G.players.push({ id: 'bot' + Math.random().toString(36).slice(2, 8), name: uniqueName(NM[k++ % 7], ''), at: Date.now() });
+    startGame();
+  });
+  ACT.step = H(d => {
+    const L = { players: [3, 32], seasons: [1, 5] }[d.k]; if (!L || G.phase !== 'lobby') return false;
+    G.settings[d.k] = Math.min(L[1], Math.max(L[0], (+G.settings[d.k] || L[0]) + (+d.v)));
+  });
   ACT.picksNext = H(() => {
     if (G.phase !== 'picks') return false;
     const done = progList();
@@ -1591,7 +1685,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
   ACT.cupStart = H(() => { if (G.phase !== 'lineup') return false; startCup(); });
   ACT.cupNext = H(() => { if (!G.cup || G.cup.stage !== 'result') return false; nextMatch(); });
   ACT.rematch = H(() => { startGame(); });
-  ACT.toLobby = H(() => { G.phase = 'lobby'; G.mk = null; G.cup = null; G.prog = []; });
+  ACT.toLobby = H(() => { G.players = G.players.filter(p => !isBot(p.id)); Object.keys(BOT).forEach(id => delete BOT[id]); if (G.hostP && !inRoom(G.hostP.id) && G.hostP.id === ME_ID) G.players.unshift(G.hostP); G.hostP = null; G.phase = 'lobby'; G.mk = null; G.cup = null; G.prog = []; });
 
   /* my inputs */
   function mine() { ME = ME || blankMe(U.code); return ME; }
@@ -1685,6 +1779,7 @@ html,body{background:#FFFFFF!important;background-image:none!important}
     U.name = saved.name || '';
     const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
     if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; }
+    if (h) { try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
     if (saved.code && !h) U.splash = false;
     render();
     const cl = !EXT ? window.claude : null;
