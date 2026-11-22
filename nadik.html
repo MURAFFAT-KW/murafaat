@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>أقنعني! | ناديك</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800;900&family=Readex+Pro:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --bg:#FFFFFF; --bg-2:#F4F6FB; --panel:#FFFFFF; --panel-2:#FFFFFF; --line:#D5DCEA; --line-soft:#E6EBF4;
+  --text:#0E1630; --muted:#5A6580; --blue:#1D4ED8; --cyan:#1D4ED8; --gold:#E11D2E; --yel:#FFC93C; --gold-ink:#FFFFFF; --ink:#FFFFFF;
+  --ok:#17935A; --bad:#D32F2F; --warn:#D97706;
+  --grad:linear-gradient(135deg,#2563EB 0%,#1D4ED8 55%,#1E3A8A 100%);
+  --r:16px;
+  --font-d:'Alexandria','Readex Pro',Tahoma,sans-serif;
+  --font-b:'Readex Pro','Alexandria','Segoe UI',Tahoma,system-ui,sans-serif;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{
+  background-color:var(--bg);
+  background-image:radial-gradient(900px 420px at 50% -8%,rgba(29,78,216,.10),transparent 70%);
+  color:var(--text); font-family:var(--font-b); font-size:16px; line-height:1.65; direction:rtl;
+  padding-inline:max(16px,env(safe-area-inset-left,0px)) max(16px,env(safe-area-inset-right,0px));
+  padding-block:0 40px; min-height:100%;
+}
+button,input,textarea{font:inherit;color:inherit}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:var(--font-d);font-weight:700;text-wrap:balance;line-height:1.3}
+.wrap{max-width:880px;margin-inline:auto;display:flex;flex-direction:column;gap:18px}
+.muted{color:var(--muted)}
+.small{font-size:.88rem}
+.num{font-variant-numeric:tabular-nums}
+
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:14px 4px;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand b{font-family:var(--font-d);font-size:1.35rem;letter-spacing:.01em}
+.brand span{color:var(--muted);font-size:.85rem;letter-spacing:.08em}
+.top-r{display:flex;align-items:center;gap:10px}
+.saved{color:var(--muted);font-size:.8rem;white-space:nowrap}
+@media(max-width:480px){.brand span,.saved{display:none}}
+
+/* buttons */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:10px 22px;
+  border:1px solid var(--line);border-radius:14px;background:var(--panel-2);color:var(--text);
+  font-weight:600;font-size:1rem;cursor:pointer;text-align:center;transition:transform .08s,border-color .15s,background .15s;
+}
+.btn:hover{border-color:var(--cyan)}
+.btn:active{transform:scale(.985)}
+.btn:focus-visible,.chipbtn:focus-visible,.perk:focus-visible,.vopt:focus-visible,.seg button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.btn.primary{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 8px 22px rgba(29,78,216,.28)}
+.btn.primary:hover{filter:brightness(1.06)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--gold-ink)}
+.btn.ghost{background:transparent}
+.btn.danger{border-color:var(--bad);color:var(--bad);background:transparent}
+.btn.xl{min-height:62px;font-size:1.12rem;width:100%}
+.btn.sm{min-height:40px;padding:6px 14px;font-size:.9rem;border-radius:12px}
+.btn[disabled],.btn[aria-disabled="true"]{opacity:.45;cursor:not-allowed}
+.btn-row{display:flex;flex-wrap:wrap;gap:12px}
+.btn-row>.btn{flex:1 1 200px}
+
+/* surfaces */
+.card{background:var(--panel);box-shadow:0 10px 30px rgba(14,22,48,.07);border:1px solid var(--line-soft);border-radius:var(--r);padding:20px;min-width:0}
+.card h2{font-size:1.35rem;margin-bottom:6px}
+.card h3{font-size:1.1rem}
+.sect-title{font-family:var(--font-d);font-size:1.05rem;color:var(--cyan);margin-bottom:10px}
+.alert{border:1px solid var(--bad);background:rgba(211,47,47,.1);color:#9E1219;border-radius:12px;padding:12px 16px}
+.note{border:1px solid var(--line);background:var(--bg-2);border-radius:12px;padding:12px 16px;color:var(--muted);font-size:.93rem}
+.note b{color:var(--text)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 12px;border-radius:99px;border:1px solid var(--line);background:var(--bg-2);color:var(--muted);font-size:.82rem;font-weight:600;white-space:nowrap}
+.chip.gold{border-color:var(--gold);color:var(--gold)}
+.chip.live{border-color:var(--cyan);color:var(--cyan)}
+.chip.ok{border-color:var(--ok);color:var(--ok)}
+
+/* stepper */
+.steps{display:flex;flex-wrap:wrap;gap:8px;list-style:none;margin:0;padding:0}
+.steps li{padding:2px 12px;border-radius:99px;border:1px solid var(--line-soft);color:var(--muted);font-size:.82rem}
+.steps li.on{border-color:var(--cyan);color:var(--cyan);background:rgba(29,78,216,.08)}
+.steps li.done{color:var(--text)}
+
+/* home */
+.hero{padding:34px 22px 26px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:14px}
+.hero h1{font-size:clamp(2.6rem,9vw,4rem);font-weight:800;background:linear-gradient(90deg,#E11D2E 0 50%,#1D4ED8 50% 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero h1 em{font-style:normal;color:var(--gold)}
+.hero .en{font-family:var(--font-d);letter-spacing:.32em;color:var(--cyan);font-size:.95rem}
+.hero p.lead{max-width:34rem;color:var(--muted);font-size:1.08rem}
+.hero .btn-row{width:100%;max-width:520px;margin-top:6px}
+.howto{counter-reset:s;list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.howto li{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start}
+.howto li::before{counter-increment:s;content:counter(s);width:34px;height:34px;border-radius:50%;border:1px solid var(--gold);color:var(--gold);display:grid;place-items:center;font-weight:700}
+
+/* players */
+.prow{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;padding:12px;border:1px solid var(--line-soft);border-radius:14px;background:var(--bg-2)}
+.prow .fields{display:flex;gap:10px;align-items:center;flex-wrap:wrap;min-width:0}
+.prow input{flex:1 1 150px;min-width:0}
+.field{background:var(--bg);border:1px solid var(--line);border-radius:12px;min-height:50px;padding:8px 14px;width:100%}
+textarea.field{min-height:92px;resize:vertical}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:8px 16px;min-height:46px;cursor:pointer;color:var(--muted);font-weight:600}
+.seg button.on{background:var(--blue);color:#fff}
+.seg-wide{display:flex;flex-wrap:wrap;gap:10px}
+.seg-wide button{flex:1 1 90px;min-height:50px;border:1px solid var(--line);border-radius:12px;background:var(--bg-2);cursor:pointer;font-weight:600}
+.seg-wide button.on{border-color:var(--cyan);color:var(--ink);background:var(--cyan)}
+.x{width:46px;height:46px;border:1px solid var(--line);border-radius:12px;background:transparent;color:var(--muted);cursor:pointer;font-size:1.3rem;line-height:1}
+.x:hover{border-color:var(--bad);color:var(--bad)}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.opt-card{border:1px solid var(--line);border-radius:14px;background:var(--bg-2);padding:14px 16px;cursor:pointer;text-align:start;min-height:70px}
+.opt-card.on{border-color:var(--cyan);background:rgba(29,78,216,.1)}
+.opt-card b{display:block}
+.labelled{display:flex;flex-direction:column;gap:8px}
+.labelled>label,.lbl{font-weight:600;color:var(--text)}
+
+/* pass-the-device */
+.pass{text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px;padding:30px 20px}
+.pass h2{font-size:2rem;margin:0}
+.pass .kick{color:var(--cyan);font-weight:600}
+.pass .btn{max-width:420px}
+
+/* perk picking */
+.perk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}
+.perk-pick{display:grid;grid-template-columns:1fr auto;gap:4px 10px;text-align:start;border:1px solid var(--line);border-radius:14px;background:var(--bg-2);padding:14px 16px;cursor:pointer;min-height:92px}
+.perk-pick b{font-family:var(--font-d);font-size:1.05rem}
+.perk-pick span.d{grid-column:1/-1;color:var(--muted);font-size:.9rem}
+.perk-pick.on{border-color:var(--gold);background:rgba(225,29,46,.09)}
+.perk-pick.off{opacity:.5}
+.tick{width:26px;height:26px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.on .tick{border-color:var(--gold);background:var(--gold);color:var(--gold-ink)}
+
+/* answers */
+.qa{display:flex;flex-direction:column;gap:8px;padding:14px;border:1px solid var(--line-soft);border-radius:14px;background:var(--bg-2)}
+.qa .qt{font-weight:600}
+.qlist{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.qlist li{padding:12px 16px;border:1px solid var(--line-soft);border-radius:12px;background:var(--bg-2)}
+
+/* case */
+.casehead{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.qcard{text-align:center;padding:24px 18px}
+.qcard .qlabel{color:var(--gold);font-weight:600;font-size:.9rem;letter-spacing:.04em}
+.qcard h2{font-size:clamp(1.4rem,4.6vw,2rem);margin-top:6px}
+.parties{display:grid;grid-template-columns:1fr;gap:14px}
+@media(min-width:720px){.parties{grid-template-columns:1fr 1fr}}
+.party{border:1px solid var(--line-soft);background:var(--panel);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.party.speaking{border-color:var(--cyan);box-shadow:0 0 0 1px var(--cyan) inset}
+.ptop{display:flex;gap:8px;flex-wrap:wrap}
+.pid{display:flex;align-items:center;gap:12px;min-width:0}
+.pid h3{overflow-wrap:anywhere}
+.defend{border-radius:12px;background:var(--bg-2);padding:10px 14px;border:1px dashed var(--line)}
+.defend strong{display:block;font-size:1.15rem;color:var(--gold);overflow-wrap:anywhere}
+.helper{display:flex;align-items:center;gap:10px;font-size:.92rem;color:var(--muted)}
+.perks{display:flex;flex-wrap:wrap;gap:8px}
+.perk{min-height:44px;padding:6px 14px;border-radius:12px;border:1px solid var(--gold);background:transparent;color:var(--gold);font-weight:600;font-size:.92rem;cursor:pointer}
+.perk.na{border-color:var(--line);color:var(--muted)}
+.perk.used{border-color:var(--line-soft);color:var(--muted);text-decoration:line-through;cursor:not-allowed}
+.perk.set{background:var(--gold);color:var(--gold-ink)}
+.witness{border:1px solid var(--blue);border-radius:14px;background:rgba(29,78,216,.1);padding:14px 16px}
+.witness b{color:var(--cyan)}
+.timerbox{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+@media(max-width:520px){.timerbox{grid-template-columns:1fr;justify-items:center;text-align:center}}
+.ring{position:relative;width:150px;height:150px}
+.ring svg{width:150px;height:150px;transform:rotate(-90deg)}
+.ring .bg{stroke:var(--line-soft)}
+.ring .fg{stroke:var(--cyan);transition:stroke-dashoffset .25s linear}
+.ring.low .fg{stroke:var(--bad)}
+.ring.ended .fg{stroke:var(--bad)}
+.clock{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-d);font-size:2.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tcontrols{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
+.timeup{border:1px solid var(--bad);color:#9E1219;background:rgba(211,47,47,.12);border-radius:12px;padding:10px 14px;font-weight:700;text-align:center}
+.notes{display:grid;gap:6px;font-size:.92rem;color:var(--muted)}
+
+/* voting */
+.vkind{display:flex;flex-direction:column;gap:6px;border-radius:14px;padding:14px 16px;border:1px solid var(--cyan);background:rgba(29,78,216,.08)}
+.vkind.appeal{border-color:var(--gold);background:rgba(225,29,46,.09)}
+.vkind b{font-family:var(--font-d);font-size:1.15rem}
+.vopts{display:grid;gap:14px}
+.vopt{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;min-height:78px;padding:12px 16px;border:2px solid var(--line);border-radius:16px;background:var(--bg-2);cursor:pointer;text-align:start}
+.vopt.on{border-color:var(--cyan);background:rgba(29,78,216,.12)}
+.vopt .vt{display:flex;flex-direction:column;min-width:0}
+.vopt .vt b{font-size:1.1rem;overflow-wrap:anywhere}
+.vopt .vt span{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.vopt.none{grid-template-columns:1fr auto;border-style:dashed}
+.radio{width:28px;height:28px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center}
+.on .radio{border-color:var(--cyan);background:var(--cyan);color:var(--ink)}
+.bars{display:grid;gap:12px}
+.bar{display:grid;grid-template-columns:130px 1fr 36px;align-items:center;gap:10px}
+@media(max-width:520px){.bar{grid-template-columns:90px 1fr 30px}}
+.bar .track{height:16px;border-radius:99px;background:var(--bg);border:1px solid var(--line-soft);overflow:hidden}
+.bar .fill{height:100%;background:var(--blue);border-radius:99px}
+.bar.lead .fill{background:var(--gold)}
+.bar .nm{overflow-wrap:anywhere;font-weight:600}
+.verdict{text-align:center;padding:22px 16px;border:1px solid var(--gold);background:rgba(225,29,46,.08);border-radius:var(--r)}
+.verdict h2{color:var(--gold);font-size:1.6rem}
+.jrow{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line-soft);border-radius:12px;background:var(--bg-2)}
+
+/* scoreboard */
+.rank{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.rank li{display:grid;grid-template-columns:40px auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--line-soft);border-radius:14px;background:var(--bg-2)}
+.rank li.win{border-color:var(--gold);background:rgba(225,29,46,.1)}
+.rank .pos{font-family:var(--font-d);font-size:1.3rem;color:var(--muted);text-align:center}
+.rank .win .pos{color:var(--gold)}
+.rank .pts{font-family:var(--font-d);font-size:1.4rem;color:var(--gold);font-variant-numeric:tabular-nums}
+.winner{text-align:center;padding:26px 16px;border:1px solid var(--gold);border-radius:var(--r);background:rgba(225,29,46,.09);display:flex;flex-direction:column;align-items:center;gap:8px}
+.winner h2{font-size:clamp(1.8rem,6vw,2.6rem);color:var(--gold)}
+.cases{display:grid;gap:12px}
+.cr{border:1px solid var(--line-soft);border-radius:14px;background:var(--bg-2);padding:14px 16px;display:grid;gap:6px}
+.cr .q{font-weight:700}
+.cr .v{display:flex;flex-wrap:wrap;gap:8px}
+
+/* modal + toast */
+.ov{position:fixed;inset:0;background:rgba(14,22,48,.55);display:flex;align-items:flex-end;justify-content:center;z-index:30;padding:0;overflow:auto}
+@media(min-width:640px){.ov{align-items:center;padding:20px}}
+.dlg{background:var(--panel);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px));width:100%;max-width:560px;max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:14px;direction:rtl}
+@media(min-width:640px){.dlg{border-radius:20px}}
+.dlg h2{font-size:1.4rem}
+.cands{display:grid;gap:10px}
+.cand{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 14px;border:1px solid var(--line);border-radius:14px;background:var(--bg-2);cursor:pointer;text-align:start;width:100%}
+.cand:hover{border-color:var(--cyan)}
+#toast{position:fixed;inset-inline:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));display:flex;justify-content:center;pointer-events:none;z-index:50;padding-inline:16px}
+#toast span{background:#0F2233;color:#fff!important;border:1px solid var(--cyan);color:var(--text);padding:12px 18px;border-radius:14px;max-width:520px;box-shadow:0 8px 30px rgba(14,22,48,.25);opacity:0;transform:translateY(8px);transition:.2s}
+#toast.show span{opacity:1;transform:none}
+/* splash */
+.splash{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:40px 8px;position:relative}
+.splash .blob{position:fixed;inset:auto;width:520px;height:520px;border-radius:50%;filter:blur(70px);opacity:.32;z-index:-1;pointer-events:none}
+.splash .b1{background:#E11D2E;top:-180px;inset-inline-start:-160px}
+.splash .b2{background:#1D4ED8;bottom:-200px;inset-inline-end:-180px}
+.splash .lg{animation:up .7s ease both;margin-bottom:8px}
+.splash .big{font-family:var(--font-d);font-weight:900;font-size:clamp(4rem,19vw,8rem);line-height:1.1;background:linear-gradient(90deg,#E11D2E 0 50%,#1D4ED8 50% 100%);-webkit-background-clip:text;background-clip:text;color:transparent;padding-inline:.1em;animation:up .7s .1s ease both}
+.splash .ar{font-family:var(--font-d);font-weight:700;font-size:clamp(1.6rem,6vw,2.2rem);color:var(--text);margin-top:6px;animation:up .7s .25s ease both}
+.splash .en{font-family:var(--font-d);font-weight:600;letter-spacing:.42em;color:var(--cyan);font-size:.95rem;padding-inline-start:.42em;animation:up .7s .35s ease both}
+.splash .go{margin-top:34px;width:100%;max-width:320px;min-height:64px;font-size:1.3rem;font-weight:800;border-radius:99px;animation:up .7s .5s ease both}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* online rooms */
+.bigcode{font-family:var(--font-d);font-weight:900;font-size:clamp(2.6rem,13vw,3.6rem);letter-spacing:.18em;line-height:1.1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;padding-inline-start:.18em}
+.roomcard{text-align:center;display:grid;gap:8px;justify-items:center}
+.linkrow{display:flex;gap:8px;width:100%;flex-wrap:wrap}
+.linkrow .field{flex:1 1 220px;font-size:.85rem;min-height:46px;text-align:left}
+.linkrow .btn{flex:0 0 auto;min-height:46px}
+.code-in{font-family:var(--font-d);font-size:1.4rem;letter-spacing:.3em;text-align:center;text-transform:uppercase}
+.plist{display:flex;flex-wrap:wrap;gap:8px}
+.pchip{display:inline-flex;align-items:center;gap:6px;padding:3px 12px 3px 4px;border-radius:99px;border:1px solid var(--line-soft);background:var(--bg-2);color:var(--muted);font-size:.9rem}
+.pchip.ok{border-color:var(--ok);color:var(--ok);background:rgba(23,147,90,.07)}
+.party.mine{box-shadow:0 0 0 2px var(--gold) inset}
+.card.action{border:2px solid var(--cyan);background:#F2F8FF}
+.spin{width:44px;height:44px;border-radius:50%;border:4px solid var(--line-soft);border-top-color:var(--cyan);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+input.field{font-size:16px}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+
+
+.hero .sub{font-family:var(--font-d);font-weight:700;font-size:1.5rem;color:var(--gold);margin-top:-6px}
+.wallet{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.wallet div{background:var(--panel);border:1px solid var(--line-soft);border-radius:14px;padding:8px 6px;text-align:center;display:flex;flex-direction:column;box-shadow:0 6px 18px rgba(14,22,48,.06)}
+.wallet span{font-size:.78rem;color:var(--muted)}
+.wallet b{font-family:var(--font-d);font-size:1.05rem;color:var(--cyan)}
+.wallet div:last-child b{color:var(--gold)}
+.parties .price{font-family:var(--font-d);font-size:1.5rem;font-weight:800;color:var(--gold)}
+.stepper{display:flex;align-items:center;justify-content:center;gap:18px}
+.stepper .btn{width:64px;min-height:64px;font-size:1.8rem;padding:0;border-radius:50%}
+.bigprice{font-family:var(--font-d);font-weight:900;font-size:4rem;line-height:1;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;min-width:120px}
+.bigprice small{font-size:1rem;margin-inline-start:6px;-webkit-text-fill-color:var(--muted)}
+.tbl{display:grid;gap:6px}
+.tr{display:grid;grid-template-columns:18px minmax(0,1fr) 36px 42px 38px 46px;gap:4px;align-items:center;padding:8px 10px;border:1px solid var(--line-soft);border-radius:12px;background:var(--bg-2);font-size:.92rem}
+.tr.th{background:transparent;border-color:transparent;color:var(--muted);font-size:.78rem;padding-block:0}
+.tr span{text-align:center}
+.tr .nm{display:flex;align-items:center;gap:6px;text-align:start;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-weight:600}
+.tr .tot{font-family:var(--font-d);font-weight:800;color:var(--gold)}
+.tr.win{border-color:var(--gold);background:rgba(225,29,46,.08)}
+.tr.me{box-shadow:0 0 0 2px var(--cyan) inset}
+.award{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}
+.award b{font-family:var(--font-d);font-size:1.3rem;color:var(--cyan)}
+.qcard h2{color:var(--cyan)}
+
+.perk-pick{grid-template-columns:1fr}
+.perk-pick span{color:var(--muted);font-size:.9rem;line-height:1.5}
+.perk-pick em{font-style:normal;font-size:.78rem;color:var(--cyan);font-weight:600}
+.perk-btn{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:56px;padding:8px 14px;border-radius:14px;border:1px solid var(--line);background:var(--bg-2);color:var(--muted);cursor:pointer;text-align:start;font:inherit}
+.perk-btn b{font-family:var(--font-d);font-size:.98rem;color:var(--text)}
+.perk-btn span{font-size:.8rem}
+.perk-btn.ready{border-color:var(--gold);background:rgba(225,29,46,.09);color:var(--gold)}
+.perk-btn.ready b{color:var(--gold)}
+.perk-btn.used{opacity:.55;text-decoration:line-through}
+.perk-btn[aria-disabled=true]{cursor:not-allowed}
+.perk-btn:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}
+.perklog{display:grid;gap:6px;border:1px solid var(--cyan);background:rgba(29,78,216,.07);border-radius:14px;padding:10px 14px;font-size:.92rem;font-weight:600;color:var(--text)}
+.chip.bad{border-color:var(--bad);color:var(--bad);background:rgba(211,47,47,.08)}
+
+.splash .b3{background:#FFC93C;top:40%;inset-inline-end:-220px;width:380px;height:380px}
+body{background-image:linear-gradient(180deg,rgba(29,78,216,.07),transparent 260px)}
+.hero .sub{font-family:var(--font-d);font-weight:800;font-size:1.6rem;color:var(--gold);margin-top:-6px}
+.top .brand span{color:var(--gold)}
+.row-b{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.dot{width:10px;height:10px;border-radius:50%;background:#C3CADB;flex:none;display:inline-block;box-shadow:0 0 0 3px #fff}
+.dot.on{background:#16A34A}
+.prow{display:flex;align-items:center;gap:10px;border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px;background:var(--bg-2)}
+/* stepper */
+.steps{display:flex;gap:4px;overflow-x:auto;padding:4px 0 2px;scrollbar-width:none}
+.steps::-webkit-scrollbar{display:none}
+.st{flex:1 0 auto;display:flex;align-items:center;gap:5px;padding:5px 9px;border-radius:99px;background:var(--bg-2);color:var(--muted);font-size:.76rem;white-space:nowrap}
+.st i{font-style:normal;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;background:#fff;border:1px solid var(--line);font-size:.7rem}
+.st.done{color:var(--blue)}.st.done i{background:var(--blue);color:#fff;border-color:var(--blue)}
+.st.on{background:var(--blue);color:#fff;font-weight:700}.st.on i{background:var(--yel);color:#0E1630;border-color:var(--yel)}
+.st b{font-weight:inherit}
+/* picks */
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.slot{border:2px dashed var(--line);border-radius:14px;padding:10px 12px;background:#fff;display:flex;flex-direction:column;gap:2px;text-align:start;cursor:pointer;min-height:64px}
+.slot span{font-size:.8rem;color:var(--muted)}
+.slot.set{border-style:solid;border-color:var(--blue);background:rgba(29,78,216,.05)}
+.slot.set:first-child{border-color:var(--gold);background:rgba(225,29,46,.05)}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tabs button{flex:1 0 auto;min-height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#fff;font-weight:600;cursor:pointer}
+.tabs button.on{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:inset 0 -3px 0 var(--yel)}
+.tcard{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--line-soft);border-radius:12px;padding:10px 12px;flex-wrap:wrap}
+.tcard b{font-family:var(--font-d)}
+.pkbtns{display:flex;gap:6px}
+.pkbtns .btn.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pkbtns .btn.on:first-child{background:var(--gold);border-color:var(--gold)}
+.src{font-size:.78rem;color:var(--muted);text-align:center;line-height:1.6}
+/* tier */
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.tier{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;border:2px solid var(--line);border-radius:16px;padding:16px 10px;background:#fff;cursor:pointer}
+.tier .big{font-family:var(--font-d);font-size:1.7rem;font-weight:800}
+.tier.s .big{color:var(--gold)}.tier.w .big{color:var(--blue)}
+.tier.on.s{border-color:var(--gold);background:rgba(225,29,46,.06)}
+.tier.on.w{border-color:var(--blue);background:rgba(29,78,216,.06)}
+/* reveal & pitch */
+.reveal{text-align:center;display:grid;gap:6px;justify-items:center;border-top:5px solid var(--yel)}
+.big2{font-size:clamp(2rem,9vw,3rem);font-weight:800;color:var(--blue)}
+.pitch{background:linear-gradient(180deg,#1F8A4C,#17733F);border-radius:16px;padding:14px 8px;display:grid;gap:12px;position:relative;overflow:hidden;border:3px solid #fff;box-shadow:0 0 0 2px #17733F}
+.pitch::before{content:"";position:absolute;inset:50% 8px auto;height:2px;background:rgba(255,255,255,.35)}
+.pitch .line{display:flex;justify-content:space-around;gap:4px;position:relative}
+.pp{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;flex:1;max-width:96px}
+.pp i{font-style:normal;width:30px;height:30px;border-radius:50%;background:#fff;color:var(--blue);display:grid;place-items:center;font-weight:800;font-size:.8rem;border:2px solid var(--yel)}
+.pp b{font-size:.72rem;color:#fff;text-align:center;line-height:1.25;overflow:hidden;text-overflow:ellipsis;max-width:100%;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.pitch.mini{padding:10px 4px;gap:8px}
+.pitch.mini .pp i{width:24px;height:24px;font-size:.7rem}
+.pitch.mini .pp b{font-size:.64rem}
+.teamhead h2{color:var(--blue)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.kpis div{border:1px solid var(--line-soft);border-radius:12px;padding:8px;text-align:center;display:flex;flex-direction:column;background:var(--bg-2)}
+.kpis span{font-size:.76rem;color:var(--muted)}
+.kpis b{font-family:var(--font-d);color:var(--blue);font-size:1rem}
+.rtable{display:grid;gap:6px}
+.rr{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line-soft);border-radius:12px;padding:8px 10px;background:#fff}
+.rr[role=button]{cursor:pointer}
+.rr .nb{width:30px;height:30px;border-radius:8px;background:var(--bg-2);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.rr.xi .nb{background:rgba(29,78,216,.1);color:var(--blue)}
+.rr .nm{display:flex;flex-direction:column;min-width:0}
+.rr .nm b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rr .nm small{color:var(--muted);font-size:.74rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rr .vl{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.rr.sel{border-color:var(--gold);background:rgba(225,29,46,.05);box-shadow:inset 4px 0 0 var(--gold)}
+.rr .ask{grid-column:1/-1;display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.askin{width:84px;min-height:40px;text-align:center;padding:4px}
+.btn.sm{min-height:40px}
+/* market */
+.mkhead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;border-bottom:3px solid var(--yel);padding-bottom:10px}
+.mkhead h2{margin-top:6px}
+.kpi1{display:flex;flex-direction:column;align-items:flex-end}
+.kpi1 span{font-size:.78rem;color:var(--muted)}
+.kpi1 b{font-family:var(--font-d);color:var(--blue);font-size:1.2rem;white-space:nowrap}
+.lgrid{display:grid;gap:8px}
+.lcard{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fff;display:grid;gap:8px}
+.lcard.on{border-color:var(--blue);box-shadow:0 0 0 2px rgba(29,78,216,.15)}
+.lc-top{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center}
+.lc-top .nm{display:flex;flex-direction:column;min-width:0}
+.lc-top .nm small{color:var(--muted);font-size:.74rem}
+.pos{font-size:.72rem;font-weight:700;border-radius:8px;padding:4px 8px;color:#fff;white-space:nowrap}
+.pos.GK{background:#F59E0B}.pos.DF{background:#1D4ED8}.pos.MF{background:#16A34A}.pos.FW{background:#E11D2E}
+.ref{display:flex;flex-direction:column;align-items:flex-end}
+.ref span{font-size:.7rem;color:var(--muted)}
+.ref b{white-space:nowrap}
+.lc-bid{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.bidctl{display:flex;align-items:center;gap:4px}
+.deals{display:grid;gap:6px}
+.deal{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;border:1px solid var(--line-soft);border-radius:12px;padding:8px 12px}
+.deal .muted{grid-column:1}
+.deal .price{grid-row:1/3;grid-column:2;align-self:center;color:var(--gold);white-space:nowrap;font-family:var(--font-d)}
+.deal.me{border-color:var(--blue);background:rgba(29,78,216,.04)}
+.chip.ok{border-color:#16A34A;color:#16A34A}.chip.bad{border-color:var(--gold);color:var(--gold)}
+/* cup */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vs .side h3{text-align:center;margin-bottom:6px;color:var(--blue)}
+.vs .side:last-child h3{color:var(--gold)}
+.bracket{display:flex;gap:10px;overflow-x:auto}
+.bround{display:flex;flex-direction:column;gap:8px;min-width:130px;justify-content:space-around}
+.bm{border:1px solid var(--line);border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;font-size:.84rem;background:#fff}
+.bm .w{font-weight:800;color:var(--blue)}.bm .l{color:var(--muted);text-decoration:line-through}
+.bm.live{border-color:var(--yel);box-shadow:0 0 0 2px var(--yel)}
+.tr{grid-template-columns:18px minmax(0,1fr) 34px 34px 40px 34px 46px!important}
+
+.vs{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:6px;padding:10px}
+.vs .side{min-width:0}
+.vs .pitch{padding:8px 2px;gap:6px;border-width:2px}
+.vs .pitch .line{gap:1px}
+.vs .pp{max-width:none}
+.vs .pp i{width:20px;height:20px;font-size:.6rem;border-width:1px}
+.vs .pp b{font-size:.56rem;word-break:break-word;white-space:normal}
+.steps{flex-wrap:nowrap}
+.wrap{overflow-x:clip}
+</style>
+</head>
+<body>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+(function () {
+  if (window.claude && window.claude.use) return;
+  if (typeof firebase === 'undefined') return;
+  var CFG = {
+    apiKey: "AIzaSyByoJGFA6WSH5IXgZ4rxbNITx2Oqnjai1A",
+    authDomain: "murafaat-1a91d.firebaseapp.com",
+    databaseURL: "https://murafaat-1a91d-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "murafaat-1a91d"
+  };
+  try { if (!firebase.apps.length) firebase.initializeApp(CFG); } catch (e) { return; }
+  var rt = firebase.database();
+  var K = function (p) { return 'docs/' + p; };
+  var meta = { fromCache: false, hasPendingWrites: false };
+  function snapOf(id, raw) {
+    var v = null;
+    if (typeof raw === 'string') { try { v = JSON.parse(raw); } catch (e) { v = null; } }
+    return { id: id, exists: v !== null, data: function () { return v === null ? undefined : JSON.parse(JSON.stringify(v)); }, metadata: meta };
+  }
+  function docRef(path) {
+    var id = path.split('/').pop(), ref = rt.ref(K(path) + '/_d');
+    return {
+      id: id,
+      get: function () { return ref.once('value').then(function (s) { return snapOf(id, s.val()); }); },
+      set: function (v) { return ref.set(JSON.stringify(v)); },
+      delete: function () { return rt.ref(K(path)).remove(); },
+      onSnapshot: function (cb, err) {
+        var f = function (s) { cb(snapOf(id, s.val())); };
+        ref.on('value', f, function (e) { if (err) err(e); });
+        return function () { ref.off('value', f); };
+      }
+    };
+  }
+  function colRef(col) {
+    var ref = rt.ref(K(col));
+    function wrap(s) {
+      var docs = [];
+      s.forEach(function (c) { var d = c.child('_d').val(); if (typeof d === 'string') docs.push(snapOf(c.key, d)); });
+      return { docs: docs };
+    }
+    return {
+      doc: function (id) { return docRef(col + '/' + id); },
+      get: function () { return ref.once('value').then(wrap); },
+      onSnapshot: function (cb, err) {
+        var f = function (s) { cb(wrap(s)); };
+        ref.on('value', f, function (e) { if (err) err(e); });
+        return function () { ref.off('value', f); };
+      }
+    };
+  }
+  window.__MZ_DB = { doc: docRef, collection: colRef };
+})();
+</script>
+<div id="app" dir="rtl" lang="ar"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>window.__NADIK_TEAMS=[{"id":"t0","lg":"ENG","club":"Arsenal","ar":"آرسنال","season":"2003/04","coach":"Arsène Wenger","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2003–04_Arsenal_F.C._season","form":"4-4-2","pl":[["1","Jens Lehmann","GK",38,1],["3","Ashley Cole","DF",32,1],["4","Patrick Vieira","MF",29,1],["5","Martin Keown","DF",3,0],["7","Robert Pires","MF",33,1],["8","Freddie Ljungberg","MF",27,1],["9","José Antonio Reyes","FW",7,0],["10","Dennis Bergkamp","FW",21,1],["11","Sylvain Wiltord","FW",8,0],["12","Lauren","DF",30,1],["14","Thierry Henry","FW",37,1],["15","Ray Parlour","MF",16,0],["17","Edu","MF",13,0],["18","Pascal Cygan","DF",10,0],["19","Gilberto Silva","MF",29,1],["22","Gaël Clichy","DF",7,0],["23","Sol Campbell","DF",35,1],["25","Nwankwo Kanu","FW",3,0],["28","Kolo Touré","DF",36,1],["30","Jérémie Aliadière","FW",3,0],["33","Graham Stack","GK",0,0],["37","David Bentley","MF",1,0],["57","Cesc Fàbregas","MF",0,0]]},{"id":"t1","lg":"ENG","club":"Chelsea","ar":"تشيلسي","season":"2004/05","coach":"José Mourinho","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2004–05_Chelsea_F.C._season","form":"4-5-1","pl":[["1","Petr Čech","GK",35,1],["20","Paulo Ferreira","DF",29,1],["6","Ricardo Carvalho","DF",22,1],["26","John Terry","DF",36,1],["13","William Gallas","DF",28,1],["10","Joe Cole","MF",19,1],["4","Claude Makélélé","MF",36,1],["8","Frank Lampard","MF",38,1],["30","Tiago Mendes","MF",21,1],["11","Damien Duff","MF",28,1],["22","Eiður Guðjohnsen","FW",30,1],["23","Carlo Cudicini","GK",3,0],["15","Didier Drogba","FW",18,0],["16","Arjen Robben","MF",14,0],["2","Glen Johnson","DF",13,0],["18","Wayne Bridge","DF",12,0],["3","Celestine Babayaro","DF",3,0],["5","Alexey Smertin","MF",11,0],["9","Mateja Kežman","FW",6,0],["14","Geremi","MF",6,0],["29","Robert Huth","DF",6,0],["27","Jiří Jarošík","MF",3,0],["19","Scott Parker","MF",1,0]]},{"id":"t2","lg":"ENG","club":"Manchester United","ar":"مانشستر يونايتد","season":"2007/08","coach":"Sir Alex Ferguson","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2007–08_Manchester_United_F.C._season","form":"4-4-2","pl":[["1","Edwin van der Sar","GK",29,1],["3","Patrice Evra","DF",33,1],["4","Owen Hargreaves","MF",16,0],["5","Rio Ferdinand","DF",35,1],["6","Wes Brown","DF",34,1],["7","Cristiano Ronaldo","MF",31,1],["8","Anderson","MF",16,0],["9","Louis Saha","FW",6,0],["10","Wayne Rooney","FW",25,1],["11","Ryan Giggs","MF",26,1],["12","Ben Foster","GK",1,0],["13","Park Ji-sung","MF",8,0],["15","Nemanja Vidić","DF",32,1],["16","Michael Carrick","MF",24,1],["17","Nani","MF",16,0],["18","Paul Scholes","MF",22,1],["19","Gerard Piqué","DF",5,0],["22","John O'Shea","DF",10,0],["24","Darren Fletcher","MF",5,0],["25","Danny Simpson","DF",1,0],["27","Mikaël Silvestre","DF",3,0],["29","Tomasz Kuszczak","GK",8,0],["32","Carlos Tevez","FW",31,1],["33","Chris Eagles","MF",1,0]]},{"id":"t3","lg":"ENG","club":"Leicester City","ar":"ليستر سيتي","season":"2015/16","coach":"Claudio Ranieri","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2015–16_Leicester_City_F.C._season","form":"4-4-2","pl":[["1","Kasper Schmeichel","GK",38,1],["2","Ritchie De Laet","DF",7,0],["4","Danny Drinkwater","MF",35,1],["5","Wes Morgan","DF",38,1],["6","Robert Huth","DF",35,1],["9","Jamie Vardy","FW",36,1],["10","Andy King","MF",9,0],["11","Marc Albrighton","MF",34,1],["12","Ben Hamer","GK",0,0],["13","Daniel Amartey","DF",1,0],["14","N'Golo Kanté","MF",33,1],["15","Jeffrey Schlupp","MF",14,0],["17","Danny Simpson","DF",30,1],["20","Shinji Okazaki","FW",28,1],["22","Demarai Gray","MF",1,0],["23","Leonardo Ulloa","FW",7,0],["24","Nathan Dyer","MF",0,0],["26","Riyad Mahrez","MF",36,1],["27","Marcin Wasilewski","DF",3,0],["28","Christian Fuchs","DF",30,1],["32","Mark Schwarzer","GK",0,0],["33","Gökhan Inler","MF",3,0]]},{"id":"t4","lg":"ENG","club":"Liverpool","ar":"ليفربول","season":"2019/20","coach":"Jürgen Klopp","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2019–20_Liverpool_F.C._season","form":"4-3-3","pl":[["1","Alisson Becker","GK",29,1],["3","Fabinho","MF",22,1],["4","Virgil van Dijk","DF",38,1],["5","Georginio Wijnaldum","MF",35,1],["6","Dejan Lovren","DF",9,0],["7","James Milner","MF",9,0],["8","Naby Keïta","MF",9,0],["9","Roberto Firmino","FW",34,1],["10","Sadio Mané","FW",31,1],["11","Mohamed Salah","FW",33,1],["12","Joe Gomez","DF",22,1],["13","Adrián","GK",9,0],["14","Jordan Henderson","MF",26,1],["15","Alex Oxlade-Chamberlain","MF",17,0],["18","Takumi Minamino","FW",2,0],["20","Adam Lallana","MF",3,0],["23","Xherdan Shaqiri","MF",2,0],["26","Andy Robertson","DF",34,1],["27","Divock Origi","FW",7,0],["32","Joël Matip","DF",8,0],["48","Curtis Jones","MF",1,0],["66","Trent Alexander-Arnold","DF",35,1],["76","Neco Williams","DF",3,0]]},{"id":"t5","lg":"ENG","club":"Manchester City","ar":"مانشستر سيتي","season":"2017/18","coach":"Pep Guardiola","mode":"TOTAL_APPS","src":"https://en.wikipedia.org/wiki/2017–18_Manchester_City_F.C._season","form":"4-4-2","pl":[["1","Claudio Bravo","GK",13,0],["2","Kyle Walker","DF",48,1],["3","Danilo","DF",38,1],["4","Vincent Kompany","DF",21,0],["5","John Stones","DF",29,1],["7","Raheem Sterling","FW",45,1],["8","İlkay Gündoğan","MF",48,1],["10","Sergio Agüero","FW",39,0],["14","Aymeric Laporte","DF",13,0],["15","Eliaquim Mangala","DF",15,0],["17","Kevin De Bruyne","MF",52,1],["18","Fabian Delph","MF",29,0],["19","Leroy Sané","FW",49,1],["20","Bernardo Silva","MF",53,1],["21","David Silva","MF",40,0],["22","Benjamin Mendy","DF",8,0],["25","Fernandinho","MF",48,1],["30","Nicolás Otamendi","DF",46,1],["31","Ederson","GK",45,1],["33","Gabriel Jesus","FW",42,0],["35","Oleksandr Zinchenko","MF",14,0],["42","Yaya Touré","MF",17,0],["47","Phil Foden","MF",10,0],["55","Brahim","MF",10,0]]},{"id":"t6","lg":"ESP","club":"Barcelona","ar":"برشلونة","season":"2010/11","coach":"Pep Guardiola","mode":"TOTAL","src":"https://en.wikipedia.org/wiki/2010–11_FC_Barcelona_season","form":"4-3-3","pl":[["1","Víctor Valdés","GK",44,1],["13","José Manuel Pinto","GK",17,0],["2","Dani Alves","DF",50,1],["3","Gerard Piqué","DF",48,1],["5","Carles Puyol","DF",25,0],["18","Gabriel Milito","DF",12,0],["19","Maxwell","DF",31,1],["21","Adriano","DF",23,0],["22","Éric Abidal","DF",34,1],["26","Andreu Fontàs","DF",7,0],["32","Marc Bartra","DF",4,0],["6","Xavi","MF",47,1],["8","Andrés Iniesta","MF",46,1],["14","Javier Mascherano","MF",35,0],["15","Seydou Keita","MF",27,0],["16","Sergio Busquets","MF",42,1],["20","Ibrahim Afellay","MF",10,0],["30","Thiago Alcântara","MF",10,0],["34","Jonathan dos Santos","MF",3,0],["7","David Villa","FW",48,1],["9","Bojan Krkić","FW",17,0],["10","Lionel Messi","FW",48,1],["11","Jeffrén Suárez","FW",6,0],["17","Pedro","FW",40,1]]},{"id":"t7","lg":"ESP","club":"Barcelona","ar":"برشلونة","season":"2008/09","coach":"Pep Guardiola","mode":"TOTAL","src":"https://en.wikipedia.org/wiki/2008–09_FC_Barcelona_season","form":"4-3-3","pl":[["1","Víctor Valdés","GK",49,1],["13","José Manuel Pinto","GK",11,0],["2","Martín Cáceres","DF",16,0],["3","Gerard Piqué","DF",44,1],["4","Rafael Márquez","DF",36,1],["5","Carles Puyol","DF",41,1],["16","Sylvinho","DF",22,0],["20","Dani Alves","DF",52,1],["22","Eric Abidal","DF",31,0],["29","Víctor Sánchez","DF",6,0],["6","Xavi","MF",49,1],["8","Andrés Iniesta","MF",38,1],["15","Seydou Keita","MF",29,0],["21","Alexander Hleb","MF",19,0],["24","Yaya Touré","MF",39,1],["28","Sergio Busquets","MF",31,0],["45","Xavi Torres","MF",2,0],["7","Eiður Guðjohnsen","FW",17,0],["9","Samuel Eto'o","FW",46,1],["10","Lionel Messi","FW",41,1],["11","Bojan","FW",18,0],["14","Thierry Henry","FW",36,1],["27","Pedro","FW",6,0]]},{"id":"t8","lg":"ESP","club":"Real Madrid","ar":"ريال مدريد","season":"2011/12","coach":"José Mourinho","mode":"TOTAL","src":"https://en.wikipedia.org/wiki/2011–12_Real_Madrid_CF_season","form":"4-3-3","pl":[["1","Iker Casillas","GK",53,1],["17","Álvaro Arbeloa","DF",37,1],["3","Pepe","DF",45,1],["4","Sergio Ramos","DF",50,1],["12","Marcelo","DF",39,1],["6","Sami Khedira","MF",33,1],["14","Xabi Alonso","MF",50,1],["7","Cristiano Ronaldo","FW",54,1],["10","Mesut Özil","MF",45,1],["22","Ángel Di María","FW",23,0],["9","Karim Benzema","FW",40,1],["13","Antonio Adán","GK",5,0],["20","Gonzalo Higuaín","FW",28,1],["15","Fábio Coentrão","DF",23,0],["8","Kaká","MF",25,0],["24","Lassana Diarra","MF",21,0],["21","José Callejón","FW",11,0],["19","Raphaël Varane","DF",13,0],["2","Ricardo Carvalho","DF",12,0],["11","Esteban Granero","MF",10,0],["18","Raúl Albiol","DF",8,0],["5","Nuri Şahin","MF",8,0],["16","Hamit Altıntop","MF",5,0]]},{"id":"t9","lg":"ESP","club":"Atlético Madrid","ar":"أتلتيكو مدريد","season":"2013/14","coach":"Diego Simeone","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2013–14_Atlético_Madrid_season","form":"4-4-2","pl":[["13","Thibaut Courtois","GK",37,1],["1","Daniel Aranzubia","GK",1,0],["2","Diego Godín","DF",34,1],["3","Filipe Luís","DF",32,1],["12","Toby Alderweireld","DF",10,0],["18","José Giménez","DF",1,0],["20","Juanfran","DF",35,1],["22","Emiliano Insúa","DF",5,0],["23","Miranda","DF",32,1],["4","Mario Suárez","MF",16,0],["5","Tiago","MF",21,1],["6","Koke","MF",33,1],["8","Raúl García","MF",18,0],["10","Arda Turan","MF",22,1],["14","Gabi","MF",35,1],["21","Diego","MF",4,0],["24","José Sosa","MF",4,0],["16","Óliver Torres","MF",2,0],["7","Adrián López","FW",4,0],["9","David Villa","FW",32,1],["19","Diego Costa","FW",34,1]]},{"id":"t10","lg":"ESP","club":"Real Madrid","ar":"ريال مدريد","season":"2016/17","coach":"Zinedine Zidane","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2016–17_Real_Madrid_CF_season","form":"4-4-2","pl":[["1","Keylor Navas","GK",27,1],["13","Kiko Casilla","GK",11,0],["2","Dani Carvajal","DF",21,0],["4","Sergio Ramos","DF",28,1],["5","Raphaël Varane","DF",23,1],["6","Nacho","DF",24,1],["12","Marcelo","DF",26,1],["23","Danilo","DF",17,0],["3","Pepe","DF",13,0],["15","Fábio Coentrão","DF",2,0],["8","Toni Kroos","MF",28,1],["14","Casemiro","MF",20,1],["19","Luka Modrić","MF",22,1],["16","Mateo Kovačić","MF",19,1],["22","Isco","MF",18,0],["10","James Rodríguez","MF",13,0],["7","Cristiano Ronaldo","FW",29,1],["9","Karim Benzema","FW",23,1],["11","Gareth Bale","FW",17,0],["21","Álvaro Morata","FW",14,0],["17","Lucas Vázquez","FW",12,0],["20","Marco Asensio","FW",11,0]]},{"id":"t11","lg":"ESP","club":"Valencia","ar":"فالنسيا","season":"2003/04","coach":"Rafael Benítez","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2003–04_Valencia_CF_season","form":"4-5-1","pl":[["1","Santiago Cañizares","GK",37,1],["28","David Rangel","GK",1,0],["23","Curro Torres","DF",28,1],["4","Roberto Ayala","DF",30,1],["5","Carlos Marchena","DF",28,1],["15","Amedeo Carboni","DF",33,1],["2","Mauricio Pellegrino","DF",17,0],["12","Javier Garrido","DF",13,0],["17","David Navarro","DF",7,0],["18","Jorge López","MF",23,1],["6","David Albelda","MF",32,1],["8","Rubén Baraja","MF",29,1],["14","Vicente","MF",32,1],["21","Pablo Aimar","MF",18,1],["19","Francisco Rufete","MF",15,0],["25","Mohamed Sissoko","MF",9,0],["24","Xisco","MF",5,0],["16","Fabián Canobbio","MF",3,0],["20","Mista","FW",29,1],["7","Ricardo Oliveira","FW",14,0],["10","Miguel Ángel Angulo","FW",12,0],["11","Juan Sánchez","FW",3,0]]},{"id":"t12","lg":"ESP","club":"Sevilla","ar":"إشبيلية","season":"2014/15","coach":"Unai Emery","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2014–15_Sevilla_FC_season","form":"4-5-1","pl":[["29","Sergio Rico","GK",19,1],["13","Beto","GK",18,0],["1","Mariano Barbosa","GK",1,0],["2","Benoît Trémoulinas","DF",18,0],["3","Fernando Navarro","DF",15,0],["5","Diogo Figueiras","DF",19,1],["6","Daniel Carriço","DF",28,1],["15","Timothée Kolodziejczak","DF",18,0],["21","Nicolás Pareja","DF",26,1],["23","Coke","DF",21,1],["24","Alejandro Arribas","DF",10,0],["4","Grzegorz Krychowiak","MF",31,1],["10","José Antonio Reyes","MF",15,0],["12","Vicente Iborra","MF",24,1],["17","Denis Suárez","MF",16,0],["19","Éver Banega","MF",23,1],["20","Vitolo","MF",25,1],["22","Aleix Vidal","MF",22,1],["25","Stéphane Mbia","MF",17,0],["7","Kevin Gameiro","FW",7,0],["9","Carlos Bacca","FW",31,1],["14","Iago Aspas","FW",4,0],["18","Gerard Deulofeu","FW",10,0]]},{"id":"t13","lg":"GER","club":"Bayern Munich","ar":"بايرن ميونخ","season":"2012/13","coach":"Jupp Heynckes","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2012–13_FC_Bayern_Munich_season","form":"4-5-1","pl":[["1","Manuel Neuer","GK",31,1],["22","Tom Starke","GK",3,0],["4","Dante","DF",29,1],["5","Daniel Van Buyten","DF",11,0],["13","Rafinha","DF",6,0],["17","Jérôme Boateng","DF",25,1],["21","Philipp Lahm","DF",28,1],["26","Diego Contento","DF",4,0],["27","David Alaba","DF",22,1],["28","Holger Badstuber","DF",12,0],["7","Franck Ribéry","MF",24,1],["8","Javi Martínez","MF",19,1],["10","Arjen Robben","MF",11,0],["11","Xherdan Shaqiri","MF",13,0],["25","Thomas Müller","MF",25,1],["30","Luiz Gustavo","MF",16,0],["31","Bastian Schweinsteiger","MF",27,1],["36","Emre Can","MF",2,0],["39","Toni Kroos","MF",23,1],["44","Anatoliy Tymoshchuk","MF",5,0],["9","Mario Mandžukić","FW",22,1],["14","Claudio Pizarro","FW",7,0],["33","Mario Gómez","FW",9,0]]},{"id":"t14","lg":"GER","club":"Bayern Munich","ar":"بايرن ميونخ","season":"2019/20","coach":"Hansi Flick","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2019–20_FC_Bayern_Munich_season","form":"4-4-2","pl":[["1","Manuel Neuer","GK",33,1],["26","Sven Ulreich","GK",1,0],["2","Álvaro Odriozola","DF",2,0],["4","Niklas Süle","DF",8,0],["5","Benjamin Pavard","DF",31,1],["8","Javi Martínez","DF",6,0],["17","Jérôme Boateng","DF",23,1],["19","Alphonso Davies","DF",24,1],["21","Lucas Hernandez","DF",11,0],["27","David Alaba","DF",27,1],["6","Thiago","MF",20,1],["10","Philippe Coutinho","MF",15,0],["11","Michaël Cuisance","MF",3,0],["14","Ivan Perišić","MF",11,0],["18","Leon Goretzka","MF",17,1],["24","Corentin Tolisso","MF",7,0],["25","Thomas Müller","MF",26,1],["28","Sarpreet Singh","MF",1,0],["32","Joshua Kimmich","MF",32,1],["22","Serge Gnabry","FW",26,1],["29","Kingsley Coman","FW",17,0],["9","Robert Lewandowski","FW",31,1],["35","Joshua Zirkzee","FW",3,0]]},{"id":"t15","lg":"GER","club":"Borussia Dortmund","ar":"بوروسيا دورتموند","season":"2011/12","coach":"Jürgen Klopp","mode":"TOTAL_APPS","src":"https://en.wikipedia.org/wiki/2011–12_Borussia_Dortmund_season","form":"4-5-1","pl":[["1","Roman Weidenfeller","GK",42,1],["20","Mitchell Langerak","GK",4,0],["4","Neven Subotić","DF",33,1],["15","Mats Hummels","DF",45,1],["24","Chris Löwe","DF",11,0],["25","Patrick Owomoyela","DF",12,0],["26","Łukasz Piszczek","DF",44,1],["27","Felipe Santana","DF",17,0],["29","Marcel Schmelzer","DF",36,1],["5","Sebastian Kehl","MF",38,1],["6","Florian Kringe","MF",2,0],["7","Moritz Leitner","MF",23,0],["8","Antônio da Silva","MF",8,0],["11","Mario Götze","MF",26,0],["14","Ivan Perišić","MF",40,1],["16","Jakub Błaszczykowski","MF",39,1],["19","Kevin Großkreutz","MF",42,1],["21","İlkay Gündoğan","MF",35,0],["22","Sven Bender","MF",31,0],["23","Shinji Kagawa","MF",42,1],["9","Robert Lewandowski","FW",46,1],["18","Lucas Barrios","FW",25,0],["10","Mohamed Zidan","FW",3,0]]},{"id":"t16","lg":"GER","club":"Bayer Leverkusen","ar":"باير ليفركوزن","season":"2023/24","coach":"Xabi Alonso","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2023–24_Bayer_04_Leverkusen_season","form":"4-5-1","pl":[["1","Lukas Hradecky","GK",33,1],["17","Matěj Kovář","GK",1,0],["2","Josip Stanišić","DF",13,0],["3","Piero Hincapié","DF",16,0],["4","Jonathan Tah","DF",30,1],["6","Odilon Kossounou","DF",21,0],["12","Edmond Tapsoba","DF",23,1],["13","Arthur","DF",2,0],["20","Álex Grimaldo","DF",31,1],["30","Jeremie Frimpong","DF",27,1],["7","Jonas Hofmann","MF",26,1],["8","Robert Andrich","MF",18,1],["10","Florian Wirtz","MF",26,1],["19","Nathan Tella","MF",8,0],["21","Amine Adli","MF",8,0],["25","Exequiel Palacios","MF",21,1],["34","Granit Xhaka","MF",32,1],["11","Nadiem Amiri","MF",1,0],["9","Borja Iglesias","FW",2,0],["14","Patrick Schick","FW",12,0],["22","Victor Boniface","FW",18,1],["23","Adam Hložek","FW",5,0]]},{"id":"t17","lg":"GER","club":"Bayern Munich","ar":"بايرن ميونخ","season":"2009/10","coach":"Louis van Gaal","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2009–10_FC_Bayern_Munich_season","form":"4-4-2","pl":[["22","Hans-Jörg Butt","GK",31,1],["1","Michael Rensing","GK",3,0],["5","Daniel Van Buyten","DF",31,1],["6","Martín Demichelis","DF",17,1],["21","Philipp Lahm","DF",34,1],["26","Diego Contento","DF",8,0],["28","Holger Badstuber","DF",33,1],["4","Edson Braafheid","DF",5,0],["7","Franck Ribéry","MF",10,0],["8","Hamit Altıntop","MF",7,0],["10","Arjen Robben","MF",18,1],["17","Mark van Bommel","MF",25,1],["23","Danijel Pranjić","MF",14,0],["25","Thomas Müller","MF",29,1],["27","David Alaba","MF",2,0],["31","Bastian Schweinsteiger","MF",33,1],["44","Anatoliy Tymoshchuk","MF",11,0],["11","Ivica Olić","FW",23,1],["18","Miroslav Klose","FW",11,0],["33","Mario Gómez","FW",21,1],["9","Luca Toni","FW",3,0]]},{"id":"t18","lg":"ITA","club":"Inter Milan","ar":"إنتر ميلان","season":"2009/10","coach":"José Mourinho","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2009–10_Inter_Milan_season","form":"4-4-2","pl":[["12","Júlio César","GK",38,1],["1","Francesco Toldo","GK",0,0],["13","Maicon","DF",33,1],["6","Lúcio","DF",30,1],["25","Walter Samuel","DF",25,1],["26","Cristian Chivu","DF",16,1],["2","Iván Córdoba","DF",15,0],["39","Davide Santon","DF",8,0],["23","Marco Materazzi","DF",7,0],["4","Javier Zanetti","MF",37,1],["19","Esteban Cambiasso","MF",26,1],["10","Wesley Sneijder","MF",24,1],["5","Dejan Stanković","MF",24,1],["8","Thiago Motta","MF",18,0],["11","Sulley Muntari","MF",16,0],["14","Patrick Vieira","MF",7,0],["7","Ricardo Quaresma","MF",3,0],["17","McDonald Mariga","MF",3,0],["22","Diego Milito","FW",33,1],["9","Samuel Eto'o","FW",27,1],["45","Mario Balotelli","FW",13,0],["27","Goran Pandev","FW",13,0]]},{"id":"t19","lg":"ITA","club":"Juventus","ar":"يوفنتوس","season":"2011/12","coach":"Antonio Conte","mode":"TOTAL_APPS","src":"https://en.wikipedia.org/wiki/2011–12_Juventus_FC_season","form":"4-4-2","pl":[["1","Gianluigi Buffon","GK",35,1],["30","Marco Storari","GK",8,0],["3","Giorgio Chiellini","DF",37,1],["4","Martín Cáceres","DF",14,0],["6","Fabio Grosso","DF",2,0],["11","Paolo De Ceglie","DF",23,0],["15","Andrea Barzagli","DF",39,1],["19","Leonardo Bonucci","DF",37,1],["26","Stephan Lichtsteiner","DF",39,1],["5","Michele Pazienza","MF",9,0],["7","Simone Pepe","MF",33,1],["8","Claudio Marchisio","MF",39,1],["17","Eljero Elia","MF",5,0],["20","Simone Padoin","MF",7,0],["21","Andrea Pirlo","MF",41,1],["22","Arturo Vidal","MF",35,1],["24","Emanuele Giaccherini","MF",27,0],["27","Miloš Krasić","MF",9,0],["28","Marcelo Estigarribia","MF",18,0],["34","Luca Marrone","MF",6,0],["10","Alessandro Del Piero","FW",28,0],["14","Mirko Vučinić","FW",35,1],["18","Fabio Quagliarella","FW",27,0],["23","Marco Borriello","FW",17,0],["32","Alessandro Matri","FW",32,1]]},{"id":"t20","lg":"ITA","club":"Juventus","ar":"يوفنتوس","season":"2016/17","coach":"Massimiliano Allegri","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2016–17_Juventus_FC_season","form":"4-3-3","pl":[["1","Gianluigi Buffon","GK",30,1],["25","Neto","GK",7,0],["3","Giorgio Chiellini","DF",20,1],["4","Medhi Benatia","DF",14,0],["12","Alex Sandro","DF",25,1],["15","Andrea Barzagli","DF",17,0],["19","Leonardo Bonucci","DF",26,1],["23","Dani Alves","DF",15,0],["24","Daniele Rugani","DF",11,0],["26","Stephan Lichtsteiner","DF",22,1],["5","Miralem Pjanić","MF",25,1],["6","Sami Khedira","MF",31,1],["8","Claudio Marchisio","MF",15,0],["18","Mario Lemina","MF",8,0],["22","Kwadwo Asamoah","MF",16,1],["27","Stefano Sturaro","MF",12,0],["28","Tomás Rincón","MF",2,0],["7","Juan Cuadrado","FW",21,0],["9","Gonzalo Higuaín","FW",32,1],["17","Mario Mandžukić","FW",29,1],["20","Marko Pjaca","FW",3,0],["21","Paulo Dybala","FW",26,1]]},{"id":"t21","lg":"ITA","club":"Napoli","ar":"نابولي","season":"2022/23","coach":"Luciano Spalletti","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2022–23_SSC_Napoli_season","form":"4-3-3","pl":[["1","Alex Meret","GK",34,1],["95","Pierluigi Gollini","GK",4,0],["3","Kim Min-jae","DF",35,1],["5","Juan Jesus","DF",10,0],["6","Mário Rui","DF",21,1],["13","Amir Rrahmani","DF",27,1],["17","Mathías Olivera","DF",17,0],["19","Bartosz Bereszyński","DF",2,0],["22","Giovanni Di Lorenzo","DF",36,1],["55","Leo Skiri Østigård","DF",4,0],["4","Diego Demme","MF",2,0],["7","Eljif Elmas","MF",14,0],["20","Piotr Zieliński","MF",27,1],["68","Stanislav Lobotka","MF",34,1],["91","Tanguy Ndombele","MF",8,0],["99","André-Frank Zambo Anguissa","MF",36,1],["9","Victor Osimhen","FW",30,1],["11","Hirving Lozano","FW",20,1],["18","Giovanni Simeone","FW",1,0],["21","Matteo Politano","FW",14,0],["23","Alessio Zerbin","FW",2,0],["77","Khvicha Kvaratskhelia","FW",30,1],["81","Giacomo Raspadori","FW",10,0]]},{"id":"t22","lg":"ITA","club":"AC Milan","ar":"إيه سي ميلان","season":"2010/11","coach":"Massimiliano Allegri","mode":"TOTAL_APPS","src":"https://en.wikipedia.org/wiki/2010–11_AC_Milan_season","form":"4-3-3","pl":[["32","Christian Abbiati","GK",42,1],["1","Marco Amelia","GK",8,0],["13","Alessandro Nesta","DF",35,1],["15","Sokratis Papastathopoulos","DF",7,0],["17","Massimo Oddo","DF",10,0],["18","Marek Jankulovski","DF",7,0],["19","Gianluca Zambrotta","DF",20,0],["20","Ignazio Abate","DF",37,1],["25","Daniele Bonera","DF",20,0],["33","Thiago Silva","DF",42,1],["76","Mario Yepes","DF",17,0],["77","Luca Antonini","DF",32,1],["4","Mark van Bommel","MF",15,0],["8","Gennaro Gattuso","MF",38,1],["10","Clarence Seedorf","MF",40,1],["16","Mathieu Flamini","MF",29,0],["21","Andrea Pirlo","MF",25,0],["23","Massimo Ambrosini","MF",23,0],["27","Kevin-Prince Boateng","MF",34,1],["28","Urby Emanuelson","MF",11,0],["52","Alexander Merkel","MF",10,0],["7","Alexandre Pato","FW",33,1],["9","Filippo Inzaghi","FW",9,0],["11","Zlatan Ibrahimović","FW",41,1],["70","Robinho","FW",45,1],["80","Ronaldinho","FW",16,0],["99","Antonio Cassano","FW",21,0]]},{"id":"t23","lg":"ITA","club":"Roma","ar":"روما","season":"2000/01","coach":"Fabio Capello","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2000–01_AS_Roma_season","form":"4-3-3","pl":[["1","Antonioli","GK",26,1],["22","Lupatelli","GK",8,0],["2","Cafu","DF",31,1],["15","Zebina","DF",21,0],["3","Zago","DF",28,1],["19","Samuel","DF",31,1],["32","Candela","DF",33,1],["6","Aldair","DF",14,0],["28","Mangone","DF",5,0],["23","Rinaldi","DF",3,0],["17","Tommasi","MF",31,1],["4","Zanetti","MF",20,1],["10","Totti","MF",30,1],["11","Emerson","MF",10,0],["5","Assunção","MF",6,0],["8","Nakata","MF",5,0],["25","Guigou","MF",3,0],["7","Di Francesco","MF",1,0],["18","Batistuta","FW",28,1],["24","Delvecchio","FW",28,1],["9","Montella","FW",12,1]]},{"id":"t24","lg":"FRA","club":"Paris Saint-Germain","ar":"باريس سان جيرمان","season":"2018/19","coach":"Thomas Tuchel","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2018–19_Paris_Saint-Germain_FC_season","form":"4-3-3","pl":[["16","Alphonse Areola","GK",21,1],["1","Gianluigi Buffon","GK",17,0],["2","Thiago Silva","DF",24,1],["3","Presnel Kimpembe","DF",23,1],["4","Thilo Kehrer","DF",19,0],["5","Marquinhos","DF",30,1],["12","Thomas Meunier","DF",19,0],["13","Dani Alves","DF",19,0],["14","Juan Bernat","DF",21,1],["20","Layvin Kurzawa","DF",11,0],["31","Colin Dagba","DF",9,0],["34","Stanley N'Soki","DF",8,0],["6","Marco Verratti","MF",23,1],["8","Leandro Paredes","MF",14,0],["11","Ángel Di María","MF",28,1],["23","Julian Draxler","MF",22,1],["24","Christopher Nkunku","MF",13,0],["25","Adrien Rabiot","MF",12,0],["7","Kylian Mbappé","FW",24,1],["9","Edinson Cavani","FW",20,1],["10","Neymar","FW",16,1],["17","Eric Maxim Choupo-Moting","FW",8,0],["27","Moussa Diaby","FW",10,0]]},{"id":"t25","lg":"FRA","club":"Monaco","ar":"موناكو","season":"2016/17","coach":"Leonardo Jardim","mode":"TOTAL_APPS","src":"https://en.wikipedia.org/wiki/2016–17_AS_Monaco_FC_season","form":"4-4-2","pl":[["1","Danijel Subašić","GK",54,1],["16","Morgan De Sanctis","GK",8,0],["2","Fabinho","DF",56,1],["5","Jemerson","DF",54,1],["6","Jorge","DF",5,0],["19","Djibril Sidibé","DF",47,1],["23","Benjamin Mendy","DF",39,0],["24","Andrea Raggi","DF",37,0],["25","Kamil Glik","DF",53,1],["34","Abdou Diallo","DF",11,0],["38","Almamy Touré","DF",27,0],["7","Nabil Dirar","MF",33,0],["8","João Moutinho","MF",52,1],["10","Bernardo Silva","MF",58,1],["14","Tiémoué Bakayoko","MF",51,1],["26","Gabriel Boschilia","MF",16,0],["27","Thomas Lemar","MF",55,1],["9","Radamel Falcao","FW",43,0],["11","Guido Carrillo","FW",31,0],["18","Valère Germain","FW",60,1],["29","Kylian Mbappé","FW",44,1],["33","Irvin Cardona","FW",7,0]]},{"id":"t26","lg":"FRA","club":"Lille","ar":"ليل","season":"2010/11","coach":"Rudi Garcia","mode":"TOTAL_APPS","src":"https://en.wikipedia.org/wiki/2010–11_Lille_OSC_season","form":"4-4-2","pl":[["1","Mickaël Landreau","GK",55,1],["16","Barel Mouko","GK",1,0],["2","Mathieu Debuchy","DF",49,1],["3","Jerry Vandam","DF",6,0],["6","Pape Souaré","DF",5,0],["14","David Rozehnal","DF",27,0],["15","Emerson","DF",31,0],["18","Franck Béria","DF",41,1],["22","Aurélien Chedjou","DF",49,1],["23","Adil Rami","DF",49,1],["4","Florent Balmont","MF",39,0],["5","Idrissa Gueye","MF",18,0],["7","Yohan Cabaye","MF",50,1],["10","Ludovic Obraniak","MF",44,1],["24","Rio Mavuba","MF",54,1],["26","Eden Hazard","MF",54,1],["29","Stéphane Dumont","MF",21,0],["8","Moussa Sow","FW",51,1],["9","Túlio de Melo","FW",42,0],["17","Pierre-Alain Frau","FW",43,0],["27","Gervinho","FW",50,1]]},{"id":"t27","lg":"FRA","club":"Marseille","ar":"مارسيليا","season":"2009/10","coach":"Didier Deschamps","mode":"LEAGUE","src":"https://en.wikipedia.org/wiki/2009–10_Olympique_de_Marseille_season","form":"4-4-2","pl":[["30","Steve Mandanda","GK",36,1],["40","Elinton Andrade","GK",2,0],["21","Souleymane Diawara","DF",36,1],["24","Laurent Bonnart","DF",30,1],["3","Taye Taiwo","DF",25,0],["17","Stéphane Mbia","DF",26,1],["19","Gabriel Heinze","DF",26,1],["5","Hilton","DF",9,0],["18","Fabrice Abriel","MF",18,0],["7","Benoît Cheyrou","MF",27,1],["6","Édouard Cissé","MF",27,1],["8","Lucho González","MF",28,1],["28","Mathieu Valbuena","MF",19,1],["12","Charles Kaboré","MF",17,0],["22","Cyril Rool","MF",1,0],["11","Mamadou Niang","FW",29,1],["9","Brandão","FW",27,1],["10","Hatem Ben Arfa","FW",17,0],["14","Bakari Koné","FW",11,0],["23","Fernando Morientes","FW",4,0]]}];</script>
+<script>
+/* ===== أقنعني! ناديك: one phone per player, rooms synced through Firebase (or the artifact db) ===== */
+(function () {
+  'use strict';
+  const TEAMS = window.__NADIK_TEAMS || [];
+  const TM = {}; TEAMS.forEach(t => { TM[t.id] = t; });
+  const LS = 'aqnieni.nadik.v1';
+  const TEST = !!window.__MZ_TEST;
+  const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const LG = { ENG: 'الإنجليزي', ESP: 'الإسباني', GER: 'الألماني', ITA: 'الإيطالي', FRA: 'الفرنسي' };
+  const POS = { GK: 'حارس', DF: 'دفاع', MF: 'وسط', FW: 'هجوم' };
+  const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
+  const TIER = { s: { name: 'تشكيلة قوية', bal: 10 }, w: { name: 'تشكيلة أضعف', bal: 60 } };
+  const MAXP = 500;
+  const app = document.getElementById('app');
+  const toastEl = document.getElementById('toast');
+  const EXT = !(typeof window.claude !== 'undefined' && window.claude && window.claude.use);
+  const ART_URL = EXT ? (location.origin + location.pathname) : (window.__NADIK_URL || location.href.split('#')[0]);
+
+  let db = null, roomCap = null, rt = null, ME_ID = null;
+  let G = null, ME = null, INP = {};
+  let skew = null, hostOn = false, unsubRoom = null, unsubInp = null, hostTick = null;
+  let seq = 0, toastT = null;
+  const SEEN = {};
+  const U = {
+    splash: true, ready: false, view: 'home', modal: null, draft: {}, err: '', lastKey: '', lastHtml: '',
+    code: '', name: '', busy: false, offline: '', fromLink: false,
+    lg: 'ENG', pk: { s: null, w: null }, pkKey: '', tierPick: null, tab: 'pitch',
+    lst: {}, lstKey: '', bids: {}, bidsKey: '', xi: [], xiKey: '', pick: null, pickKey: ''
+  };
+
+  /* ---------- helpers ---------- */
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const uid = p => p + (++seq) + Math.random().toString(36).slice(2, 6);
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const P = id => (G && G.players.find(p => p.id === id)) || { id, name: 'لاعب' };
+  const inRoom = id => !!(G && G.players.some(p => p.id === id));
+  const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+  const mil = v => (Math.round((+v || 0) * 10) / 10) + ' مليون';
+  const isHost = () => !!(G && ME_ID && G.host === ME_ID);
+  const nowH = () => (isHost() ? Date.now() : Date.now() - (skew || 0));
+  const inp = id => (id === ME_ID ? ME : INP[id]) || {};
+  const norm = s => String(s || '').trim().toLowerCase();
+  const shuffle = a => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+  function lsGet() { try { return JSON.parse(localStorage.getItem(LS) || '{}') || {}; } catch (e) { return {}; } }
+  function lsSet(o) { try { localStorage.setItem(LS, JSON.stringify(Object.assign(lsGet(), o))); } catch (e) { } }
+  function toast(msg) {
+    toastEl.innerHTML = '<span>' + esc(msg) + '</span>';
+    toastEl.classList.add('show');
+    clearTimeout(toastT);
+    toastT = setTimeout(() => toastEl.classList.remove('show'), 3400);
+  }
+  function beep() {
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
+      const a = new AC(), o = a.createOscillator(), g = a.createGain();
+      o.connect(g); g.connect(a.destination); o.frequency.value = 660; g.gain.value = .08; o.start(); o.stop(a.currentTime + .35);
+    } catch (e) { }
+  }
+
+  /* ---------- squad data ---------- */
+  const tLabel = t => t ? (t.ar + ' ' + t.season) : '؟';
+  const PL = pk => { const [tid, i] = pk.split('.'); const t = TM[tid]; const r = t && t.pl[+i]; return r ? { pk, num: r[0], name: r[1], pos: r[2], starts: r[3], xi: !!r[4], tid, team: t } : { pk, num: '-', name: '؟', pos: 'MF', starts: 0, xi: false, tid, team: null }; };
+  const val = pk => (G && G.val && G.val[pk] != null ? G.val[pk] : (G ? G.settings.base : 5));
+  const roster = pid => (G && G.own ? Object.keys(G.own).filter(k => G.own[k] === pid) : []).sort((a, b) => (POS_ORDER[PL(a).pos] - POS_ORDER[PL(b).pos]) || (PL(b).starts - PL(a).starts));
+  const bal = pid => (G && G.bal ? (G.bal[pid] || 0) : 0);
+  const assets = pid => bal(pid) + roster(pid).reduce((s, k) => s + val(k), 0);
+  const gkCount = list => list.filter(k => PL(k).pos === 'GK').length;
+  const mkLabel = no => 'الموسم ' + Math.ceil(no / 2) + ' · السوق ' + (no % 2 ? 'الصيفي' : 'الشتوي');
+
+  /* ---------- logo ---------- */
+  const LOGO = '<svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true" style="flex:none"><defs><linearGradient id="lgn" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E11D2E"/><stop offset="1" stop-color="#1D4ED8"/></linearGradient></defs><circle cx="32" cy="32" r="31" fill="url(#lgn)"/><circle cx="32" cy="32" r="27" fill="none" stroke="#FFC93C" stroke-width="2.5"/><g transform="rotate(-45 30 27)"><rect x="17" y="15" width="26" height="11" rx="3" fill="#fff"/><rect x="14" y="12.5" width="6" height="16" rx="2.5" fill="#fff"/><rect x="40" y="12.5" width="6" height="16" rx="2.5" fill="#fff"/><rect x="27.5" y="26" width="5" height="23" rx="2.5" fill="#fff"/></g><rect x="13" y="47" width="22" height="5.5" rx="2.75" fill="#FFC93C"/></svg>';
+
+  /* ---------- storage ---------- */
+  const roomPath = c => 'nadik/' + c;
+  const inpPath = (c, id) => 'nadik/' + c + '/inputs/' + id;
+  let pubBusy = false, pubDirty = false, pubT = null;
+  function publish() { if (!isHost() || !db) return; clearTimeout(pubT); pubT = setTimeout(flushRoom, 40); }
+  async function flushRoom() {
+    if (!isHost() || !db) return;
+    if (pubBusy) { pubDirty = true; return; }
+    pubBusy = true;
+    try {
+      G.rev = (G.rev || 0) + 1; G.sentAt = Date.now();
+      await db.doc(roomPath(G.code)).set(clone(G));
+      nudge('v'); U.offline = '';
+    } catch (e) { writeFailed(e); }
+    pubBusy = false;
+    if (pubDirty) { pubDirty = false; flushRoom(); }
+  }
+  let meBusy = false, meDirty = false;
+  async function saveMe() {
+    if (!db || !ME || !U.code) return;
+    if (meBusy) { meDirty = true; return; }
+    meBusy = true;
+    try { await db.doc(inpPath(U.code, ME_ID)).set(clone(ME)); nudge('i'); U.offline = ''; }
+    catch (e) { writeFailed(e); }
+    meBusy = false;
+    if (meDirty) { meDirty = false; saveMe(); }
+    if (isHost()) hostStep();
+  }
+  function writeFailed(e) {
+    const code = e && e.code;
+    U.offline = (code === 'invalid_argument' || code === 'not_granted' || code === 'revoked' || code === 'PERMISSION_DENIED') ? 'perm' : 'net';
+    toast(U.offline === 'perm' ? 'ما عندك صلاحية الكتابة. تأكد من إعدادات قاعدة البيانات.' : 'تعذر الحفظ، تأكد من الاتصال.');
+    render();
+  }
+  function nudge(topic) { try { if (rt) rt.emit(topic, { rev: G ? G.rev : 0 }); } catch (e) { } }
+
+  /* ---------- room lifecycle ---------- */
+  function freshRoom(code) {
+    return {
+      v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {}, online: [],
+      settings: { seasons: 5, listSec: 30, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
+      picks: {}, tier: {}, team: {}, note: {}, own: {}, val: {}, bal: {}, start: {}, stats: {}, mk: null, hist: [], xi: {}, cup: null, prog: []
+    };
+  }
+  function blankMe(code) { return { room: code, name: U.name.trim(), at: Date.now(), hb: Date.now(), reqN: 0, reqs: [] }; }
+
+  async function subscribe(code) {
+    unsubscribe();
+    U.code = code;
+    try { location.hash = 'room-' + code; } catch (e) { }
+    lsSet({ code });
+    try { rt = roomCap && roomCap.join ? roomCap.join('nadik-' + code) : null; } catch (e) { rt = null; }
+    if (rt) {
+      try {
+        rt.on('v', d => { if (!isHost() && d && G && d.rev > G.rev) db.doc(roomPath(code)).get().then(onRoomSnap).catch(() => { }); });
+        rt.on('i', () => { if (isHost()) db.collection('nadik/' + code + '/inputs').get().then(onInputs).catch(() => { }); });
+      } catch (e) { }
+    }
+    const loading = setTimeout(() => { if (!G) { U.offline = 'net'; render(); } }, 10000);
+    unsubRoom = db.doc(roomPath(code)).onSnapshot(s => { clearTimeout(loading); onRoomSnap(s); }, () => { clearTimeout(loading); U.offline = 'net'; render(); });
+  }
+  function unsubscribe() {
+    if (unsubRoom) { try { unsubRoom(); } catch (e) { } unsubRoom = null; }
+    if (unsubInp) { try { unsubInp(); } catch (e) { } unsubInp = null; }
+    if (rt) { try { rt.leave(); } catch (e) { } rt = null; }
+    if (hostTick) { clearInterval(hostTick); hostTick = null; }
+    hostOn = false; INP = {};
+  }
+  function onRoomSnap(s) {
+    if (!s || !s.exists) {
+      if (!G) { U.err = 'ما لقينا غرفة بهذا الرمز. تأكد من الرمز.'; leaveLocal(); render(); }
+      return;
+    }
+    const d = s.data();
+    if (!d || d.code !== U.code) return;
+    if (s.metadata && !s.metadata.fromCache && !s.metadata.hasPendingWrites && d.sentAt && d.host !== ME_ID) {
+      const o = Date.now() - d.sentAt;
+      if (skew === null || o < skew) skew = o;
+    }
+    if (hostOn && G && G.host === ME_ID) {
+      if (d.host !== ME_ID && d.rev > G.rev) { hostOn = false; G = clone(d); stopHost(); }
+      else return;
+    } else {
+      if (G && G.code === d.code && (d.rev || 0) < (G.rev || 0)) return;
+      G = clone(d);
+    }
+    if (G.host === ME_ID && !hostOn) becomeHost();
+    decideView();
+    render();
+  }
+  function decideView() {
+    if (!G) return;
+    if (inRoom(ME_ID)) U.view = 'game';
+    else if (G.kicked && G.kicked[ME_ID]) U.view = 'kicked';
+    else if (G.phase === 'lobby') U.view = ME && ME.room === G.code && ME.name ? 'wait' : 'join';
+    else U.view = 'spect';
+  }
+  async function loadMe(code) {
+    try { const s = await db.doc(inpPath(code, ME_ID)).get(); ME = s.exists ? clone(s.data()) : null; } catch (e) { ME = null; }
+    if (ME && ME.room !== code) ME = null;
+  }
+  function becomeHost() {
+    hostOn = true;
+    if (unsubInp) { try { unsubInp(); } catch (e) { } }
+    unsubInp = db.collection('nadik/' + G.code + '/inputs').onSnapshot(onInputs, () => { });
+    if (!hostTick) hostTick = setInterval(hostTickFn, 400);
+    publish();
+  }
+  function stopHost() {
+    if (unsubInp) { try { unsubInp(); } catch (e) { } unsubInp = null; }
+    if (hostTick) { clearInterval(hostTick); hostTick = null; }
+    INP = {};
+  }
+  function onInputs(snap) {
+    const m = {};
+    snap.docs.forEach(d => { if (d.exists) m[d.id] = d.data(); });
+    Object.keys(m).forEach(id => { const hb = m[id].hb; if (hb && (!INP[id] || INP[id].hb !== hb)) SEEN[id] = Date.now(); });
+    INP = m;
+    hostStep();
+  }
+  function leaveLocal() {
+    unsubscribe();
+    G = null; ME = null; U.code = ''; U.view = 'home'; U.modal = null; skew = null;
+    lsSet({ code: '' });
+    try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { try { location.hash = ''; } catch (e2) { } }
+  }
+  /* heartbeat: lets the host show who is connected */
+  setInterval(() => {
+    if (!ME || !U.code || !G || !inRoom(ME_ID)) return;
+    ME.hb = Date.now();
+    if (isHost()) { SEEN[ME_ID] = Date.now(); hostStep(); } else saveMe();
+  }, TEST ? 3000 : 20000);
+
+  /* ---------- host engine ---------- */
+  function hostStep() {
+    if (!isHost() || !G) return;
+    let ch = false;
+    SEEN[ME_ID] = Date.now();
+    Object.keys(INP).forEach(id => {
+      const d = INP[id];
+      if (!d || id === ME_ID) return;
+      const p = G.players.find(x => x.id === id);
+      if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
+      if (d.room !== G.code) return;
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 16) {
+        G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true;
+      } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
+    });
+    const on = G.players.filter(p => SEEN[p.id] && Date.now() - SEEN[p.id] < (TEST ? 10000 : 50000)).map(p => p.id);
+    if (JSON.stringify(on) !== JSON.stringify(G.online || [])) { G.online = on; ch = true; }
+    const pr = progList();
+    if (JSON.stringify(pr) !== JSON.stringify(G.prog || [])) { G.prog = pr; ch = true; }
+    if (G.phase === 'market' && G.mk && G.mk.stage === 'bid') {
+      const top = {};
+      Object.keys(G.mk.lst).forEach(l => { const bs = bidsOn(l); if (bs.length) top[l] = [Math.max(...bs.map(b => b.a)), bs.length]; });
+      if (JSON.stringify(top) !== JSON.stringify(G.mk.top || {})) { G.mk.top = top; ch = true; }
+    }
+    if (autoStep(false)) ch = true;
+    if (ch) publish();
+    render();
+  }
+  function uniqueName(n, id) {
+    let base = String(n || '').trim().slice(0, 20) || 'لاعب', name = base, k = 2;
+    while (G.players.some(p => p.id !== id && norm(p.name) === norm(name))) name = base + ' ' + (k++);
+    return name;
+  }
+  const ids = () => G.players.map(p => p.id);
+  function progList() {
+    const g = G.gameNo, mk = G.mk, cup = G.cup;
+    if (G.phase === 'picks') return ids().filter(id => { const x = inp(id).picks; return x && x.g === g && x.s && x.w; });
+    if (G.phase === 'tier') return ids().filter(id => { const x = inp(id).tier; return x && x.g === g && x.v; });
+    if (G.phase === 'reveal') return ids().filter(id => { const x = inp(id).ready; return x && x.k === 'reveal' + g; });
+    if (G.phase === 'market' && mk) {
+      if (mk.stage === 'list') return ids().filter(id => { const x = inp(id).list; return x && x.key === mk.key; });
+      if (mk.stage === 'bid') return ids().filter(id => { const x = inp(id).bids; return x && x.key === mk.key && x.done; });
+      if (mk.stage === 'review') return ids().filter(id => { const x = inp(id).ready; return x && x.k === mk.key; });
+    }
+    if (G.phase === 'lineup') return ids().filter(id => { const x = inp(id).xi; return x && x.g === g && validXI(id, x.list); });
+    if (G.phase === 'cup' && cup && cup.stage === 'vote') { const m = curMatch(); return voters(m).filter(id => { const x = inp(id).vote; return x && x.key === cup.key; }); }
+    return [];
+  }
+  function hostTickFn() {
+    if (!isHost() || !G) return;
+    const t = G.phase === 'market' && G.mk ? G.mk.endsAt : (G.phase === 'cup' && G.cup ? G.cup.endsAt : 0);
+    if (t && Date.now() >= t) { beep(); if (autoStep(true)) { publish(); render(); } }
+  }
+  /* moves timed stages on when time is up (or force), and untimed ones when everyone is ready */
+  function autoStep(force) {
+    const n = G.players.length, done = progList().length;
+    if (G.phase === 'market' && G.mk) {
+      const mk = G.mk, up = force || (mk.endsAt && Date.now() >= mk.endsAt);
+      if (mk.stage === 'list' && (up || done >= n)) { openBidding(); return true; }
+      if (mk.stage === 'bid' && (up || done >= n)) { resolveMarket(); return true; }
+      if (mk.stage === 'review' && (up || done >= n)) { nextMarket(); return true; }
+    }
+    if (G.phase === 'cup' && G.cup && G.cup.stage === 'vote') {
+      const up = force || (G.cup.endsAt && Date.now() >= G.cup.endsAt);
+      if (up || (voters(curMatch()).length && done >= voters(curMatch()).length)) { closeVote(); return true; }
+    }
+    return false;
+  }
+
+  /* phase transitions */
+  function startGame() {
+    G.gameNo = (G.gameNo || 0) + 1;
+    ['picks', 'tier', 'team', 'note', 'own', 'val', 'bal', 'start', 'stats', 'xi'].forEach(k => { G[k] = {}; });
+    G.mk = null; G.hist = []; G.cup = null; G.prog = [];
+    G.phase = 'picks';
+  }
+  function lockPicks() {
+    G.players.forEach(p => {
+      const x = inp(p.id).picks;
+      G.picks[p.id] = x && x.g === G.gameNo && TM[x.s] && TM[x.w] && x.s !== x.w ? { s: x.s, w: x.w } : null;
+    });
+    G.phase = 'tier'; G.prog = [];
+  }
+  function assignTeams() {
+    const pl = ids();
+    pl.forEach(id => { const x = inp(id).tier; G.tier[id] = x && x.g === G.gameNo && (x.v === 's' || x.v === 'w') ? x.v : 'w'; });
+    const own = id => { const k = G.picks[id]; return k ? [k.s, k.w] : []; };
+    const poolFor = (id, tier) => {
+      let pool = [];
+      pl.forEach(o => { if (o !== id && G.picks[o]) pool.push(G.picks[o][tier]); });
+      pool = pool.filter(t => !own(id).includes(t));
+      return pool;
+    };
+    let best = null;
+    for (let tries = 0; tries < 300; tries++) {
+      const used = new Set(), res = {}, note = {};
+      let dup = 0;
+      shuffle(pl).forEach(id => {
+        const t = G.tier[id];
+        let pool = poolFor(id, t), why = '';
+        if (!pool.length) { pool = poolFor(id, t === 's' ? 'w' : 's'); why = 'other'; }
+        if (!pool.length) { pool = TEAMS.map(x => x.id).filter(x => !own(id).includes(x)); why = 'lib'; }
+        const fresh = pool.filter(x => !used.has(x));
+        const pickFrom = fresh.length ? fresh : pool;
+        if (!fresh.length) dup++;
+        const tid = pickFrom[Math.floor(Math.random() * pickFrom.length)];
+        used.add(tid); res[id] = tid; note[id] = why;
+      });
+      if (!best || dup < best.dup) best = { dup, res, note };
+      if (!dup) break;
+    }
+    G.own = {}; G.val = {}; G.stats = {};
+    pl.forEach(id => {
+      const tid = best.res[id];
+      G.team[id] = tid; G.note[id] = best.note[id];
+      TM[tid].pl.forEach((r, i) => { G.own[tid + '.' + i + (best.dup ? '.' + id.slice(-4) : '')] = id; });
+      G.bal[id] = TIER[G.tier[id]].bal;
+      G.stats[id] = { sold: 0, bought: 0 };
+    });
+    // duplicate squads get their own copies (key suffix) so ownership stays unique
+    pl.forEach(id => { G.start[id] = G.bal[id] + roster(id).length * G.settings.base; });
+    G.phase = 'reveal'; G.prog = [];
+  }
+  function startMarket(no) {
+    G.phase = 'market';
+    G.mk = { no, key: uid('m'), stage: 'list', endsAt: Date.now() + G.settings.listSec * 1000, dur: G.settings.listSec, lst: {}, top: {}, res: [], auto: [] };
+    G.prog = [];
+  }
+  function openBidding() {
+    const mk = G.mk;
+    mk.lst = {}; mk.auto = [];
+    G.players.forEach(p => {
+      const r = roster(p.id); if (!r.length) return;
+      const x = inp(p.id).list;
+      let items = x && x.key === mk.key && x.items ? Object.keys(x.items).filter(k => G.own[k] === p.id).slice(0, 10) : [];
+      if (!items.length) {
+        const k = r[Math.floor(Math.random() * r.length)];
+        items = [k]; mk.auto.push(p.id);
+        mk.lst[uid('l')] = { pk: k, seller: p.id, ask: val(k) };
+      } else items.forEach(k => { const a = Math.round(+x.items[k] || 0); mk.lst[uid('l')] = { pk: k, seller: p.id, ask: Math.min(MAXP, Math.max(1, a || val(k))) }; });
+    });
+    mk.stage = 'bid'; mk.endsAt = Date.now() + G.settings.mkSec * 1000; mk.dur = G.settings.mkSec;
+    G.prog = [];
+  }
+  function bidsOn(lid) {
+    const mk = G.mk, L = mk.lst[lid], out = [];
+    G.players.forEach(p => {
+      if (p.id === L.seller) return;
+      const x = inp(p.id).bids;
+      if (!x || x.key !== mk.key || !x.b) return;
+      const a = Math.round(+x.b[lid] || 0);
+      if (a >= L.ask) out.push({ id: p.id, a });
+    });
+    return out;
+  }
+  function resolveMarket() {
+    const mk = G.mk, res = [];
+    const lids = Object.keys(mk.lst);
+    const tops = {}; lids.forEach(l => { tops[l] = Math.max(0, ...bidsOn(l).map(b => b.a)); });
+    const buys = {};
+    shuffle(lids).sort((a, b) => tops[b] - tops[a]).forEach(lid => {
+      const L = mk.lst[lid], P_ = PL(L.pk);
+      const bs = shuffle(bidsOn(lid)).sort((a, b) => b.a - a.a);
+      if (!bs.length) { res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null, why: 'nobid' }); return; }
+      const left = roster(L.seller).filter(k => k !== L.pk);
+      if (left.length < 11 || !gkCount(left)) { res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null, why: 'keep11' }); return; }
+      let win = null, tie = false;
+      for (let i = 0; i < bs.length; i++) {
+        const b = bs[i];
+        if (bal(b.id) >= b.a && (buys[b.id] || 0) < 10) { win = b; tie = bs.some((o, j) => j !== i && o.a === b.a && bal(o.id) >= o.a); break; }
+      }
+      if (!win) { res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: 0, buyer: null, why: 'nomoney' }); return; }
+      G.bal[win.id] -= win.a; G.bal[L.seller] += win.a;
+      G.own[L.pk] = win.id; G.val[L.pk] = win.a;
+      G.stats[win.id].bought++; G.stats[L.seller].sold++;
+      buys[win.id] = (buys[win.id] || 0) + 1;
+      res.push({ pk: L.pk, seller: L.seller, ask: L.ask, price: win.a, buyer: win.id, n: bs.length, tie, pos: P_.pos });
+    });
+    mk.res = res;
+    G.hist.push({ no: mk.no, deals: res.filter(r => r.buyer).map(r => ({ pk: r.pk, s: r.seller, b: r.buyer, p: r.price })) });
+    mk.stage = 'review'; mk.endsAt = Date.now() + G.settings.revSec * 1000; mk.dur = G.settings.revSec;
+    G.prog = [];
+  }
+  function nextMarket() {
+    const total = G.settings.seasons * 2;
+    if (G.mk.no >= total) { G.phase = 'lineup'; G.mk = null; G.prog = []; return; }
+    startMarket(G.mk.no + 1);
+  }
+
+  /* lineup & cup */
+  function validXI(id, list) {
+    if (!Array.isArray(list) || list.length !== 11) return false;
+    if (new Set(list).size !== 11) return false;
+    if (!list.every(k => G.own[k] === id)) return false;
+    return gkCount(list) === 1;
+  }
+  function suggestXI(id) {
+    const r = roster(id);
+    const gks = r.filter(k => PL(k).pos === 'GK').sort((a, b) => PL(b).starts - PL(a).starts);
+    const of = r.filter(k => PL(k).pos !== 'GK').sort((a, b) => (PL(b).xi - PL(a).xi) || (PL(b).starts - PL(a).starts) || (val(b) - val(a)));
+    return (gks.length ? [gks[0]] : []).concat(of.slice(0, 10));
+  }
+  function startCup() {
+    G.players.forEach(p => { const x = inp(p.id).xi; G.xi[p.id] = x && x.g === G.gameNo && validXI(p.id, x.list) ? x.list : suggestXI(p.id); });
+    const pl = shuffle(ids());
+    let size = 1; while (size < pl.length) size *= 2;
+    const R = Math.round(Math.log2(size));
+    const byes = size - pl.length;
+    const r1 = [];
+    // spread the byes: a bye is a match with a single player
+    const seeds = pl.slice();
+    for (let i = 0; i < size / 2; i++) {
+      if (i < byes) r1.push({ a: seeds.shift(), b: null, w: null });
+      else r1.push({ a: seeds.shift(), b: seeds.shift(), w: null });
+    }
+    G.cup = { R, rounds: [shuffle(r1)], r: 0, m: -1, stage: 'idle', key: '', endsAt: 0, dur: 0, flip: false, out: {} };
+    G.phase = 'cup'; G.prog = [];
+    nextMatch();
+  }
+  const roundName = (r, R) => { const left = R - r; return left === 1 ? 'النهائي' : left === 2 ? 'نصف النهائي' : left === 3 ? 'ربع النهائي' : left === 4 ? 'دور الـ16' : 'الدور ' + (r + 1); };
+  function curMatch() { const c = G.cup; return c && c.m >= 0 ? c.rounds[c.r][c.m] : null; }
+  function voters(m) { return m ? ids().filter(id => id !== m.a && id !== m.b) : []; }
+  function nextMatch() {
+    const c = G.cup;
+    for (; ;) {
+      const rd = c.rounds[c.r];
+      const i = rd.findIndex(m => !m.w);
+      if (i >= 0) {
+        const m = rd[i];
+        if (!m.b) { m.w = m.a; m.bye = true; continue; }
+        c.m = i; c.stage = 'vote'; c.key = uid('v'); c.flip = Math.random() < .5;
+        c.endsAt = Date.now() + G.settings.voteSec * 1000; c.dur = G.settings.voteSec;
+        G.prog = [];
+        return;
+      }
+      const winners = rd.map(m => m.w);
+      if (winners.length === 1) { c.champ = winners[0]; c.stage = 'done'; c.m = -1; G.phase = 'final'; return; }
+      const nx = [];
+      for (let k = 0; k < winners.length; k += 2) nx.push({ a: winners[k], b: winners[k + 1], w: null });
+      c.rounds.push(nx); c.r++;
+    }
+  }
+  function closeVote() {
+    const c = G.cup, m = curMatch();
+    const t = { a: 0, b: 0 };
+    voters(m).forEach(id => { const x = inp(id).vote; if (x && x.key === c.key && (x.v === 'a' || x.v === 'b')) t[x.v]++; });
+    // votes are stored by screen side; map back to players
+    const left = c.flip ? m.b : m.a, right = c.flip ? m.a : m.b;
+    const va = t.a, vb = t.b;
+    m.votes = { [left]: va, [right]: vb };
+    if (va === vb) { m.w = Math.random() < .5 ? left : right; m.draw = true; }
+    else m.w = va > vb ? left : right;
+    const loser = m.w === m.a ? m.b : m.a;
+    c.out[loser] = c.r + 1;
+    c.stage = 'result'; c.endsAt = 0; c.dur = 0; G.prog = [];
+  }
+
+  /* ---------- scoring ---------- */
+  function scores() {
+    if (!G || !G.players.length) return [];
+    const n = G.players.length, pl = ids();
+    const rankPts = (key, max) => {
+      const v = id => (G.stats[id] || {})[key] || 0;
+      return id => { const x = v(id); if (!x) return 0; const rank = 1 + pl.filter(o => v(o) > x).length; return Math.round(max * (n - rank + 1) / n * 10) / 10; };
+    };
+    const sp = rankPts('sold', 10), bp = rankPts('bought', 10);
+    const growth = id => { const s = G.start[id] || 1; return (assets(id) - s) / s; };
+    const gmax = Math.max(0, ...pl.map(growth));
+    const c = G.cup, R = c ? c.R : 1;
+    const cupPts = id => {
+      if (!c) return 0;
+      if (c.champ === id) return 50;
+      const k = c.out[id]; if (!k) return 0;
+      return Math.round(10 + (k - 1) * 40 / R);
+    };
+    return pl.map(id => {
+      const g = growth(id);
+      const r = { id, sold: sp(id), bought: bp(id), port: g > 0 && gmax > 0 ? Math.round(30 * g / gmax * 10) / 10 : 0, cup: cupPts(id), growth: g, assets: assets(id) };
+      r.market = Math.round((r.sold + r.bought + r.port) * 10) / 10;
+      r.total = Math.round((r.market + r.cup) * 10) / 10;
+      return r;
+    });
+  }
+
+  /* ---------- views ---------- */
+  const STEPS = [['lobby', 'الغرفة'], ['picks', 'التشكيلات'], ['tier', 'الفئة'], ['reveal', 'فريقك'], ['market', 'السوق'], ['lineup', 'التشكيلة'], ['cup', 'الكأس'], ['final', 'النتائج']];
+  function stepper() {
+    if (!G) return '';
+    const i = STEPS.findIndex(s => s[0] === G.phase);
+    return '<nav class="steps" aria-label="مراحل اللعبة">' + STEPS.map((s, k) => '<span class="st ' + (k < i ? 'done' : k === i ? 'on' : '') + '"><i>' + (k + 1) + '</i><b>' + s[1] + '</b></span>').join('') + '</nav>';
+  }
+  function topbar() {
+    const inG = !!G && !!U.code;
+    return '<header class="top"><div class="brand">' + LOGO + '<b>أقنعني!</b><span>ناديك</span></div><div class="top-r">' +
+      (inG ? '<span class="chip live num">غرفة ' + esc(U.code) + '</span><button class="btn sm ghost" data-act="menu">القائمة</button>' : '') + '</div></header>' +
+      (U.offline === 'net' ? '<div class="alert" role="alert">الاتصال ضعيف. التحديثات بتوصل أول ما يرجع الاتصال.</div>' : '') +
+      (U.offline === 'perm' ? '<div class="alert" role="alert">ما نقدر نحفظ في قاعدة البيانات من هذا الجهاز.</div>' : '') +
+      (inG && U.view === 'game' ? stepper() : '');
+  }
+  const errBox = () => (U.err ? '<div class="alert" role="alert">' + esc(U.err) + '</div>' : '');
+  function splashView() {
+    return '<section class="splash"><span class="blob b1"></span><span class="blob b2"></span><span class="blob b3"></span>' +
+      '<div class="lg">' + LOGO.replace('width="34" height="34"', 'width="88" height="88"') + '</div>' +
+      '<h1 class="big">أقنعني!</h1><div class="ar">ناديك</div><div class="en">NADIK</div>' +
+      '<button class="btn primary go" data-act="enter">نبدأ</button></section>';
+  }
+  function homeView() {
+    if (!U.ready) return '<section class="card hero"><h1>أقنعني!</h1><p class="muted">جاري التحميل…</p></section>';
+    if (!db) return '<section class="card hero"><h1>أقنعني!</h1><p class="lead">تعذر الاتصال بقاعدة البيانات. تأكد من الإنترنت وحدّث الصفحة.</p></section>';
+    const me = '<section class="card" style="display:grid;gap:12px"><div class="labelled"><label for="nm">اسمك أو لقبك</label><input class="field" id="nm" data-bind="name" value="' + esc(U.name) + '" maxlength="20" autocomplete="off" placeholder="مثال: أبو فهد"></div></section>';
+    const join = '<section class="card" style="display:grid;gap:12px"><h2 style="margin:0">انضم لغرفة</h2>' +
+      '<div class="labelled"><label for="cd">رمز الغرفة</label><input class="field code-in" id="cd" data-bind="code" value="' + esc(U.draft.code || '') + '" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="مثال: K7QX" dir="ltr"></div>' +
+      '<button class="btn xl ' + (U.fromLink ? 'primary' : '') + '" data-act="join"' + (U.busy ? ' aria-disabled="true"' : '') + '>انضمام</button></section>';
+    const host = '<section class="card" style="display:grid;gap:12px"><h2 style="margin:0">أو أنشئ غرفة جديدة</h2><p class="muted">تكون أنت المضيف وتشارك رمز الغرفة مع ربعك.</p>' +
+      '<button class="btn xl ' + (U.fromLink ? '' : 'primary') + '" data-act="create"' + (U.busy ? ' aria-disabled="true"' : '') + '>إنشاء غرفة</button></section>';
+    return '<section class="card hero">' + LOGO.replace('width="34" height="34"', 'width="64" height="64"') + '<h1>أقنعني!</h1><div class="sub">ناديك</div>' +
+      '<p class="lead">أدر تشكيلة تاريخية، فاوض بسوق انتقالات يمتد ٥ مواسم، وبعدها أقنع الجمهور يصوّت لفريقك بكأس الأبطال.</p></section>' +
+      me + errBox() + (U.fromLink ? join + host : host + join) +
+      '<section class="card"><h2>كيف تُلعب؟</h2><ol class="howto">' +
+      '<li><span>كل لاعب يختار تشكيلتين تاريخيتين من الدوريات الخمسة: «الأقوى» و«الأضعف».</span></li>' +
+      '<li><span>تختار سرًّا: تشكيلة قوية مع ١٠ ملايين، أو أضعف مع ٦٠ مليون. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
+      '<li><span>١٠ أسواق انتقالات: بكل سوق تعرض لاعب واحد على الأقل بسعرك، وتزايد على لاعبين غيرك.</span></li>' +
+      '<li><span>بعد الموسم الخامس تختار ١١ لاعب بينهم حارس، وتدخل كأس الأبطال.</span></li>' +
+      '<li><span>بكل مواجهة تنعرض التشكيلتين بدون اسم النادي، والجمهور يصوّت. والفايز يتأهل.</span></li></ol></section>';
+  }
+  function joinView() {
+    return '<section class="card" style="display:grid;gap:14px;text-align:center"><span class="muted">تنضم إلى الغرفة</span><div class="bigcode" dir="ltr">' + esc(U.code) + '</div></section>' +
+      '<section class="card"><div class="labelled"><label for="nm">اسمك أو لقبك</label><input class="field" id="nm" data-bind="name" value="' + esc(U.name) + '" maxlength="20" autocomplete="off"></div></section>' + errBox() +
+      '<button class="btn xl primary" data-act="sendJoin">دخول الغرفة</button><button class="btn ghost" data-act="leaveNow">رجوع</button>';
+  }
+  const waitView = () => '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>بانتظار المضيف</h2><p class="muted">أرسلنا اسمك للغرفة ' + esc(U.code) + '. بتظهر بقائمة اللاعبين خلال ثواني.</p></section><button class="btn ghost" data-act="leaveNow">إلغاء والخروج</button>';
+  const spectView = () => '<section class="card pass"><h2>اللعبة بدأت</h2><p class="muted">هذي الغرفة بدأت اللعب بدونك.</p><button class="btn xl" data-act="leaveNow">خروج</button></section>';
+  const kickedView = () => '<section class="card pass"><h2>خرجت من الغرفة</h2><p class="muted">المضيف أزالك من هذي الغرفة.</p><button class="btn xl" data-act="leaveNow">رجوع</button></section>';
+  const dot = id => '<span class="dot ' + ((G.online || []).includes(id) ? 'on' : '') + '" title="' + ((G.online || []).includes(id) ? 'متصل' : 'غير متصل') + '"></span>';
+  function progBox(label, list) {
+    const done = G.prog || []; list = list || ids();
+    return '<section class="card" style="display:grid;gap:10px"><div class="row-b"><h3>' + label + '</h3><span class="chip num">' + done.filter(id => list.includes(id)).length + ' من ' + list.length + '</span></div><div class="plist">' +
+      list.map(id => '<span class="pchip ' + (done.includes(id) ? 'ok' : '') + '">' + dot(id) + esc(P(id).name) + (done.includes(id) ? ' ✓' : ' …') + '</span>').join('') + '</div></section>';
+  }
+  const waitHost = () => '<p class="muted small" style="text-align:center">بانتظار المضيف ' + esc(P(G.host).name) + ' ينقل اللعبة للمرحلة التالية.</p>';
+  const hostBtn = (label, act, extra) => isHost() ? '<button class="btn xl primary" data-act="' + act + '"' + (extra || '') + '>' + label + '</button>' : waitHost();
+  const remain = t => Math.max(0, (t - nowH()) / 1000);
+  function clockBox(label, endsAt, dur) {
+    return '<section class="card timerbox"><div class="ring" data-ring="' + (dur || 0) + '" data-end="' + (endsAt || 0) + '"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="clock num" data-clock="' + (endsAt || 0) + '">' + fmt(remain(endsAt)) + '</div></div>' +
+      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn" data-act="skip">تخطّي الوقت</button>' : '') + '</div></section>';
+  }
+
+  function lobbyView() {
+    const s = G.settings, host = isHost(), n = G.players.length;
+    const link = ART_URL + '#room-' + G.code;
+    const seg = (k, vals, unit) => '<div class="seg-wide" role="group">' + vals.map(v => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + v + (unit || '') + '</button>').join('') + '</div>';
+    const rows = G.players.map(p => '<div class="prow">' + dot(p.id) + '<b style="flex:1">' + esc(p.name) + (p.id === ME_ID ? ' <span class="muted small">(أنت)</span>' : '') + '</b>' +
+      (p.id === G.host ? '<span class="chip gold">المضيف</span>' : '') + '<span class="muted small">' + ((G.online || []).includes(p.id) ? 'متصل' : 'غير متصل') + '</span>' +
+      (host && p.id !== ME_ID ? '<button class="x" data-act="kick" data-id="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">×</button>' : '') + '</div>').join('');
+    const settings = host ? '<section class="card" style="display:grid;gap:16px"><h2>الإعدادات</h2>' +
+      '<div class="labelled"><span class="lbl">عدد المواسم</span>' + seg('seasons', [5, 3, 1]) + '<span class="muted small">اللعبة الكاملة ٥ مواسم (١٠ أسواق). ٣ أو ١ للتجربة السريعة.</span></div>' +
+      '<div class="labelled"><span class="lbl">وقت عرض اللاعبين للبيع</span>' + seg('listSec', [20, 30, 45], ' ث') + '</div>' +
+      '<div class="labelled"><span class="lbl">وقت السوق (المزايدة)</span>' + seg('mkSec', [60, 90, 120], ' ث') + '</div>' +
+      '<div class="labelled"><span class="lbl">وقت المراجعة</span>' + seg('revSec', [60, 30], ' ث') + '</div>' +
+      '<div class="labelled"><span class="lbl">وقت تصويت الكأس</span>' + seg('voteSec', [30, 45, 20], ' ث') + '</div></section>'
+      : '<section class="card"><h3>الإعدادات</h3><p class="muted">' + s.seasons + ' مواسم · العرض ' + s.listSec + ' ث · السوق ' + s.mkSec + ' ث · المراجعة ' + s.revSec + ' ث · التصويت ' + s.voteSec + ' ث</p></section>';
+    return '<section class="card roomcard"><span class="muted">رمز الغرفة</span><div class="bigcode" dir="ltr">' + esc(G.code) + '</div>' +
+      '<div class="linkrow"><input class="field" id="lnk" readonly value="' + esc(link) + '" dir="ltr" aria-label="رابط الدعوة"><button class="btn" data-act="copyLink">نسخ الرابط</button></div></section>' +
+      '<section class="card"><div class="row-b" style="margin-bottom:10px"><h2 style="margin:0">غرفة الانتظار</h2><span class="chip num">' + n + ' لاعبين</span></div><div style="display:grid;gap:8px">' + rows + '</div>' +
+      (n < 3 ? '<p class="muted small" style="margin-top:10px">تحتاج ٣ لاعبين على الأقل، عشان يكون فيه جمهور يصوّت بالكأس.</p>' : '') + '</section>' + settings + errBox() +
+      (host ? '<button class="btn xl primary" data-act="startGame"' + (n < 3 ? ' aria-disabled="true"' : '') + '>ابدأ اللعبة</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف يبدأ اللعبة…</p>');
+  }
+
+  function teamCard(t, extra) {
+    return '<div class="tcard"><div><b>' + esc(t.ar) + '</b><span class="muted small"> · ' + esc(t.season) + '</span><div class="muted small">' + esc(t.club) + ' · المدرب: ' + esc(t.coach) + '</div></div>' + (extra || '') + '</div>';
+  }
+  function picksView() {
+    const x = inp(ME_ID).picks, done = x && x.g === G.gameNo && x.s && x.w;
+    if (done) return '<section class="card pass"><h2>وصلت اختياراتك ✓</h2><p class="muted">اختياراتك سرية، ومحد يشوفها إلا بعد ما يكمل الكل.</p></section>' + progBox('مين اختار') + hostBtn('التالي: اختيار الفئة', 'picksNext');
+    const key = G.code + G.gameNo;
+    if (U.pkKey !== key) { U.pkKey = key; U.pk = { s: null, w: null }; }
+    const slot = k => '<button class="slot ' + (U.pk[k] ? 'set' : '') + '" data-act="clearPick" data-k="' + k + '"><span>' + (k === 's' ? 'الأقوى' : 'الأضعف') + '</span><b>' + (U.pk[k] ? esc(tLabel(TM[U.pk[k]])) : 'ما اخترت') + '</b></button>';
+    const list = TEAMS.filter(t => t.lg === U.lg).map(t => teamCard(t,
+      '<div class="pkbtns"><button class="btn sm ' + (U.pk.s === t.id ? 'on' : '') + '" data-act="pickTeam" data-k="s" data-id="' + t.id + '">الأقوى</button><button class="btn sm ' + (U.pk.w === t.id ? 'on' : '') + '" data-act="pickTeam" data-k="w" data-id="' + t.id + '">الأضعف</button></div>')).join('');
+    return '<section class="card action"><h2 style="margin:0 0 6px">اختر تشكيلتين تاريخيتين</h2><p class="muted">وحدة «الأقوى» ووحدة «الأضعف». بعدها كل لاعب ياخذ فريق عشوائي من اختيارات غيره.</p><div class="slots">' + slot('s') + slot('w') + '</div>' +
+      '<button class="btn xl primary" data-act="sendPicks"' + (U.pk.s && U.pk.w ? '' : ' aria-disabled="true"') + '>تأكيد الاختيار</button></section>' +
+      '<div class="tabs" role="tablist">' + Object.keys(LG).map(k => '<button role="tab" class="' + (U.lg === k ? 'on' : '') + '" aria-selected="' + (U.lg === k) + '" data-act="lg" data-v="' + k + '">' + LG[k] + '</button>').join('') + '</div>' +
+      '<section class="card" style="display:grid;gap:8px">' + list + '</section>' + srcNote() + progBox('مين اختار');
+  }
+  const srcNote = () => '<p class="src">المصدر: صفحات مواسم الأندية على ويكيبيديا الإنجليزية. الأساسيين هم الأكثر بداية بمراكزهم بذاك الموسم، والخطة مستنتجة من مراكزهم.</p>';
+  function tierView() {
+    const x = inp(ME_ID).tier, done = x && x.g === G.gameNo && x.v;
+    if (done) return '<section class="card pass"><h2>اخترت: ' + TIER[x.v].name + ' ✓</h2><p class="muted">اختيارك سري. لما يختار الكل، تنعرض الفرق.</p></section>' + progBox('مين اختار الفئة') + hostBtn('اكشف الفرق', 'tierNext');
+    const opt = (v, d) => '<button class="tier ' + v + (U.tierPick === v ? ' on' : '') + '" data-act="tierPick" data-v="' + v + '"><b>' + TIER[v].name + '</b><span class="big num">' + TIER[v].bal + ' مليون</span><span class="muted">' + d + '</span></button>';
+    return '<section class="card action"><h2 style="margin:0 0 6px">اختر فئتك سرًّا</h2><p class="muted">بتاخذ تشكيلة عشوائية من اختيارات اللاعبين الثانيين بنفس الفئة، وما تطلع لك أي وحدة من تشكيلتيك.</p>' +
+      '<div class="tiers">' + opt('s', 'فريق أقوى ورصيد قليل') + opt('w', 'فريق أضعف ورصيد كبير للسوق') + '</div>' +
+      '<button class="btn xl primary" data-act="sendTier"' + (U.tierPick ? '' : ' aria-disabled="true"') + '>تأكيد</button></section>' + progBox('مين اختار الفئة');
+  }
+  function pitch(list, form, mini) {
+    const rows = { GK: [], DF: [], MF: [], FW: [] };
+    list.forEach(k => rows[PL(k).pos].push(k));
+    return '<div class="pitch' + (mini ? ' mini' : '') + '">' + ['FW', 'MF', 'DF', 'GK'].map(r => '<div class="line">' + rows[r].map(k => { const p = PL(k); return '<span class="pp"><i class="num">' + esc(p.num) + '</i><b>' + esc(shortName(p.name)) + '</b></span>'; }).join('') + '</div>').join('') + '</div>' + (form ? '<div class="muted small" style="text-align:center">الخطة: <span dir="ltr">' + esc(form) + '</span></div>' : '');
+  }
+  const shortName = n => { const s = String(n).split(' '); return s.length > 2 ? s[0] + ' ' + s[s.length - 1] : n; };
+  function rosterTable(pid, opts) {
+    opts = opts || {};
+    const r = roster(pid);
+    return '<div class="rtable">' + r.map(k => {
+      const p = PL(k), sel = opts.sel && opts.sel(k);
+      return '<div class="rr' + (sel ? ' sel' : '') + (p.xi ? ' xi' : '') + '"' + (opts.act ? ' data-act="' + opts.act + '" data-k="' + k + '" role="button" tabindex="0"' : '') + '><span class="num nb">' + esc(p.num) + '</span><span class="nm"><b>' + esc(p.name) + '</b><small>' + POS[p.pos] + (p.xi ? ' · أساسي' : '') + ' · ' + esc(p.team ? p.team.ar + ' ' + p.team.season : '') + '</small></span><span class="num vl">' + mil(val(k)) + '</span>' + (opts.right ? opts.right(k) : '') + '</div>';
+    }).join('') + '</div>';
+  }
+  function teamHead(pid) {
+    const t = TM[G.team[pid]];
+    return '<section class="card teamhead"><div class="row-b"><div><span class="muted small">فريقك</span><h2 style="margin:0">' + esc(tLabel(t)) + '</h2><span class="muted small">' + esc(t.club) + ' · المدرب: ' + esc(t.coach) + ' · الخطة: <span dir="ltr">' + esc(t.form) + '</span></span></div></div>' +
+      '<div class="kpis"><div><span>الرصيد</span><b class="num">' + mil(bal(pid)) + '</b></div><div><span>اللاعبين</span><b class="num">' + roster(pid).length + '</b></div><div><span>قيمة المحفظة</span><b class="num">' + mil(assets(pid)) + '</b></div></div></section>';
+  }
+  function revealView() {
+    const me = ME_ID, t = TM[G.team[me]];
+    if (!t) return '';
+    const xi = roster(me).filter(k => PL(k).xi);
+    const ready = (inp(me).ready || {}).k === 'reveal' + G.gameNo;
+    const note = G.note[me] === 'other' ? '<div class="note">ما كان فيه تشكيلات كافية بفئتك، فطلع لك فريق من الفئة الثانية.</div>' : G.note[me] === 'lib' ? '<div class="note">ما كان فيه اختيارات كافية، فطلع لك فريق عشوائي من المكتبة.</div>' : '';
+    return '<section class="card reveal"><span class="muted">طلع لك</span><h1 class="big2">' + esc(t.ar) + '</h1><div class="chip gold num">' + esc(t.season) + '</div><p class="muted">' + esc(t.club) + ' · المدرب: <b>' + esc(t.coach) + '</b> · ' + TIER[G.tier[me]].name + '</p></section>' + note +
+      '<section class="card"><h3 style="margin-bottom:8px">التشكيلة الأساسية</h3>' + pitch(xi, t.form) + '</section>' +
+      teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">قائمة اللاعبين</h3>' + rosterTable(me) +
+      '<p class="muted small" style="margin-top:8px">القيمة المبدئية لكل لاعب ' + mil(G.settings.base) + ' للحساب بس. السعر الحقيقي يحدده صاحب النادي لما يعرضه بالسوق، وبعدها قيمة اللاعب = آخر سعر انباع فيه.</p></section>' +
+      (t.mode !== 'LEAGUE' && t.mode !== 'TOTAL' ? '<p class="src">هالموسم ما فيه أرقام «بداية» بويكيبيديا، فاخترنا الأساسيين حسب عدد المشاركات.</p>' : '') +
+      '<p class="src">المصدر: <span dir="ltr">' + esc(t.src.replace('https://', '')) + '</span></p>' +
+      (ready ? progBox('مين جاهز') + hostBtn('افتح السوق الأول', 'revealNext') : '<button class="btn xl primary" data-act="ready" data-k="reveal' + G.gameNo + '">جاهز للسوق</button>' + progBox('مين جاهز'));
+  }
+
+  function marketView() {
+    const mk = G.mk, me = ME_ID;
+    const head = '<section class="mkhead"><div><span class="chip gold num">السوق ' + mk.no + ' من ' + (G.settings.seasons * 2) + '</span><h2>' + mkLabel(mk.no) + '</h2></div><div class="kpi1"><span>رصيدك</span><b class="num">' + mil(bal(me)) + '</b></div></section>';
+    if (mk.stage === 'list') {
+      const x = inp(me).list, sent = x && x.key === mk.key;
+      if (U.lstKey !== mk.key) { U.lstKey = mk.key; U.lst = {}; }
+      let body;
+      if (sent) body = '<section class="card pass"><h2>عرضت ' + Object.keys(x.items).length + ' لاعب ✓</h2><p class="muted">' + Object.keys(x.items).map(k => esc(PL(k).name) + ' (' + mil(x.items[k]) + ')').join('، ') + '</p></section>';
+      else {
+        const n = Object.keys(U.lst).length;
+        body = '<section class="card action"><h2 style="margin:0 0 4px">اعرض لاعبين للبيع</h2><p class="muted">لازم لاعب واحد على الأقل، وبحد أقصى ١٠. حط السعر اللي تبيه، والمزايدة تبدأ منه. العرض ما يضمن البيع.</p>' +
+          (roster(me).length <= 11 ? '<div class="note">عندك ' + roster(me).length + ' لاعبين بس. أي بيعة تخليك أقل من ١١ أو بدون حارس تنرفض تلقائيًا.</div>' : '') +
+          rosterTable(me, {
+            act: 'toggleList', sel: k => k in U.lst,
+            right: k => k in U.lst ? '<span class="ask" data-stop="1"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="-1" aria-label="أقل">−</button><input class="field num askin" data-bind="ask" data-k="' + k + '" inputmode="numeric" value="' + U.lst[k] + '"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="1" aria-label="أكثر">+</button></span>' : ''
+          }) +
+          '<button class="btn xl primary" data-act="sendList"' + (n ? '' : ' aria-disabled="true"') + '>اعرض ' + (n || '') + ' للبيع</button><p class="muted small">إذا خلص الوقت وما عرضت أحد، اللعبة تعرض لاعب عشوائي منك بقيمته.</p></section>';
+      }
+      return head + body + clockBox('وقت العرض', mk.endsAt, mk.dur) + progBox('مين عرض');
+    }
+    if (mk.stage === 'bid') {
+      const x = inp(me).bids, done = x && x.key === mk.key && x.done;
+      if (U.bidsKey !== mk.key) { U.bidsKey = mk.key; U.bids = (x && x.key === mk.key && x.b) ? clone(x.b) : {}; }
+      const lids = Object.keys(mk.lst);
+      const mine = lids.filter(l => mk.lst[l].seller === me), others = lids.filter(l => mk.lst[l].seller !== me);
+      const total = Object.keys(U.bids).reduce((s, l) => s + (+U.bids[l] || 0), 0), nb = Object.keys(U.bids).length;
+      const card = l => {
+        const L = mk.lst[l], p = PL(L.pk), b = U.bids[l], top = mk.top && mk.top[l];
+        return '<div class="lcard' + (b ? ' on' : '') + '"><div class="lc-top"><span class="pos ' + p.pos + '">' + POS[p.pos] + '</span><div class="nm"><b>' + esc(p.name) + '</b><small>' + esc(p.team ? p.team.ar + ' ' + p.team.season : '') + ' · البائع: ' + esc(P(L.seller).name) + '</small></div><div class="ref"><span>السعر المرجعي</span><b class="num">' + mil(L.ask) + '</b></div></div>' +
+          (L.seller === me ? '<div class="muted small">لاعبك. ' + (top ? 'أعلى عرض الحين: <b class="num">' + mil(top[0]) + '</b> (' + top[1] + ' عروض)' : 'ما فيه عروض للحين.') + '</div>' :
+            '<div class="lc-bid">' + (top ? '<span class="muted small">أعلى عرض: <b class="num">' + mil(top[0]) + '</b></span>' : '<span class="muted small">ما فيه عروض</span>') +
+            (b ? '<span class="bidctl"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="-1">−</button><input class="field num askin" data-bind="bid" data-l="' + l + '" inputmode="numeric" value="' + b + '"><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="1">+</button><button class="btn sm" data-act="bidAdj" data-l="' + l + '" data-v="5"><span dir="ltr">+5</span></button><button class="x" data-act="bidDel" data-l="' + l + '" aria-label="إلغاء العرض">×</button></span>'
+              : '<button class="btn sm primary" data-act="bidNew" data-l="' + l + '"' + (done || nb >= 10 ? ' aria-disabled="true"' : '') + '>زايد</button>') + '</div>') + '</div>';
+      };
+      const warn = total > bal(me) ? '<div class="alert">مجموع عروضك (' + mil(total) + ') أكبر من رصيدك. اللعبة ما تتم أي شراء يتجاوز رصيدك وقت التنفيذ.</div>' : '';
+      return head + '<section class="card"><div class="row-b"><h2 style="margin:0">المعروض بالسوق</h2><span class="chip num">' + lids.length + ' لاعب</span></div><p class="muted small">المزايدة تبدأ من السعر المرجعي. أعلى عرض يقدر صاحبه يدفعه يفوز، والتعادل بالقرعة. بحد أقصى ١٠ صفقات.</p>' +
+        '<div class="kpis"><div><span>عروضك</span><b class="num">' + nb + ' / ١٠</b></div><div><span>مجموعها</span><b class="num">' + mil(total) + '</b></div><div><span>رصيدك</span><b class="num">' + mil(bal(me)) + '</b></div></div></section>' + warn +
+        (others.length ? '<section class="lgrid">' + others.map(card).join('') + '</section>' : '<section class="card muted">ما فيه لاعبين من غيرك بالسوق.</section>') +
+        (mine.length ? '<section class="card"><h3 style="margin-bottom:8px">لاعبينك المعروضين</h3><div class="lgrid">' + mine.map(card).join('') + '</div>' + (mk.auto.includes(me) ? '<p class="muted small">انعرض لاعبك تلقائيًا لأنك ما عرضت بالوقت.</p>' : '') + '</section>' : '') +
+        (done ? '<section class="card pass"><h3>ثبّت عروضك ✓</h3><p class="muted small">تقدر تعدل لين يخلص الوقت.</p><button class="btn" data-act="bidEdit">تعديل</button></section>' : '<button class="btn xl primary" data-act="sendBids">' + (nb ? 'ثبّت عروضي' : 'ما أبي أشتري') + '</button>') +
+        clockBox('السوق مفتوح', mk.endsAt, mk.dur) + progBox('مين خلص');
+    }
+    if (mk.stage === 'review') {
+      const deals = mk.res.filter(r => r.buyer), uns = mk.res.filter(r => !r.buyer);
+      const why = { nobid: 'ما وصله عرض', keep11: 'انرفض: لازم يبقى ١١ لاعب بينهم حارس', nomoney: 'ما فيه عرض يقدر صاحبه يدفعه' };
+      const ready = (inp(me).ready || {}).k === mk.key;
+      const last = mk.no >= G.settings.seasons * 2;
+      return head + '<section class="card"><h2 style="margin-bottom:10px">نتائج السوق</h2>' +
+        (deals.length ? '<div class="deals">' + deals.map(r => { const p = PL(r.pk); return '<div class="deal' + (r.buyer === me || r.seller === me ? ' me' : '') + '"><b>' + esc(p.name) + '</b><span class="muted small">' + POS[p.pos] + ' · من ' + esc(P(r.seller).name) + ' إلى ' + esc(P(r.buyer).name) + (r.tie ? ' · بالقرعة' : '') + '</span><b class="num price">' + mil(r.price) + '</b></div>'; }).join('') + '</div>' : '<p class="muted">ما تمت أي صفقة بهالسوق.</p>') +
+        (uns.length ? '<details style="margin-top:10px"><summary class="muted">ما انباعوا (' + uns.length + ')</summary><div class="deals">' + uns.map(r => '<div class="deal"><b>' + esc(PL(r.pk).name) + '</b><span class="muted small">' + esc(P(r.seller).name) + ' · ' + why[r.why] + '</span></div>').join('') + '</div></details>' : '') + '</section>' +
+        teamHead(me) + '<section class="card"><h3 style="margin-bottom:8px">لاعبينك</h3>' + rosterTable(me) + '</section>' +
+        (ready ? '' : '<button class="btn xl primary" data-act="ready" data-k="' + mk.key + '">جاهز</button>') +
+        clockBox(last ? 'مراجعة قبل الكأس' : 'مراجعة قبل السوق الجاي', mk.endsAt, mk.dur) + progBox('مين جاهز');
+    }
+    return head;
+  }
+
+  function lineupView() {
+    const me = ME_ID, x = inp(me).xi, done = x && x.g === G.gameNo && validXI(me, x.list);
+    const key = G.gameNo + ':' + roster(me).length;
+    if (U.xiKey !== key) { U.xiKey = key; U.xi = done ? x.list.slice() : suggestXI(me); }
+    const sel = U.xi, gk = gkCount(sel), ok = sel.length === 11 && gk === 1;
+    const msg = sel.length !== 11 ? 'اخترت ' + sel.length + ' من ١١' : gk !== 1 ? 'لازم حارس واحد بالضبط' : 'تشكيلتك جاهزة';
+    return '<section class="card action"><h2 style="margin:0 0 4px">اختر تشكيلة الكأس</h2><p class="muted">١١ لاعب صالحين للعب، بينهم حارس مرمى. اضغط على اللاعب عشان تضيفه أو تشيله.</p>' +
+      '<div class="row-b"><span class="chip ' + (ok ? 'ok' : 'bad') + '">' + msg + '</span><button class="btn sm" data-act="xiAuto">اقتراح تلقائي</button></div></section>' +
+      '<section class="card">' + pitch(sel, '', true) + '</section>' +
+      '<section class="card">' + rosterTable(me, { act: 'xiToggle', sel: k => sel.includes(k) }) + '</section>' +
+      (done ? '<section class="card pass"><h3>ثبّت تشكيلتك ✓</h3></section>' : '<button class="btn xl primary" data-act="sendXI"' + (ok ? '' : ' aria-disabled="true"') + '>ثبّت التشكيلة</button>') +
+      progBox('مين ثبّت تشكيلته') + hostBtn('ابدأ كأس الأبطال', 'cupStart') + (isHost() ? '<p class="muted small" style="text-align:center">اللي ما ثبّت، تنختار له أفضل ١١ تلقائيًا.</p>' : '');
+  }
+  function bracket() {
+    const c = G.cup;
+    return '<section class="card"><h3 style="margin-bottom:8px">القرعة</h3><div class="bracket">' + c.rounds.map((rd, ri) => '<div class="bround"><span class="muted small">' + roundName(ri, c.R) + '</span>' + rd.map((m, mi) => {
+      const live = ri === c.r && mi === c.m;
+      const nm = id => id ? '<span class="' + (m.w === id ? 'w' : (m.w ? 'l' : '')) + '">' + esc(P(id).name) + '</span>' : '<span class="muted">تأهل مباشر</span>';
+      return '<div class="bm' + (live ? ' live' : '') + '">' + nm(m.a) + nm(m.b) + '</div>';
+    }).join('') + '</div>').join('') + '</div></section>';
+  }
+  function cupView() {
+    const c = G.cup, m = curMatch();
+    if (!m) return bracket();
+    const left = c.flip ? m.b : m.a, right = c.flip ? m.a : m.b;
+    const side = (id, lab) => { const t = TM[G.team[id]]; return '<div class="side"><h3>' + lab + '</h3>' + pitch(G.xi[id] || [], '', true) + '</div>'; };
+    const head = '<section class="mkhead"><div><span class="chip gold">' + roundName(c.r, c.R) + '</span><h2>مواجهة</h2></div></section>';
+    const vs = '<section class="card vs">' + side(left, 'الفريق أ') + side(right, 'الفريق ب') + '</section>';
+    const iAmIn = m.a === ME_ID || m.b === ME_ID;
+    if (c.stage === 'vote') {
+      const x = inp(ME_ID).vote, voted = x && x.key === c.key;
+      if (U.pickKey !== c.key) { U.pickKey = c.key; U.pick = null; }
+      let body;
+      if (iAmIn) body = '<section class="card pass"><h2>فريقك بهالمواجهة</h2><p class="muted">أقنع الجمهور بصوتك! ما تقدر تصوّت بمواجهتك.</p></section>';
+      else if (voted) body = '<section class="card pass"><h2>وصل صوتك ✓</h2></section>';
+      else body = '<section class="card action"><h2 style="margin:0 0 8px">مين الأقوى؟</h2><div class="seg-wide"><button class="' + (U.pick === 'a' ? 'on' : '') + '" data-act="pick" data-v="a">الفريق أ</button><button class="' + (U.pick === 'b' ? 'on' : '') + '" data-act="pick" data-v="b">الفريق ب</button></div><button class="btn xl primary" data-act="sendVote" style="margin-top:10px">صوّت</button><p class="muted small">صوت واحد لكل متفرج، والأسماء ما تنكشف إلا بعد التصويت.</p></section>';
+      return head + vs + body + clockBox('وقت التصويت', c.endsAt, c.dur) + progBox('مين صوّت', voters(m)) + bracket();
+    }
+    if (c.stage === 'result') {
+      const v = m.votes || {};
+      return head + '<section class="verdict"><h2>' + esc(P(m.w).name) + ' تأهل!</h2><p>' + esc(P(left).name) + ' (الفريق أ): ' + (v[left] || 0) + ' صوت · ' + esc(P(right).name) + ' (الفريق ب): ' + (v[right] || 0) + ' صوت' + (m.draw ? ' · تعادل وانحسمت بالقرعة' : '') + '</p></section>' + vs +
+        hostBtn(G.cup.rounds[c.r].every(x => x.w) && G.cup.rounds[c.r].length === 1 ? 'إعلان النتائج' : 'المواجهة التالية', 'cupNext') + bracket();
+    }
+    return bracket();
+  }
+  function finalView() {
+    const sc = scores();
+    const tot = sc.slice().sort((a, b) => (b.total - a.total) || (b.assets - a.assets) || ((G.cup && G.cup.champ === b.id) - (G.cup && G.cup.champ === a.id)));
+    const mkc = sc.slice().sort((a, b) => (b.market - a.market) || (b.assets - a.assets))[0];
+    const champ = G.cup && G.cup.champ;
+    const w = tot[0];
+    return '<section class="winner"><span class="muted">البطل العام</span><h2>' + esc(P(w.id).name) + '</h2><span class="chip gold num">' + w.total + ' من ١٠٠</span></section>' +
+      '<div class="grid2"><section class="card award"><span class="muted small">بطل سوق الانتقالات</span><b>' + esc(P(mkc.id).name) + '</b><span class="num">' + mkc.market + ' نقطة</span></section>' +
+      '<section class="card award"><span class="muted small">بطل كأس الأبطال</span><b>' + (champ ? esc(P(champ).name) : '—') + '</b><span>' + (champ ? esc(tLabel(TM[G.team[champ]])) : '') + '</span></section></div>' +
+      '<section class="card"><h2 style="margin-bottom:10px">جدول النقاط</h2><div class="tbl" role="table"><div class="tr th" role="row"><span>#</span><span>اللاعب</span><span>بيع</span><span>شراء</span><span>محفظة</span><span>كأس</span><span>المجموع</span></div>' +
+      tot.map((r, i) => '<div class="tr' + (i === 0 ? ' win' : '') + (r.id === ME_ID ? ' me' : '') + '" role="row"><span class="num">' + (i + 1) + '</span><span class="nm">' + esc(P(r.id).name) + '</span><span class="num">' + r.sold + '</span><span class="num">' + r.bought + '</span><span class="num">' + r.port + '</span><span class="num">' + r.cup + '</span><span class="num tot">' + r.total + '</span></div>').join('') + '</div>' +
+      '<p class="muted small" style="margin-top:8px">البيع والشراء: لين ١٠ نقاط حسب الترتيب بعدد الصفقات. المحفظة: لين ٣٠ نقطة حسب نسبة النمو (الرصيد + قيمة اللاعبين) مقارنة بالبداية. الكأس: من ١٠ نقاط لأول دور لين ٥٠ للبطل. التعادل: المحفظة الأعلى، ثم بطل الكأس.</p></section>' +
+      '<section class="card"><h3 style="margin-bottom:8px">المحافظ النهائية</h3><div class="deals">' + tot.map(r => '<div class="deal"><b>' + esc(P(r.id).name) + '</b><span class="muted small">' + esc(tLabel(TM[G.team[r.id]])) + ' · ' + roster(r.id).length + ' لاعب · الرصيد ' + mil(bal(r.id)) + ' · ' + (G.stats[r.id] || {}).sold + ' بيع / ' + (G.stats[r.id] || {}).bought + ' شراء</span><b class="num price">' + mil(r.assets) + ' <small>(' + (r.growth >= 0 ? '+' : '') + Math.round(r.growth * 100) + '٪)</small></b></div>').join('') + '</div></section>' +
+      bracket() + srcNote() +
+      (isHost() ? '<div class="btn-row"><button class="btn xl primary" data-act="rematch">لعبة جديدة بنفس اللاعبين</button><button class="btn xl" data-act="toLobby">رجوع للغرفة</button></div>' : waitHost());
+  }
+
+  function modalView() {
+    const m = U.modal;
+    if (!m) return '';
+    let body = '';
+    if (m.type === 'menu') {
+      const host = isHost(), others = G ? G.players.filter(p => p.id !== ME_ID) : [];
+      body = '<h2>القائمة</h2><p class="muted">الغرفة <b dir="ltr">' + esc(U.code) + '</b>' + (G ? ' · المضيف: ' + esc(P(G.host).name) : '') + '</p>' +
+        (!host && G && inRoom(ME_ID) ? '<button class="btn" data-act="askTake">المضيف ما يرد؟ استلم الاستضافة</button>' : '') +
+        (host && others.length ? '<button class="btn" data-act="askHand">نقل الاستضافة للاعب آخر</button>' : '') +
+        '<button class="btn danger" data-act="askLeave">الخروج من الغرفة</button><button class="btn ghost" data-act="closeModal">إغلاق</button>';
+    } else if (m.type === 'take') {
+      body = '<h2>استلام الاستضافة؟</h2><p class="muted">استخدمها بس إذا المضيف طلع أو تلفونه فصل.</p><div class="btn-row"><button class="btn primary" data-act="takeHost">استلام</button><button class="btn" data-act="closeModal">إلغاء</button></div>';
+    } else if (m.type === 'hand') {
+      body = '<h2>اختر المضيف الجديد</h2><div class="cands">' + G.players.filter(p => p.id !== ME_ID).map(p => '<button class="cand" data-act="handTo" data-id="' + p.id + '"><b>' + esc(p.name) + '</b></button>').join('') + '</div><button class="btn ghost" data-act="closeModal">إلغاء</button>';
+    } else if (m.type === 'leave') {
+      body = '<h2>الخروج من الغرفة؟</h2><p class="muted">' + (isHost() && G && G.players.length > 1 ? 'أنت المضيف. بننقل الاستضافة للاعب ثاني.' : 'تقدر ترجع للغرفة بنفس الرمز.') + '</p><div class="btn-row"><button class="btn danger" data-act="leave">خروج</button><button class="btn" data-act="closeModal">إلغاء</button></div>';
+    }
+    return '<div class="ov" data-act="ovClose"><div class="dlg" role="dialog" aria-modal="true">' + body + '</div></div>';
+  }
+  function gameView() {
+    switch (G.phase) {
+      case 'lobby': return lobbyView();
+      case 'picks': return picksView();
+      case 'tier': return tierView();
+      case 'reveal': return revealView();
+      case 'market': return G.mk ? marketView() : '';
+      case 'lineup': return lineupView();
+      case 'cup': return G.cup ? cupView() : '';
+      case 'final': return finalView();
+    }
+    return '';
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    let html;
+    if (U.splash) html = splashView();
+    else {
+      html = topbar();
+      if (!U.code || U.view === 'home') html += homeView();
+      else if (!G) html += '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>جاري الاتصال بالغرفة ' + esc(U.code) + '</h2></section><button class="btn ghost" data-act="leaveNow">إلغاء</button>';
+      else if (U.view === 'join') html += joinView();
+      else if (U.view === 'wait') html += waitView();
+      else if (U.view === 'spect') html += spectView();
+      else if (U.view === 'kicked') html += kickedView();
+      else html += gameView();
+      html += modalView();
+    }
+    if (html === U.lastHtml) { tickUI(); return; }
+    const key = U.splash ? 'splash' : (G ? U.view + G.phase + (G.mk ? G.mk.key + G.mk.stage : '') + (G.cup ? G.cup.key + G.cup.stage : '') : U.view);
+    const ae = document.activeElement, fid = ae && ae.id && app.contains(ae) ? ae.id : null;
+    const fbind = ae && ae.dataset && ae.dataset.bind && app.contains(ae) ? '[data-bind="' + ae.dataset.bind + '"]' + (ae.dataset.k ? '[data-k="' + ae.dataset.k + '"]' : '') + (ae.dataset.l ? '[data-l="' + ae.dataset.l + '"]' : '') : null;
+    let ss = null, se = null;
+    try { if (ae && ae.setSelectionRange) { ss = ae.selectionStart; se = ae.selectionEnd; } } catch (e) { }
+    const y = window.scrollY;
+    app.innerHTML = '<div class="wrap">' + html + '</div>';
+    U.lastHtml = html;
+    const el = fid ? document.getElementById(fid) : (fbind ? app.querySelector(fbind) : null);
+    if (el) { try { el.focus({ preventScroll: true }); if (ss != null && el.setSelectionRange) el.setSelectionRange(ss, se); } catch (e) { } }
+    if (key !== U.lastKey) { window.scrollTo(0, 0); U.lastKey = key; } else window.scrollTo(0, y);
+    tickUI();
+  }
+  function tickUI() {
+    document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = fmt(remain(+el.dataset.clock)); });
+    document.querySelectorAll('[data-ring]').forEach(el => {
+      const r = remain(+el.dataset.end), d = +el.dataset.ring || 1;
+      const fg = el.querySelector('.fg'); if (fg) fg.style.strokeDashoffset = String(326.7 * (1 - Math.min(1, r / d)));
+      el.classList.toggle('low', r <= 10);
+    });
+  }
+  setInterval(tickUI, 250);
+
+  /* ---------- actions ---------- */
+  const ACT = {};
+  const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
+  ACT.enter = () => { U.splash = false; };
+  ACT.closeModal = () => { U.modal = null; U.err = ''; };
+  ACT.ovClose = (d, el, ev) => { if (ev.target !== el) return false; U.modal = null; };
+  ACT.menu = () => { U.modal = { type: 'menu' }; };
+  ACT.askLeave = () => { U.modal = { type: 'leave' }; };
+  ACT.askTake = () => { U.modal = { type: 'take' }; };
+  ACT.askHand = () => { U.modal = { type: 'hand' }; };
+  ACT.leaveNow = () => { leaveLocal(); U.err = ''; };
+  async function flushDirect() { try { G.rev = (G.rev || 0) + 1; G.sentAt = Date.now(); await db.doc(roomPath(G.code)).set(clone(G)); nudge('v'); } catch (e) { writeFailed(e); } }
+  ACT.leave = async () => {
+    U.modal = null;
+    if (isHost() && G) {
+      const next = G.players.find(p => p.id !== ME_ID);
+      if (G.phase === 'lobby') G.players = G.players.filter(p => p.id !== ME_ID);
+      if (next) { G.host = next.id; hostOn = false; await flushDirect(); }
+    } else if (G && G.phase === 'lobby' && ME) { ME.room = ''; ME.name = ''; await saveMe(); }
+    leaveLocal(); render();
+  };
+  ACT.handTo = async d => { if (!isHost()) return; U.modal = null; G.host = d.id; hostOn = false; stopHost(); await flushDirect(); toast('انتقلت الاستضافة.'); render(); };
+  ACT.takeHost = async () => {
+    U.modal = null;
+    try { const s = await db.doc(roomPath(U.code)).get(); if (s.exists) G = clone(s.data()); } catch (e) { }
+    if (!G || !inRoom(ME_ID)) return;
+    G.host = ME_ID; await flushDirect(); becomeHost(); toast('صرت المضيف.'); render();
+  };
+  ACT.create = async () => {
+    const name = U.name.trim();
+    if (!name) { U.err = 'اكتب اسمك أو لقبك أول.'; return; }
+    if (U.busy) return false;
+    U.busy = true; U.err = ''; render();
+    try {
+      let code = '';
+      for (let i = 0; i < 6; i++) {
+        code = Array.from({ length: 4 }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join('');
+        const s = await db.doc(roomPath(code)).get();
+        if (!s.exists) break;
+      }
+      G = freshRoom(code);
+      G.players.push({ id: ME_ID, name, at: Date.now() });
+      ME = blankMe(code); U.code = code;
+      await db.doc(inpPath(code, ME_ID)).set(clone(ME));
+      G.rev = 1; G.sentAt = Date.now();
+      await db.doc(roomPath(code)).set(clone(G));
+      hostOn = false;
+      await subscribe(code);
+      U.view = 'game';
+      becomeHost();
+    } catch (e) { G = null; U.code = ''; writeFailed(e); }
+    U.busy = false;
+  };
+  ACT.join = async () => {
+    const code = String(U.draft.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (code.length < 4) { U.err = 'اكتب رمز الغرفة (٤ أحرف).'; return; }
+    if (!U.name.trim()) { U.err = 'اكتب اسمك أو لقبك أول.'; return; }
+    U.err = ''; U.busy = true; render();
+    await openRoom(code, true);
+    U.busy = false;
+  };
+  async function openRoom(code, autoJoin) {
+    G = null; ME = null; U.view = 'connecting'; U.code = code;
+    await loadMe(code);
+    await subscribe(code);
+    if (autoJoin && U.name.trim()) {
+      await new Promise(res => { let n = 0; const t = setInterval(() => { if (G || !U.code || ++n > 40) { clearInterval(t); res(); } }, 250); });
+      if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
+    }
+  }
+  async function sendJoin() {
+    ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), at: Date.now(), hb: Date.now() });
+    lsSet({ name: U.name.trim() });
+    U.view = 'wait';
+    await saveMe(); render();
+  }
+  ACT.sendJoin = async () => { if (!U.name.trim()) { U.err = 'اكتب اسمك أو لقبك.'; return; } U.err = ''; await sendJoin(); };
+  ACT.copyLink = () => {
+    const link = ART_URL + '#room-' + G.code;
+    try { navigator.clipboard.writeText(link).then(() => toast('نسخنا رابط الدعوة.'), () => selectLink()); } catch (e) { selectLink(); }
+    return false;
+  };
+  function selectLink() { const i = document.getElementById('lnk'); if (i) { i.focus(); i.select(); } toast('انسخ الرابط من الخانة.'); }
+
+  /* host controls */
+  ACT.kick = H(d => { G.players = G.players.filter(p => p.id !== d.id); G.kicked[d.id] = true; });
+  ACT.set = H(d => { G.settings[d.k] = +d.v; });
+  ACT.startGame = H(() => { if (G.players.length < 3) { U.err = 'تحتاج ٣ لاعبين على الأقل.'; return false; } U.err = ''; startGame(); });
+  ACT.picksNext = H(() => {
+    if (G.phase !== 'picks') return false;
+    const done = progList();
+    if (done.length < 2) { toast('لازم لاعبَين على الأقل يكملون اختياراتهم.'); return false; }
+    if (done.length < G.players.length && !U.forceOk) { U.forceOk = true; toast('فيه لاعبين ما كملوا. اضغط مرة ثانية للمتابعة بدونهم.'); return false; }
+    U.forceOk = false; lockPicks();
+  });
+  ACT.tierNext = H(() => {
+    if (G.phase !== 'tier') return false;
+    if (progList().length < G.players.length && !U.forceOk) { U.forceOk = true; toast('فيه لاعبين ما اختاروا. اللي ما يختار ياخذ «الأضعف». اضغط مرة ثانية للمتابعة.'); return false; }
+    U.forceOk = false; assignTeams();
+  });
+  ACT.revealNext = H(() => { if (G.phase !== 'reveal') return false; startMarket(1); });
+  ACT.skip = H(() => { if (!autoStep(true)) return false; });
+  ACT.cupStart = H(() => { if (G.phase !== 'lineup') return false; startCup(); });
+  ACT.cupNext = H(() => { if (!G.cup || G.cup.stage !== 'result') return false; nextMatch(); });
+  ACT.rematch = H(() => { startGame(); });
+  ACT.toLobby = H(() => { G.phase = 'lobby'; G.mk = null; G.cup = null; G.prog = []; });
+
+  /* my inputs */
+  function mine() { ME = ME || blankMe(U.code); return ME; }
+  ACT.lg = d => { U.lg = d.v; };
+  ACT.pickTeam = d => { const o = d.k === 's' ? 'w' : 's'; if (U.pk[o] === d.id) U.pk[o] = null; U.pk[d.k] = d.id; };
+  ACT.clearPick = d => { U.pk[d.k] = null; };
+  ACT.sendPicks = async () => { if (!U.pk.s || !U.pk.w) return false; mine().picks = { g: G.gameNo, s: U.pk.s, w: U.pk.w }; render(); await saveMe(); };
+  ACT.tierPick = d => { U.tierPick = d.v; };
+  ACT.sendTier = async () => { if (!U.tierPick) return false; mine().tier = { g: G.gameNo, v: U.tierPick }; render(); await saveMe(); };
+  ACT.ready = async d => { mine().ready = { k: d.k }; render(); await saveMe(); };
+  ACT.toggleList = (d, el, ev) => {
+    if (ev.target.closest('[data-stop]')) return false;
+    if (d.k in U.lst) delete U.lst[d.k];
+    else { if (Object.keys(U.lst).length >= 10) { toast('بحد أقصى ١٠ لاعبين.'); return false; } U.lst[d.k] = Math.round(val(d.k)) || G.settings.base; }
+  };
+  ACT.askAdj = d => { U.lst[d.k] = Math.min(MAXP, Math.max(1, (+U.lst[d.k] || 1) + (+d.v))); };
+  ACT.sendList = async () => {
+    const mk = G.mk; if (!mk || mk.stage !== 'list') return false;
+    const items = {}; Object.keys(U.lst).forEach(k => { if (G.own[k] === ME_ID) items[k] = Math.min(MAXP, Math.max(1, Math.round(+U.lst[k] || 1))); });
+    if (!Object.keys(items).length) { toast('اختر لاعب واحد على الأقل.'); return false; }
+    mine().list = { key: mk.key, items }; render(); await saveMe();
+  };
+  ACT.bidNew = d => {
+    const mk = G.mk; if (!mk || mk.stage !== 'bid') return false;
+    if (Object.keys(U.bids).length >= 10) { toast('بحد أقصى ١٠ عروض بالسوق.'); return false; }
+    const L = mk.lst[d.l], top = mk.top && mk.top[d.l];
+    U.bids[d.l] = Math.max(L.ask, top ? top[0] + 1 : L.ask);
+    pushBids(false);
+  };
+  ACT.bidAdj = d => { const L = G.mk.lst[d.l]; U.bids[d.l] = Math.min(MAXP, Math.max(L.ask, (+U.bids[d.l] || L.ask) + (+d.v))); pushBids(false); };
+  ACT.bidDel = d => { delete U.bids[d.l]; pushBids(false); };
+  ACT.sendBids = () => pushBids(true);
+  ACT.bidEdit = () => { mine().bids = Object.assign({}, ME.bids, { done: false }); render(); saveMe(); };
+  let bidT = null;
+  function pushBids(done) {
+    const mk = G.mk; if (!mk || mk.stage !== 'bid') return false;
+    const b = {}; Object.keys(U.bids).forEach(l => { const L = mk.lst[l]; if (L && L.seller !== ME_ID) b[l] = Math.min(MAXP, Math.max(L.ask, Math.round(+U.bids[l] || L.ask))); });
+    mine().bids = { key: mk.key, b, done: !!done };
+    render();
+    clearTimeout(bidT); bidT = setTimeout(saveMe, 250);
+  }
+  ACT.xiToggle = d => {
+    const i = U.xi.indexOf(d.k);
+    if (i >= 0) U.xi.splice(i, 1);
+    else { if (U.xi.length >= 11) { toast('عندك ١١ لاعب. شيل واحد أول.'); return false; } U.xi.push(d.k); }
+  };
+  ACT.xiAuto = () => { U.xi = suggestXI(ME_ID); };
+  ACT.sendXI = async () => { if (!validXI(ME_ID, U.xi)) return false; mine().xi = { g: G.gameNo, list: U.xi.slice() }; render(); await saveMe(); };
+  ACT.pick = d => { U.pick = d.v; };
+  ACT.sendVote = async () => {
+    const c = G.cup; if (!c || c.stage !== 'vote') return false;
+    if (!U.pick) { toast('اختر فريق أول.'); return false; }
+    mine().vote = { key: c.key, v: U.pick }; render(); await saveMe();
+  };
+
+
+  /* ---------- events ---------- */
+  app.addEventListener('click', async e => {
+    const el = e.target.closest('[data-act]');
+    if (!el || !ACT[el.dataset.act]) return;
+    if (el.dataset.act === 'ovClose' && e.target !== el) return;
+    if (el.getAttribute('aria-disabled') === 'true' && el.dataset.act !== 'ovClose') return;
+    const r = await ACT[el.dataset.act](el.dataset, el, e);
+    if (r !== false) render();
+  });
+  app.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); } });
+  app.addEventListener('input', e => {
+    const el = e.target, b = el.dataset && el.dataset.bind;
+    if (!b) return;
+    if (b === 'name') { U.name = el.value; lsSet({ name: el.value.trim() }); }
+    else if (b === 'code') U.draft.code = el.value.toUpperCase();
+    else if (b === 'ask') U.lst[el.dataset.k] = Math.min(MAXP, Math.max(1, Math.round(+el.value.replace(/[^\d]/g, '') || 1)));
+    else if (b === 'bid') { const L = G.mk && G.mk.lst[el.dataset.l]; if (L) { U.bids[el.dataset.l] = Math.round(+el.value.replace(/[^\d]/g, '') || 0); } }
+  });
+  app.addEventListener('change', e => {
+    const el = e.target;
+    if (el.dataset && el.dataset.bind === 'bid') { const L = G.mk && G.mk.lst[el.dataset.l]; if (L) { U.bids[el.dataset.l] = Math.max(L.ask, +U.bids[el.dataset.l] || L.ask); pushBids(false); } }
+    if (el.dataset && el.dataset.bind === 'ask') render();
+  });
+  window.addEventListener('hashchange', () => {
+    const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
+    if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; if (!U.code) render(); }
+  });
+
+  /* ---------- start ---------- */
+  async function init() {
+    const saved = lsGet();
+    U.name = saved.name || '';
+    const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
+    if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; }
+    if (saved.code && !h) U.splash = false;
+    render();
+    const cl = !EXT ? window.claude : null;
+    let user = null;
+    if (cl) {
+      try { db = await cl.use('db'); } catch (e) { db = null; }
+      try { user = await cl.use('user'); } catch (e) { user = null; }
+      try { roomCap = await cl.use('room'); } catch (e) { roomCap = null; }
+    }
+    if (!db && window.__MZ_DB) db = window.__MZ_DB;
+    let id = null;
+    try { id = user && user.id ? await user.id() : null; } catch (e) { id = null; }
+    if (!id) { id = saved.uid || ('l' + Math.random().toString(36).slice(2, 12)); lsSet({ uid: id }); }
+    ME_ID = 'u' + String(id).replace(/[^A-Za-z0-9_\-~:@+]/g, '_').slice(0, 120);
+    U.ready = true;
+    const code = h ? h[1].toUpperCase() : (saved.code || '');
+    if (db && code) {
+      await loadMe(code);
+      if (!h || (ME && ME.room === code)) { U.splash = false; await subscribe(code); }
+      else U.code = '';
+    }
+    render();
+  }
+  if (TEST) window.__mz = () => ({ G, ME, ME_ID, U, host: isHost(), INP, ACT, scores, roster, assets, setInputs: m => { INP = m; hostStep(); } });
+  init();
+})();
+
+</script>
+</body>
+</html>
