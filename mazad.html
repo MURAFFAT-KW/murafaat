@@ -355,7 +355,7 @@ html.aqguest .aqback{display:none!important}
 section.splash.intro .lg svg.aqlogo{width:min(56vw,220px)!important;height:auto!important}
 section.splash.intro .aqlogo *{animation:none!important}
 section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921!important;background:none!important;padding:0!important;border-radius:0!important;box-shadow:none!important;font-size:clamp(2.2rem,10vw,2.9rem)!important;font-weight:800!important}
-</style><script>window.__AQ_LANG=(document.documentElement.getAttribute("lang")||"ar").slice(0,2);</script></head>
+</style><script>window.__AQ_LANG=(document.documentElement.getAttribute("lang")||"ar").slice(0,2);</script><style>section.card.hero .sub{color:#12203A!important;-webkit-text-fill-color:#12203A!important;background:none!important;padding:0!important;border-radius:0!important;box-shadow:none!important;border:0!important;font-family:'Alexandria','Readex Pro',Tahoma,sans-serif!important;font-weight:800!important;font-size:clamp(2rem,9vw,2.6rem)!important;line-height:1.25!important;margin:2px 0 0!important;display:block!important}section.card.hero .fulllogo{width:min(56vw,220px)!important;height:auto!important}</style></head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
@@ -964,11 +964,11 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     if (!db) return '<section class="card hero">' + FULL + '<h1 class="sr">أقنعني!</h1>' +
       '<p class="lead">تعذر الاتصال. تأكد من الإنترنت وحدّث الصفحة.</p></section>';
     const me = '<section class="card" style="display:grid;gap:14px"><div class="labelled"><label for="nm">اسمك أو لقبك</label><input class="field" id="nm" data-bind="name" value="' + esc(U.name) + '" maxlength="20" autocomplete="off" placeholder="مثال: أبو فهد"></div>' +
-      '<div class="labelled"><span class="lbl">الشخصية</span>' + genderSeg(U.gender, 'myGender') + '</div></section>';
+      '</section>';
     const join = '<section class="card" style="display:grid;gap:14px"><h2 style="margin:0">انضم لغرفة</h2>' +
       '<div class="labelled"><label for="cd">رمز الغرفة</label><input class="field code-in" id="cd" data-bind="code" value="' + esc(U.draft.code || '') + '" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="مثال: K7QX" dir="ltr"></div>' +
       '<button class="btn xl ' + (U.fromLink ? 'primary' : '') + '" data-act="join"' + (U.busy ? ' aria-disabled="true"' : '') + '>انضمام</button></section>';
-    const host = '<section class="card" style="display:grid;gap:12px"><h2 style="margin:0">أو أنشئ غرفة جديدة</h2><p class="muted">تكون أنت المضيف: تبدأ اللعبة وتنقلها بين المراحل، وباقي اللاعبين يدخلون برمز الغرفة من تلفوناتهم.</p>' +
+    const host = '<section class="card" style="display:grid;gap:12px"><h2 style="margin:0">أنشئ غرفة جديدة</h2><p class="muted">تكون أنت المضيف: تبدأ اللعبة وتنقلها بين المراحل، وباقي اللاعبين يدخلون برمز الغرفة من تلفوناتهم.</p>' +
       '<button class="btn xl ' + (U.fromLink ? '' : 'primary') + '" data-act="create"' + (U.busy ? ' aria-disabled="true"' : '') + '>إنشاء غرفة</button></section>';
     return '<section class="card hero" style="padding-block:24px 20px">' + FULL + '<h1 class="sr">أقنعني!</h1><div class="sub">المزاد</div>' +
       '<p class="lead">كل لاعب على تلفونه. بِع أغراض المكان لربعك بأحلى كلام، واشتري بذكاء.</p></section>' +
@@ -985,7 +985,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function joinView() {
     return '<section class="card" style="display:grid;gap:14px;text-align:center"><span class="muted">تنضم إلى الغرفة</span><div class="bigcode" dir="ltr">' + esc(U.code) + '</div></section>' +
       '<section class="card" style="display:grid;gap:14px"><div class="labelled"><label for="nm">اسمك أو لقبك</label><input class="field" id="nm" data-bind="name" value="' + esc(U.name) + '" maxlength="20" autocomplete="off"></div>' +
-      '<div class="labelled"><span class="lbl">الشخصية</span>' + genderSeg(U.gender, 'myGender') + '</div></section>' + errBox() +
+      '</section>' + errBox() +
       '<button class="btn xl primary" data-act="sendJoin">دخول الغرفة</button><button class="btn ghost" data-act="leaveNow">رجوع</button>';
   }
   function waitView() {
@@ -1016,7 +1016,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const link = ART_URL + '#room-' + G.code;
     const seg = (k, vals, unit) => '<div class="seg-wide" role="group">' + vals.map(v => '<button data-act="set" data-k="' + k + '" data-v="' + v + '" class="' + (s[k] === v ? 'on' : '') + '" aria-pressed="' + (s[k] === v) + '">' + v + (unit || '') + '</button>').join('') + '</div>';
     const rows = G.players.map(p => '<div class="prow"><div>' + avatar(p, 46) + '</div><div class="fields"><b style="flex:1">' + esc(p.name) + (p.id === ME_ID ? ' <span class="muted small">(أنت)</span>' : '') + '</b>' +
-      (p.id === G.host ? '<span class="chip gold">المضيف</span>' : '') + '<span class="muted small">' + gLabel(p) + '</span>' +
+      (p.id === G.host ? '<span class="chip gold">المضيف</span>' : '') + '' +
       (host && p.id !== ME_ID ? '<button class="x" data-act="kick" data-id="' + p.id + '" aria-label="إزالة ' + esc(p.name) + '">×</button>' : '') + '</div></div>').join('');
     const tgt = s.players || 3, minProd = tgt * (s.rounds || 1);
     const real = n - (s.hostPlays === 0 ? 1 : 0);
@@ -1546,7 +1546,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       switch (level()) {
         case 1: location.href = T.hub; return false;
         case 2: U.modal = null; U.err = ''; return;
-        case 3: U.splash = true; window.scrollTo(0, 0); return;
+        case 3: location.href = T.hub; return false;
         case 4: leaveLocal(); U.err = ''; return;
         case 5: U.modal = { type: 'aqHostBack' }; return;
         case 6: U.modal = { type: 'leave' }; return;
