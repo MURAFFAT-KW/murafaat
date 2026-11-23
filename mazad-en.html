@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Aqnieni! | Almazad</title>
+<title>Aqnieni! | ALMAZAD</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800;900&family=Readex+Pro:wght@400;500;600;700&display=swap">
 <style>
@@ -416,7 +416,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
 <div id="app" dir="ltr" lang="ar"></div>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
-/* ===== Aqnieni! Almazad: one phone per player, rooms synced through the artifact db ===== */
+/* ===== Aqnieni! ALMAZAD: one phone per player, rooms synced through the artifact db ===== */
 (function () {
   'use strict';
   const EXT = !(typeof window.claude !== 'undefined' && window.claude && window.claude.use);
@@ -937,7 +937,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   /* ---------- views ---------- */
   function topbar() {
     const inG = !!G && !!U.code;
-    return '<header class="top"><div class="brand">' + LOGO + '<b>Aqnieni!</b><span>Almazad</span></div><div class="top-r">' +
+    return '<header class="top"><div class="brand">' + LOGO + '<b>Aqnieni!</b><span>ALMAZAD</span></div><div class="top-r">' +
       (inG ? '<span class="chip live num">Room ' + esc(U.code) + '</span><button class="btn sm ghost" data-act="menu">Menu</button>' : '') + '</div></header>' +
       (U.offline === 'net' ? '<div class="alert" role="alert">Weak connection. Updates will arrive as soon as you’re back online.</div>' : '') +
       (U.offline === 'perm' ? '<div class="alert" role="alert">This account can’t write to the game. The game owner must invite you by email with <b>Editor</b> from the Share button.</div>' : '');
@@ -945,14 +945,14 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const errBox = () => (U.err ? '<div class="alert" role="alert">' + esc(U.err) + '</div>' : '');
   function noticeView() {
     return '<section class="notice"><div class="nbox"><h2>A friendly note before you play</h2>' +
-      '<p>Welcome, everyone! This is a trial version of “Aqnieni” and its games: Almanassa, Almazad, Alraees and Alazyaa, created and developed by Abdulrahman Al-Fahad, dated 26/11/26.</p>' +
+      '<p>Welcome, everyone! This is a trial version of “Aqnieni” and its games: ALMANASSA, ALMAZAD, ALRAEES, ALAZYAA and ALAQAR, created and developed by Abdulrahman Al-Fahad, dated 26/11/26.</p>' +
       '<p>I wanted to share it with you before releasing it to the public, so we can have fun and try it together. All rights to the game’s content, design and materials are reserved. Please don’t copy it, republish it, or make a similar version of it, even with small changes. Any use of its content without permission may force me to take appropriate action.</p>' +
       '<p>Enjoy, and your feedback matters to me!</p>' +
       '<button class="nbtn" data-act="noticeOk">I promise, let’s play</button></div></section>';
   }
   function splashView() {
     return '<section class="splash intro"><div class="lg">' + FULL + '</div>' +
-      '<h1 class="sr">Aqnieni!</h1><div class="ar">Almazad</div>' +
+      '<h1 class="sr">Aqnieni!</h1><div class="ar">ALMAZAD</div>' +
       '<p class="introtx">In each sale, two players sell the same item, each setting a secret price.<br>Each seller gets their turn to convince you to buy from them.<br>Everyone else buys or passes, and the highest total at the end wins.</p>' +
       '<button class="btn primary go" data-act="enter">Got it</button></section>';
   }
@@ -970,7 +970,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<button class="btn xl ' + (U.fromLink ? 'primary' : '') + '" data-act="join"' + (U.busy ? ' aria-disabled="true"' : '') + '>Join</button></section>';
     const host = '<section class="card" style="display:grid;gap:12px"><h2 style="margin:0">Or create a new room</h2><p class="muted">You’ll be the host: you start the game and move it between stages, and the other players join with the room code from their phones.</p>' +
       '<button class="btn xl ' + (U.fromLink ? '' : 'primary') + '" data-act="create"' + (U.busy ? ' aria-disabled="true"' : '') + '>Create room</button></section>';
-    return '<section class="card hero" style="padding-block:24px 20px">' + FULL + '<h1 class="sr">Aqnieni!</h1><div class="sub">Almazad</div>' +
+    return '<section class="card hero" style="padding-block:24px 20px">' + FULL + '<h1 class="sr">Aqnieni!</h1><div class="sub">ALMAZAD</div>' +
       '<p class="lead">Everyone on their own phone. Sell things around the room to your friends with your best pitch, and buy smart.</p></section>' +
       me + errBox() + (U.fromLink ? join : (isGuest() ? lockCard() : host + join)) +
       '<section class="card"><h2>How to play</h2><ol class="howto">' +

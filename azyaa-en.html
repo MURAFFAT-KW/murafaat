@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Aqnieni! | Alazyaa</title>
+<title>Aqnieni! | ALAZYAA</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800;900&family=Readex+Pro:wght@400;500;600;700&display=swap">
 <style>
 :root{
-  --p:#7B2FBE;      /* اللون الرئيسي للعبة: بنفسجي (مؤقت) */
+  --p:#7B2FBE;      /* لون العقار: أخضر */
   --p2:#5A1E92;
   --pl:#F5EDFC;
   --red:#DE0921;    /* لون اسم اللعبة في صفحة المقدمة (نفس باقي ألعاب أقنعني) */
@@ -44,7 +44,7 @@ h2{font-size:1.6rem;margin:14px 0 4px;font-weight:700;line-height:1.3}
 .card h3{margin:0 0 8px;font-size:17px}
 .row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .row:last-child{border-bottom:0}
-.stepper{display:flex;flex-direction:row-reverse;align-items:center;gap:6px}
+.stepper{display:flex;align-items:center;gap:6px}
 .stepper button{width:38px;height:38px;border-radius:12px;border:0;background:var(--pl);color:var(--p);font-size:22px;font-weight:900;cursor:pointer}
 .stepper .v{min-width:58px;text-align:center;font-weight:800}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -146,750 +146,958 @@ h2{font-size:1.6rem;margin:14px 0 4px;font-weight:700;line-height:1.3}
 .item .buy{border:0;border-radius:12px;padding:10px 14px;font-weight:800;background:var(--p);color:#fff;cursor:pointer}
 .item .buy:disabled{background:#ddd;color:#777}
 .old{text-decoration:line-through;color:var(--mut);font-size:12px;margin-inline-start:4px}
-</style>
+.preview{background:linear-gradient(180deg,#faf7fd,#f2ebf9)!important}
+.top{display:flex;align-items:center;gap:10px;min-height:52px;flex-wrap:wrap}
+.top .brand{display:flex;align-items:baseline;gap:8px;flex:1}
+.top .brand b{font-family:var(--font-d);font-size:1.15rem}
+.top .brand span{background:var(--p);color:#fff;border-radius:8px;padding:0 10px;font-weight:700;font-size:.85rem;font-family:var(--font-d)}
+.top-r{display:flex;gap:8px;align-items:center}
+.chip b{font-family:var(--font-d)}
+.seg{display:flex;gap:6px}
+.seg button{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;font:700 .9rem var(--font);cursor:pointer}
+.seg button.on{background:var(--p);border-color:var(--p);color:#fff}
+.bigcode{font:900 2.6rem/1.2 var(--font-d);letter-spacing:.2em;color:var(--p);margin:6px 0}
+.linkrow{display:flex;gap:8px;align-items:center}
+.linkrow .field{flex:1;font-size:.85rem}
+.prow{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.prow b{flex:1}
+.prow small{color:var(--mut)}
+.x{border:0;background:#FFF0F1;color:#9b0616;border-radius:8px;width:30px;height:30px;font-size:18px;cursor:pointer}
+.spin{width:34px;height:34px;border:4px solid var(--pl);border-top-color:var(--p);border-radius:50%;margin:6px auto;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.stepper button:disabled{opacity:.35}
+.btn.danger{color:#9b0616;border-color:#f2c4c9}
+.votecard{cursor:pointer}.votecard.on{border-color:var(--p);background:var(--pl)}
+.gname.sm{font-size:2rem}
+.code-in{text-transform:uppercase;letter-spacing:.2em;text-align:center;font-weight:800}
+.tag{display:inline-block;margin:6px 0}
+.card h3 small{color:var(--mut);font-weight:600}
+html.aqguest .aqfix{display:none!important}
+#fab[hidden]{display:none}
+.prop{flex-wrap:wrap}.prop .askbox{width:100%;flex-direction:row;justify-content:space-between;align-items:center;border-top:1px dashed var(--line);padding-top:6px}
+.mini{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 11px;font:700 .85rem var(--font);cursor:pointer;color:var(--ink)}
+.mini.ok{background:var(--p);border-color:var(--p);color:#fff}
+.mini:disabled{opacity:.4;cursor:default}
+.notice{min-height:100svh;display:flex;align-items:center;justify-content:center;padding:24px 4px;background:#fff}
+.notice .nbox{background:#fff;border:3px solid #DE0921;border-radius:22px;padding:24px 20px;max-width:520px;display:grid;gap:12px;color:#111}
+.notice h2{color:#111;font-size:1.35rem;text-align:center}
+.notice p{color:#111;line-height:1.85;font-size:1rem}
+.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}</style>
 </head>
 <body>
-<div id="app"></div>
-<div id="modalRoot"></div>
-<button class="fab" onclick="openAssumptions()">📝 Assumptions</button>
-<style>#langsw{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:60;background:#fff;border:1.5px solid #D5DBE5;border-radius:99px;padding:5px 14px;font:700 .9rem/1.4 "Readex Pro","Alexandria",system-ui,sans-serif;color:#12203A;text-decoration:none;box-shadow:0 3px 10px rgba(18,32,58,.1)}#langsw[hidden]{display:none}</style><a id="langsw" href="azyaa.html" lang="ar" onclick="try{localStorage.setItem('aqnieni.lang','ar')}catch(x){}">عربي</a>
-
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
+(function () {
+  if (window.claude && window.claude.use) return;
+  if (typeof firebase === 'undefined') return;
+  var CFG = {
+    apiKey: "AIzaSyByoJGFA6WSH5IXgZ4rxbNITx2Oqnjai1A",
+    authDomain: "murafaat-1a91d.firebaseapp.com",
+    databaseURL: "https://murafaat-1a91d-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "murafaat-1a91d"
+  };
+  try { if (!firebase.apps.length) firebase.initializeApp(CFG); } catch (e) { return; }
+  var rt = firebase.database();
+  var K = function (p) { return 'docs/' + p; };
+  var meta = { fromCache: false, hasPendingWrites: false };
+  function snapOf(id, raw) {
+    var v = null;
+    if (typeof raw === 'string') { try { v = JSON.parse(raw); } catch (e) { v = null; } }
+    return { id: id, exists: v !== null, data: function () { return v === null ? undefined : JSON.parse(JSON.stringify(v)); }, metadata: meta };
+  }
+  function docRef(path) {
+    var id = path.split('/').pop(), ref = rt.ref(K(path) + '/_d');
+    return {
+      id: id,
+      get: function () { return ref.once('value').then(function (s) { return snapOf(id, s.val()); }); },
+      set: function (v) { return ref.set(JSON.stringify(v)); },
+      delete: function () { return rt.ref(K(path)).remove(); },
+      onSnapshot: function (cb, err) {
+        var f = function (s) { cb(snapOf(id, s.val())); };
+        ref.on('value', f, function (e) { if (err) err(e); });
+        return function () { ref.off('value', f); };
+      }
+    };
+  }
+  function colRef(col) {
+    var ref = rt.ref(K(col));
+    function wrap(s) {
+      var docs = [];
+      s.forEach(function (c) { var d = c.child('_d').val(); if (typeof d === 'string') docs.push(snapOf(c.key, d)); });
+      return { docs: docs };
+    }
+    return {
+      doc: function (id) { return docRef(col + '/' + id); },
+      get: function () { return ref.once('value').then(wrap); },
+      onSnapshot: function (cb, err) {
+        var f = function (s) { cb(wrap(s)); };
+        ref.on('value', f, function (e) { if (err) err(e); });
+        return function () { ref.off('value', f); };
+      }
+    };
+  }
+  window.__MZ_DB = { doc: docRef, collection: colRef };
+})();
+</script>
+<div id="app"></div>
+<button class="fab" id="fab">📝 Assumptions</button>
+<style>#langsw{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:60;background:#fff;border:1.5px solid #D5DBE5;border-radius:99px;padding:5px 14px;font:700 .9rem/1.4 "Readex Pro","Alexandria",system-ui,sans-serif;color:#12203A;text-decoration:none;box-shadow:0 3px 10px rgba(18,32,58,.1)}#langsw[hidden]{display:none}html.aqguest #langsw{}</style>
+<a id="langsw" href="azyaa.html" lang="ar">عربي</a>
+<script>(function(){var a=document.getElementById('langsw');a.addEventListener('click',function(){try{localStorage.setItem('aqnieni.lang','ar')}catch(x){}a.href='azyaa.html'+location.hash;});})();</script>
+<script>
+const LANG = 'en';
+const HUB = 'en.html';
+const LOGO = `<svg class="aqlogo" viewBox="0 0 920 790" role="img" aria-label="أقنعني"><defs><clipPath id="aqbub"><path d="M483.2,99.8 474.8,91.5 464.8,83.5 452.0,75.0 432.5,65.2 415.5,59.2 398.5,55.0 395.2,55.0 386.5,53.0 380.2,53.0 377.5,52.0 365.2,52.0 362.5,51.0 326.2,51.0 323.5,52.0 309.2,52.0 306.5,53.0 299.2,53.0 296.5,54.0 292.2,54.0 289.5,55.0 286.2,55.0 264.2,60.2 247.2,66.2 240.5,69.8 238.2,70.2 234.0,73.0 225.8,77.0 210.0,87.5 197.8,97.5 184.5,110.8 172.5,126.0 162.0,142.8 154.2,159.2 149.2,173.2 145.0,191.2 145.0,194.5 144.0,197.2 144.0,203.5 143.0,206.2 143.0,227.5 144.0,230.2 144.0,235.5 145.0,238.2 146.0,247.5 151.2,266.5 155.2,276.5 165.0,295.0 176.5,310.8 184.5,318.8 187.0,322.2 186.8,326.5 179.2,348.2 178.8,351.5 163.2,399.2 163.0,405.5 163.5,406.8 166.2,408.8 169.5,408.8 173.8,407.2 205.8,385.2 220.2,366.0 228.5,356.2 230.5,354.8 238.5,354.8 241.2,355.8 246.5,355.8 249.2,356.8 255.5,356.8 258.2,357.8 264.5,357.8 267.2,358.8 272.5,358.8 275.2,359.8 281.5,359.8 284.2,360.8 289.5,360.8 292.2,361.8 311.5,361.8 314.2,360.8 325.5,360.8 328.2,359.8 339.5,358.8 362.5,353.5 377.5,348.5 392.5,342.5 410.8,333.5 411.2,332.8 410.8,330.5 410.8,316.5 411.2,315.5 412.8,314.2 423.8,309.2 436.8,306.2 443.2,298.8 449.2,293.0 454.2,286.8 460.2,281.0 465.2,274.8 472.2,268.0 477.2,261.8 483.2,256.0 488.2,249.8 495.2,243.0 501.8,235.2 504.0,233.2 507.2,232.0 513.2,231.8 514.8,230.8 515.8,228.5 516.8,222.2 518.8,215.5 518.8,212.2 519.8,209.5 519.8,178.2 518.8,175.5 518.8,170.2 514.5,153.2 507.5,135.2 501.8,124.8 494.2,113.0Z"/><path d="M518.0,165.5 414.5,295.0 411.5,299.8 411.0,301.2 411.0,333.5 412.0,336.2 413.0,344.5 419.2,363.5 425.0,375.0 430.5,383.8 439.5,395.0 448.8,404.2 460.0,413.2 469.8,419.8 485.2,427.5 498.2,432.5 520.2,437.8 523.5,437.8 526.2,438.8 532.5,438.8 535.2,439.8 577.5,439.8 580.2,438.8 591.5,438.8 594.2,437.8 598.5,437.8 601.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 634.5,433.8 637.2,432.8 641.5,432.8 644.2,431.8 652.2,431.0 665.0,438.8 686.8,453.8 726.8,479.8 735.2,483.8 739.8,483.2 741.5,481.2 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 732.8,430.5 732.8,428.2 730.8,421.5 730.8,419.2 726.8,404.5 726.8,402.5 728.2,400.5 744.0,388.2 755.2,377.0 765.2,364.8 773.8,352.0 782.5,334.5 784.0,329.2 785.5,326.5 790.8,307.5 791.8,299.2 792.8,296.5 792.8,268.2 791.8,265.5 791.8,261.2 790.8,258.5 790.8,255.2 788.5,246.2 783.5,231.2 774.8,213.8 768.2,204.0 759.2,192.8 749.0,182.5 737.8,173.5 725.0,165.0 714.5,159.2 712.2,158.8 702.5,154.2 683.5,148.2 675.2,147.0 672.5,146.0 669.2,146.0 666.5,145.0 661.2,145.0 658.5,144.0 650.2,144.0 647.5,143.0 609.2,143.0 606.5,144.0 598.2,144.0 595.5,145.0 589.2,145.0 586.5,146.0 581.2,146.0 578.5,147.0 575.2,147.0 572.5,148.0 565.2,149.0 548.2,153.2 528.2,160.2Z"/><path d="M445,185 L600,168 L600,300 L445,318Z"/></clipPath></defs><g class="aq-red"><path fill="#DE0921" d="M483.2,99.8 474.8,91.5 464.8,83.5 452.0,75.0 432.5,65.2 415.5,59.2 398.5,55.0 395.2,55.0 386.5,53.0 380.2,53.0 377.5,52.0 365.2,52.0 362.5,51.0 326.2,51.0 323.5,52.0 309.2,52.0 306.5,53.0 299.2,53.0 296.5,54.0 292.2,54.0 289.5,55.0 286.2,55.0 264.2,60.2 247.2,66.2 240.5,69.8 238.2,70.2 234.0,73.0 225.8,77.0 210.0,87.5 197.8,97.5 184.5,110.8 172.5,126.0 162.0,142.8 154.2,159.2 149.2,173.2 145.0,191.2 145.0,194.5 144.0,197.2 144.0,203.5 143.0,206.2 143.0,227.5 144.0,230.2 144.0,235.5 145.0,238.2 146.0,247.5 151.2,266.5 155.2,276.5 165.0,295.0 176.5,310.8 184.5,318.8 187.0,322.2 186.8,326.5 179.2,348.2 178.8,351.5 163.2,399.2 163.0,405.5 163.5,406.8 166.2,408.8 169.5,408.8 173.8,407.2 205.8,385.2 220.2,366.0 228.5,356.2 230.5,354.8 238.5,354.8 241.2,355.8 246.5,355.8 249.2,356.8 255.5,356.8 258.2,357.8 264.5,357.8 267.2,358.8 272.5,358.8 275.2,359.8 281.5,359.8 284.2,360.8 289.5,360.8 292.2,361.8 311.5,361.8 314.2,360.8 325.5,360.8 328.2,359.8 339.5,358.8 362.5,353.5 377.5,348.5 392.5,342.5 410.8,333.5 411.2,332.8 410.8,330.5 410.8,316.5 411.2,315.5 412.8,314.2 423.8,309.2 436.8,306.2 443.2,298.8 449.2,293.0 454.2,286.8 460.2,281.0 465.2,274.8 472.2,268.0 477.2,261.8 483.2,256.0 488.2,249.8 495.2,243.0 501.8,235.2 504.0,233.2 507.2,232.0 513.2,231.8 514.8,230.8 515.8,228.5 516.8,222.2 518.8,215.5 518.8,212.2 519.8,209.5 519.8,178.2 518.8,175.5 518.8,170.2 514.5,153.2 507.5,135.2 501.8,124.8 494.2,113.0Z"/><circle cx="260.5" cy="172.7" r="22.7" fill="#fff"/><circle cx="330.0" cy="172.7" r="22.6" fill="#fff"/><circle cx="399.4" cy="172.7" r="22.5" fill="#fff"/></g><g class="aq-blue"><path fill="#0554A4" d="M518.0,165.5 414.5,295.0 411.5,299.8 411.0,301.2 411.0,333.5 412.0,336.2 413.0,344.5 419.2,363.5 425.0,375.0 430.5,383.8 439.5,395.0 448.8,404.2 460.0,413.2 469.8,419.8 485.2,427.5 498.2,432.5 520.2,437.8 523.5,437.8 526.2,438.8 532.5,438.8 535.2,439.8 577.5,439.8 580.2,438.8 591.5,438.8 594.2,437.8 598.5,437.8 601.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 634.5,433.8 637.2,432.8 641.5,432.8 644.2,431.8 652.2,431.0 665.0,438.8 686.8,453.8 726.8,479.8 735.2,483.8 739.8,483.2 741.5,481.2 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 732.8,430.5 732.8,428.2 730.8,421.5 730.8,419.2 726.8,404.5 726.8,402.5 728.2,400.5 744.0,388.2 755.2,377.0 765.2,364.8 773.8,352.0 782.5,334.5 784.0,329.2 785.5,326.5 790.8,307.5 791.8,299.2 792.8,296.5 792.8,268.2 791.8,265.5 791.8,261.2 790.8,258.5 790.8,255.2 788.5,246.2 783.5,231.2 774.8,213.8 768.2,204.0 759.2,192.8 749.0,182.5 737.8,173.5 725.0,165.0 714.5,159.2 712.2,158.8 702.5,154.2 683.5,148.2 675.2,147.0 672.5,146.0 669.2,146.0 666.5,145.0 661.2,145.0 658.5,144.0 650.2,144.0 647.5,143.0 609.2,143.0 606.5,144.0 598.2,144.0 595.5,145.0 589.2,145.0 586.5,146.0 581.2,146.0 578.5,147.0 575.2,147.0 572.5,148.0 565.2,149.0 548.2,153.2 528.2,160.2Z"/><circle cx="552.7" cy="332.3" r="22.5" fill="#fff"/><circle cx="621.1" cy="332.2" r="22.4" fill="#fff"/><circle cx="689.7" cy="332.2" r="22.4" fill="#fff"/></g><g clip-path="url(#aqbub)"><g class="aq-arrow"><path fill="#fff" d="M583.5,227.5 580.2,223.2 572.2,223.0 563.5,225.0 559.2,225.0 556.5,226.0 552.2,226.0 549.5,227.0 545.2,227.0 542.5,228.0 538.2,228.0 535.5,229.0 531.2,229.0 528.5,230.0 524.2,230.0 521.5,231.0 516.2,231.0 513.5,232.0 509.2,232.0 506.5,233.0 502.2,233.0 499.5,234.0 493.2,234.0 490.5,235.0 486.2,235.0 483.5,236.0 479.2,236.0 476.5,237.0 472.2,237.0 469.5,238.0 465.2,238.0 462.5,239.0 458.2,239.0 455.5,240.0 452.2,240.0 449.5,241.0 446.2,241.0 443.5,242.0 434.2,243.0 431.5,244.0 409.2,248.0 372.2,257.2 351.2,264.2 336.2,270.2 316.8,280.0 295.0,293.5 279.0,305.5 261.8,320.5 237.5,346.0 221.5,365.0 217.5,370.8 210.5,379.0 207.5,383.8 203.8,386.8 203.0,388.2 203.2,394.8 204.8,395.8 207.5,395.5 296.8,365.0 298.2,364.0 298.2,362.8 297.0,362.0 292.8,361.5 292.5,359.8 299.0,353.2 312.0,343.2 330.8,330.8 337.8,326.8 361.2,315.0 384.2,306.0 402.2,300.0 427.5,293.5 431.2,292.0 440.2,289.8 442.5,289.8 447.2,288.0 450.5,287.8 465.2,283.8 467.5,283.8 580.5,255.8 582.2,254.0 583.8,250.5 583.8,248.2 584.8,245.5 584.8,241.2 585.8,238.5 585.8,235.2Z"/></g></g><g class="aq-arrow"><path fill="#FBC611" d="M602.2,179.0 598.5,181.0 597.0,185.5 605.2,209.5 606.8,212.2 607.0,215.2 604.5,217.0 593.2,219.0 590.5,220.0 588.2,220.0 585.5,221.0 583.2,221.0 581.2,222.2 581.2,223.5 583.8,227.5 586.0,235.2 586.0,238.5 585.0,241.2 585.0,245.5 583.0,253.8 583.5,254.5 588.5,253.8 612.2,246.0 617.2,245.5 618.0,246.8 619.0,255.5 621.0,262.2 621.0,265.5 622.0,268.2 623.2,276.2 626.0,279.2 629.5,279.8 632.8,278.2 649.2,259.0 687.2,216.8 690.2,212.0 690.5,208.5 686.8,204.5 674.2,200.8 664.5,197.2 661.2,196.8 651.5,193.2 648.2,192.8 619.5,183.2 616.2,182.8 604.5,179.0Z"/></g><path class="aq-sp aq-sp0" fill="#FBC611" d="M581.0,63.5 576.0,68.8 573.0,76.2 573.2,80.5 575.5,85.8 588.5,98.8 593.5,105.0 617.0,128.2 621.2,130.8 628.5,130.8 632.8,128.2 634.8,126.0 636.8,120.5 636.8,115.2 635.8,112.8 601.2,66.0 596.0,62.0 593.5,61.0 587.2,61.0Z"/><path class="aq-sp aq-sp1" fill="#FBC611" d="M687.5,4.0 680.2,4.0 674.0,6.5 669.8,10.2 667.0,13.8 665.0,20.2 665.0,38.5 664.0,41.2 664.0,72.5 663.0,75.2 663.0,93.5 664.2,97.5 666.5,101.8 668.8,103.8 675.2,106.8 681.5,106.8 685.2,105.5 688.8,103.2 691.2,100.8 693.8,95.5 694.8,91.5 694.8,87.2 695.8,84.5 695.8,78.2 696.8,75.5 696.8,70.2 697.8,67.5 697.8,61.2 698.8,58.5 698.8,52.2 699.8,49.5 699.8,42.2 700.8,39.5 700.8,33.2 701.8,30.5 701.8,17.2 700.2,13.0 696.0,8.5 693.0,6.0Z"/><path class="aq-sp aq-sp2" fill="#FBC611" d="M796.2,76.0 790.8,70.5 785.5,68.0 775.2,68.0 769.0,71.5 722.5,114.0 719.0,121.2 719.2,127.5 722.5,133.8 727.2,136.5 731.2,137.8 738.2,136.5 791.8,99.2 796.8,94.0 798.8,88.5 798.8,82.2Z"/><g class="aq-word"><path fill="#0554A4" fill-rule="evenodd" d="M134.2,744.0 127.0,746.5 124.0,748.5 120.5,752.0 117.2,759.2 116.0,766.5 119.0,776.0 125.0,782.2 129.2,784.5 133.2,785.8 142.5,785.8 150.0,782.8 156.2,776.8 158.5,773.2 159.8,769.5 159.8,760.2 156.2,753.0 150.0,747.0 142.5,744.0ZM80.2,744.0 76.2,745.2 70.8,748.0 67.5,751.0 63.5,757.8 62.0,763.2 62.0,767.5 65.0,776.0 71.0,782.2 75.2,784.5 79.2,785.8 88.5,785.8 96.0,782.8 101.8,777.5 105.8,769.5 105.8,761.2 102.8,753.8 96.8,747.5 92.5,745.2 88.5,744.0ZM820.8,633.2 819.8,630.5 819.8,626.2 815.5,612.2 811.8,604.8 809.2,601.0 801.0,592.5 792.0,586.0 784.5,582.2 772.5,578.2 769.2,578.0 766.5,577.0 760.2,577.0 757.5,576.0 747.2,576.0 744.5,577.0 738.2,577.0 735.5,578.0 732.2,578.0 722.2,581.2 715.5,584.2 706.0,590.5 696.5,600.0 692.0,606.8 689.2,612.2 686.0,624.2 686.0,629.5 685.0,632.2 685.0,636.5 686.0,639.2 686.0,643.5 688.2,651.5 691.0,657.0 695.8,664.0 694.2,665.0 658.2,665.0 655.5,664.0 652.2,664.0 646.0,661.5 643.8,659.0 641.8,654.5 641.5,592.5 639.5,591.0 635.2,591.0 632.5,590.0 610.2,590.0 600.8,593.0 599.0,594.8 598.0,597.2 598.0,654.5 595.5,659.8 593.8,661.5 590.0,663.5 584.2,664.0 581.5,665.0 538.2,665.0 532.8,663.8 532.0,662.5 541.2,652.8 544.8,648.0 549.5,638.5 551.8,630.5 551.8,613.2 548.5,602.2 545.2,597.0 539.0,590.5 533.0,586.0 525.5,582.2 513.5,578.2 503.5,576.0 500.2,576.0 497.5,575.0 490.2,575.0 487.5,574.0 467.2,574.0 464.5,575.0 457.2,575.0 454.5,576.0 450.2,576.0 447.5,577.0 440.2,578.0 431.2,580.2 419.2,584.2 412.8,587.0 409.0,589.5 406.5,593.0 404.0,601.2 404.0,623.5 406.0,631.5 407.0,632.8 413.8,637.2 424.5,647.8 436.2,661.8 436.2,663.2 435.0,664.0 432.2,664.0 429.5,665.0 378.2,665.0 375.5,664.0 370.2,663.8 364.0,660.5 362.0,657.5 360.8,653.5 360.5,592.0 359.0,591.0 355.2,591.0 352.5,590.0 339.8,589.5 338.5,590.0 330.2,590.0 325.2,591.2 320.8,593.0 318.2,595.5 318.0,653.5 315.5,659.8 311.5,662.8 307.5,664.0 303.2,664.0 300.5,665.0 275.2,665.0 269.8,663.5 266.0,661.5 263.2,657.8 261.8,653.5 261.8,647.2 260.8,644.5 260.8,633.2 261.8,630.5 261.8,595.2 260.8,590.8 258.5,589.2 249.5,586.2 226.5,581.0 222.2,581.0 219.5,580.0 212.2,580.0 209.5,579.0 199.2,579.0 196.5,580.0 190.2,580.0 180.2,582.2 171.2,585.2 165.8,588.0 156.8,594.5 148.5,603.0 146.0,606.8 141.2,616.2 139.0,623.2 139.0,625.5 138.0,628.2 138.0,646.5 141.2,658.5 149.0,674.2 149.0,681.5 146.5,686.8 143.8,689.5 138.5,692.8 127.5,696.0 124.2,696.0 121.5,697.0 100.2,697.0 97.5,696.0 93.2,695.8 84.2,692.8 78.0,689.5 70.2,682.8 65.0,674.5 61.8,663.5 61.8,642.2 62.8,639.5 64.0,631.2 67.8,619.5 67.8,617.8 66.8,616.2 62.5,615.0 59.2,615.0 56.5,614.0 36.2,614.0 28.2,616.2 22.8,619.0 19.8,621.5 14.0,628.8 10.2,638.2 10.0,641.5 9.0,644.2 9.0,649.5 8.0,652.2 8.0,667.5 9.0,670.2 9.0,674.5 11.2,684.5 15.2,695.5 20.0,704.0 23.5,708.8 32.8,718.2 44.8,726.8 55.2,731.5 67.2,735.5 76.2,737.8 79.5,737.8 82.2,738.8 86.5,738.8 89.2,739.8 129.5,739.8 132.2,738.8 137.5,738.8 140.2,737.8 142.5,737.8 151.5,735.5 167.0,729.8 178.8,722.2 185.2,716.0 191.8,707.0 195.8,697.5 198.8,684.5 198.8,673.2 196.8,664.2 190.8,651.8 185.8,642.5 185.8,636.2 187.8,631.8 191.0,628.2 194.8,626.2 200.2,624.8 209.5,624.8 211.8,625.8 213.0,627.5 213.0,667.5 214.0,670.2 214.0,674.5 217.2,685.5 220.0,691.0 224.5,697.0 231.0,703.2 234.8,705.8 242.2,709.5 253.2,712.8 256.5,712.8 259.2,713.8 306.5,713.8 309.2,712.8 312.5,712.8 324.5,709.5 334.0,704.8 338.5,701.0 340.8,701.2 346.8,705.8 354.2,709.5 365.2,712.8 369.5,712.8 372.2,713.8 431.5,713.8 434.2,712.8 439.5,712.8 442.2,711.8 445.5,711.8 448.2,710.8 455.5,709.8 472.5,704.5 476.2,702.8 479.0,703.2 486.2,706.5 496.2,709.8 498.5,709.8 506.2,711.8 509.5,711.8 512.2,712.8 518.5,712.8 521.2,713.8 587.5,713.8 590.2,712.8 593.5,712.8 607.5,708.5 620.2,700.5 621.2,700.8 625.0,704.2 632.2,708.5 646.2,712.8 649.5,712.8 652.2,713.8 779.5,713.8 791.5,710.5 800.8,705.2 810.2,695.8 813.8,690.0 818.5,677.5 818.8,674.2 819.8,671.5 819.8,667.2 820.8,664.5ZM738.8,620.8 745.2,618.0 753.2,617.0 761.5,619.0 766.8,622.2 768.5,624.0 770.5,627.0 772.5,631.8 774.0,638.2 774.0,654.5 772.5,659.8 769.8,662.5 760.5,665.0 755.2,665.0 752.5,664.0 749.2,664.0 745.2,662.8 739.8,660.0 734.2,654.8 731.2,649.0 729.8,643.5 729.8,635.2 732.2,628.0 734.2,625.0ZM452.0,619.8 454.2,618.8 456.5,618.8 464.2,616.8 472.5,616.8 475.2,615.8 481.5,615.8 484.2,616.8 489.5,616.8 492.2,617.8 494.5,617.8 500.8,620.2 505.5,625.0 507.0,629.5 504.5,636.8 499.5,643.8 495.8,647.5 488.0,653.0 483.0,655.5 480.5,655.8 478.2,653.8 459.2,630.0 451.5,622.0 451.2,620.8ZM616.2,526.0 613.5,527.0 610.2,527.2 605.8,529.0 602.0,531.5 598.5,535.0 595.2,541.2 594.0,546.2 594.0,550.5 595.5,556.0 597.0,559.0 603.0,565.2 610.2,568.5 620.5,569.8 623.2,568.8 626.5,568.5 633.0,565.8 639.2,559.8 641.5,555.5 642.8,551.5 642.8,544.2 639.8,536.8 633.8,530.5 626.5,527.2 623.2,527.0 620.5,526.0ZM336.2,526.0 327.2,528.2 319.5,533.0 316.0,537.8 314.2,542.2 314.0,552.5 316.0,558.0 321.0,564.2 324.5,566.5 330.2,568.5 333.5,568.8 336.2,569.8 339.5,569.8 342.2,568.8 345.5,568.8 351.2,566.5 356.2,562.8 359.8,558.0 361.5,553.5 361.8,543.2 359.8,537.8 354.8,531.5 345.5,527.2 342.2,527.0 339.5,526.0ZM774.2,523.0 770.2,524.2 763.0,528.5 759.5,533.0 757.0,539.2 757.0,548.5 758.2,552.5 761.5,557.8 766.8,561.8 773.2,564.8 783.5,564.8 791.0,561.8 797.2,555.8 799.5,551.5 800.8,547.5 800.8,541.2 798.8,534.8 796.2,531.0 792.8,527.5 787.5,524.2 783.5,523.0ZM720.2,523.0 716.2,524.2 711.2,527.0 705.0,533.8 703.0,539.2 703.0,549.5 706.5,556.8 711.8,561.8 719.2,564.8 729.5,564.8 737.0,561.8 742.8,556.0 745.2,551.0 746.8,544.5 745.8,538.2 742.2,531.0 738.8,527.5 735.0,525.0 728.5,523.0ZM653.2,430.8 655.2,432.8 726.8,479.8 735.2,483.8 738.5,483.8 741.2,481.8 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 733.2,431.8 731.2,430.0 654.8,430.0ZM496.5,430.5 497.2,431.5 503.2,433.5 516.2,436.8 519.5,436.8 522.2,437.8 526.5,437.8 529.2,438.8 537.5,438.8 540.2,439.8 569.5,439.8 572.2,438.8 585.5,438.8 588.2,437.8 597.5,437.8 600.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 641.5,432.8 643.8,431.8 649.2,431.0 648.8,430.2 499.0,430.0Z"/><path fill="#DE0921" fill-rule="evenodd" d="M896.5,524.0 892.2,524.0 889.5,523.0 873.2,523.0 865.2,525.2 859.0,528.5 855.5,532.0 854.2,534.2 852.0,542.2 852.0,711.5 854.2,713.8 861.5,713.8 864.2,714.8 875.5,714.8 878.2,713.8 881.5,713.8 888.5,711.5 890.8,710.2 896.2,704.8 899.8,697.5 899.8,526.5 898.8,525.0ZM904.8,446.0 897.5,444.0 878.2,444.0 869.2,446.0 863.2,448.2 855.0,453.5 852.5,456.0 848.5,462.0 846.0,469.2 846.0,478.5 850.0,489.0 846.5,490.8 841.2,491.0 838.8,492.0 837.0,493.8 836.0,496.2 836.0,507.5 837.5,511.8 840.2,513.8 847.5,513.8 850.2,512.8 855.5,512.8 858.2,511.8 863.5,511.8 866.2,510.8 871.5,510.8 874.2,509.8 880.5,509.8 883.2,508.8 888.5,508.8 891.2,507.8 897.5,507.8 900.2,506.8 904.5,506.8 910.2,505.5 911.8,503.5 911.8,493.2 910.2,487.8 908.8,485.5 905.5,484.0 903.2,484.0 900.5,485.0 893.2,485.0 890.5,486.0 879.0,486.2 875.0,484.5 872.8,482.0 871.8,479.5 872.2,472.8 875.8,468.8 878.8,467.2 884.2,465.8 891.5,465.8 894.2,466.8 896.5,466.8 899.8,465.2 902.2,462.8 903.8,459.5 905.8,450.5 905.8,447.5Z"/></g></svg>`;
 /* =====================================================================
-   ⚙️ الإعدادات القابلة للتعديل — كل الأرقام هنا مؤقتة وغير متفق عليها
-   عدّل من هذا المكان فقط: الميزانية، الأسعار، النقاط، حدود العدادات.
+   أقنعني — طبقة الغرف (أونلاين): كل لاعب على تلفونه، والمضيف يتحكم.
+   نفس فكرة باقي الألعاب: إنشاء غرفة، انضمام برمز أو رابط دعوة، تنويه،
+   قفل فترة التجربة، القائمة، نقل الاستضافة، ورجوع المضيف للمرحلة السابقة.
    ===================================================================== */
-const CONFIG = {
-  currency: 'KD',               // افتراض: العملة
-  startCapital: 100,             // افتراض: رأس المال (للمواد والمزايا)
-  shoppingWallet: 50,            // افتراض: محفظة التسوق (منفصلة، للشراء من المتاجر)
-  designsCount: 5,               // متفق عليه: ٥ تصاميم
-  maxFabricColors: 2,            // متفق عليه: لونين خام
-  maxFabricTypes: 2,             // متفق عليه: نوعين خام
-  prices: {                      // افتراض: كل الأسعار مؤقتة
-    clothingType: 8,             // سعر كل نوع ملابس
-    fabricColor: 4,              // سعر كل لون خامة
-    fabricType: 5,               // سعر كل نوع خامة
-    storeBg: 6,                  // لون خلفية المتجر
-    storeBorder: 4,              // لون إطار المتجر
-    perk: 10                     // سعر كل ميزة (موحّد مؤقتًا)
-  },
-  salePrice: { min: 1, max: 20, def: 5 },   // افتراض: سعر بيع التصميم يحدده اللاعب
-  saleRevenueTo: 'capital',      // افتراض: فلوس المبيعات تنضاف لرأس المال
-  extraTimeSec: 30,              // افتراض: مقدار ميزة الوقت الإضافي
-  discountMax: 50,               // افتراض: أقصى نسبة تنزيلات
-  brandNameMax: 24,
-  brandDescMax: 120,             // افتراض: طول وصف البراند
-  timer: { min: 30, max: 300, step: 30 },   // متفق عليه: من ٣٠ ثانية لين ٥ دقايق
-  limits: {
-    players: [3, 25],
-    talkRounds: [1, 5],          // افتراض: أقصى عدد جولات
-    speakers: [1, 5],            // متفق عليه: من ١ إلى ٥
-    shopRounds: [1, 5]           // افتراض: أقصى عدد جولات
-  },
-  defaults: {
-    players: 5, buyTime: 120, designTime: 300, buildTime: 120,
-    talkRounds: 1, speakers: 2, talkTime: 60,
-    shopRounds: 2, shopTime: 90, voteTime: 60
-  },
-  // متفق عليه: خمس فئات × ٢٠ نقطة = ١٠٠
-  categories: [
-    { id:'capital',   icon:'💰', name:'Capital',      points:20, hint:'Highest remaining capital',              metric:p=>p.capital },
-    { id:'wallet',    icon:'👛', name:'Shopping wallet',   points:20, hint:'Highest remaining balance (assumption)',         metric:p=>p.wallet },
-    { id:'creative',  icon:'✨', name:'Creativity',         points:20, hint:'Best designer & best design — by vote', metric:p=>p.votes },
-    { id:'purchases', icon:'🛍️', name:'Most purchases',   points:20, hint:'Most pieces sold from the store',        metric:p=>p.sales },
-    { id:'visits',    icon:'🚶', name:'Most visits',    points:20, hint:'Most store visits',               metric:p=>p.visits }
-  ],
-  tieRule: 'split',              // افتراض: التعادل يقسم النقاط
-  zeroNoAward: true              // افتراض: إذا أعلى قيمة صفر ما أحد ياخذ نقاط الفئة
-};
+const L = (ar, en) => LANG === 'ar' ? ar : en;
+const N = o => (o && typeof o === 'object') ? (o[LANG] ?? o.ar) : o;
+const ART_URL = location.origin + location.pathname;
+const LSK_ = () => 'aqnieni.' + GAME.key + '.v1';
+const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const app = document.getElementById('app');
 
-// المزايا المسجلة للنقاش — كلها تجريبية وتفاصيلها غير نهائية
-const PERKS = [
-  {id:'expand',    icon:'🏬', name:'Store expansion',           desc:'More space for your store.'},
-  {id:'location',  icon:'📍', name:'Prime location',       desc:'A standout spot in the market.'},
-  {id:'sale',      icon:'🏷️', name:'Player-set sale',  desc:'Set a discount on your designs.', live:true},
-  {id:'fineSell',  icon:'🚫', name:'Sales fine',             desc:'A fine on a rival’s sales.'},
-  {id:'fineShow',  icon:'⛔', name:'Display fine',             desc:'A fine on a rival’s display.'},
-  {id:'extraTime', icon:'⏱️', name:'Extra pitch time',      desc:'More time when you speak.', live:true},
-  {id:'taste',     icon:'🔍', name:'Customer taste scan',        desc:'Learn what customers like.'},
-  {id:'protect',   icon:'🛡️', name:'Store protection',           desc:'Protection from fines.'},
-  {id:'exclusive', icon:'💎', name:'Exclusive fabric',             desc:'A fabric nobody else has.'},
-  {id:'vip',       icon:'👑', name:'Virtual VIP customer',       desc:'A special virtual customer.'}
-];
+let db = null, ME_ID = null, G = null, ME = null, INP = {};
+let skew = null, hostOn = false, unsubRoom = null, unsubInp = null, hostTick = null, seq = 0;
+const U = { splash: true, ready: false, view: 'home', modal: null, draft: {}, err: '', lastKey: '', lastHtml: '',
+  code: '', name: '', busy: false, offline: '', fromLink: false, notice: false, logN: -1, logG: -1 };
 
-const CLOTHES = [
-  {id:'shirt',  name:'Shirt',   zone:'top'},
-  {id:'jacket', name:'Jacket',  zone:'outer'},
-  {id:'pants',  name:'Trousers', zone:'bottom'},
-  {id:'skirt',  name:'Skirt',  zone:'bottom'},
-  {id:'dress',  name:'Dress',  zone:'full'},
-  {id:'abaya',  name:'Abaya',  zone:'outer'},
-  {id:'scarf',  name:'Scarf',   zone:'acc'},
-  {id:'bag',    name:'Bag',  zone:'acc'}
-];
-const ZORDER = {full:0, bottom:1, top:2, outer:3, acc:4};
-
-const COLORS = [
-  {id:'black', name:'Black',  hex:'#1d1d1f'},
-  {id:'white', name:'White',  hex:'#f7f5f0'},
-  {id:'beige', name:'Beige',   hex:'#d9c4a3'},
-  {id:'red',   name:'Red',  hex:'#c81d25'},
-  {id:'navy',  name:'Navy',  hex:'#1f2a5a'},
-  {id:'olive', name:'Olive',  hex:'#5d6b2f'},
-  {id:'pink',  name:'Pink',  hex:'#e9a3b8'},
-  {id:'gold',  name:'Gold',  hex:'#c9a227'},
-  {id:'purple',name:'Purple',hex:'#7b2fbe'},
-  {id:'sky',   name:'Sky', hex:'#80c7e8'}
-];
-
-// أنواع الخامات (القائمة مؤقتة)
-const FABRICS = [
-  {id:'cotton', name:'Cotton'}, {id:'silk', name:'Silk'}, {id:'leather', name:'Leather'}, {id:'velvet', name:'Velvet'},
-  {id:'denim', name:'Denim'}, {id:'wool', name:'Wool'}, {id:'linen', name:'Linen'}, {id:'chiffon', name:'Chiffon'}
-];
-
-const PATTERNS = [
-  {id:'plain', name:'Plain'}, {id:'stripe', name:'Striped'},
-  {id:'dots',  name:'Dotted'}, {id:'check',  name:'Checked'}
-];
-
-// بيانات وهمية للتجربة
-const BOT_NAMES = ['Noura','Fahad','Maryam','Yousef','Sara','Khaled','Dana','Abdullah','Reem','Bader','Haya','Nasser','Lulwa','Hamad','Shahad','Saud','Alanoud','Meshari','Joud','Talal','Ghala','Rashed','Munira','Salman'];
-const BRANDS = ['Dar Lujain','Atelier Sama','House of Silk','Nuqta','Golden Thread','Lamsa','Mirror','Wishah','Ghaima','Naseem','Lulu','Velvet','Yasmine','Dhil','Qutn','Sidra','Emerald','Kohl','Feather','Coral','Turquoise','Naqsh','Morning Silk','Itr'];
-const DESCS = ['Simple everyday pieces in calm colours.','Luxury in the small details.','Bold style for a different taste.','Timeless classics.','All of summer’s colours in one store.','Comfortable designs for every occasion.'];
-
-const ASSUMPTIONS = [
-  'The purple colour is temporary.',
-  'Currency “KD”, capital 100 and shopping wallet 50 — temporary numbers.',
-  'All prices are temporary: clothing type 8, fabric colour 4, fabric type 5, store background 6, store frame 4, each perk 10.',
-  'Fabrics: up to two colours and two types (one is enough). The fabric list is temporary.',
-  'All perks are trial only. Active for testing: “Extra time” (+30 s once) and “Sale” (player-set, up to 50%). The rest show with no effect.',
-  'Patterns (plain, striped, dotted, checked) are free while designing.',
-  'Each design = a main piece + an optional extra piece.',
-  'Players set each design’s price from 1 to 20.',
-  'Sales money is added to capital.',
-  'A visit counts once per visitor per store per shopping round.',
-  'Each player buys a design only once, and can’t buy from their own store.',
-  '“Shopping wallet” goes to the highest remaining balance.',
-  'Voting: one vote each for the most creative designer (designer + designs); no self-votes.',
-  'Ties split the points; if the top value is zero nobody gets them.',
-  'Speakers are picked at random, no repeats until everyone has spoken.',
-  'When time runs out the game doesn’t move on by itself; the host presses “End”.',
-  'Refunds are allowed during the buying time.',
-  'Store colour: one background and one frame; changing them during buying refunds the old colour.',
-  'Unfinished designs show empty in the store.',
-  'This prototype runs on one device: you are host and player, the rest are mock players. Host-only mode and rooms come with the online version.',
-  '“Back” only goes back a screen; it doesn’t undo what mock players did.',
-];
-
-/* ============================ أدوات ============================ */
+/* ---------- أدوات ---------- */
 const $ = id => document.getElementById(id);
-const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
-const pick = a => a[Math.floor(Math.random()*a.length)];
-const shuffle = a => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
-const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const money = v => `${Math.round(v*100)/100} ${CONFIG.currency}`;
-const fmt = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
-const colorHex = id => (COLORS.find(c=>c.id===id)||{hex:'#ddd'}).hex;
-const fabric = id => FABRICS.find(f=>f.id===id) || {name:'—'};
-const colorName = id => (COLORS.find(c=>c.id===id)||{name:'—'}).name;
-const cloth = id => CLOTHES.find(c=>c.id===id);
-const perk = id => PERKS.find(k=>k.id===id);
-const isLight = hex => { const n=parseInt(hex.slice(1),16); const r=n>>16,g=(n>>8)&255,b=n&255; return (r*299+g*587+b*114)/1000 > 150; };
-const pts = v => (Math.round(v*10)/10).toString();
-const me = () => S.players[0];
-const finalPrice = (p,d) => p.discount ? Math.max(1, Math.round(d.price*(1-p.discount/100))) : d.price;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const clone = o => JSON.parse(JSON.stringify(o));
+const uid = p => p + (++seq) + Math.random().toString(36).slice(2, 7);
+const shuffle = a => { const r = a.slice(); for (let i = r.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [r[i], r[j]] = [r[j], r[i]]; } return r; };
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const fmt = s => { s = Math.max(0, Math.ceil(s)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const P = id => (G && (G.players.find(p => p.id === id) || (G.hostP && G.hostP.id === id && G.hostP))) || { id, name: L('لاعب', 'Player') };
+const inRoom = id => !!(G && G.players.some(p => p.id === id));
+const isHost = () => !!(G && ME_ID && G.host === ME_ID);
+const nowH = () => (isHost() ? Date.now() : Date.now() - (skew || 0));
+const inp = id => (id === ME_ID ? ME : INP[id]) || {};
+const amPlayer = () => inRoom(ME_ID);
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2800); }
+function lsGet() { try { return JSON.parse(localStorage.getItem(LSK_()) || '{}') || {}; } catch (e) { return {}; } }
+function lsSet(o) { try { localStorage.setItem(LSK_(), JSON.stringify(Object.assign(lsGet(), o))); } catch (e) { } }
 
-function toast(msg){
-  const t=document.createElement('div'); t.className='toast'; t.textContent=msg;
-  document.body.appendChild(t); setTimeout(()=>t.remove(),2200);
+/* ---------- قفل فترة التجربة ---------- */
+const isGuest = () => { try { return localStorage.getItem('aqnieni.guest') === '1'; } catch (e) { return false; } };
+const markGuest = () => { try { localStorage.setItem('aqnieni.guest', '1'); } catch (e) { } document.documentElement.classList.add('aqguest'); };
+if (isGuest()) document.documentElement.classList.add('aqguest');
+const lockCard = () => `<section class="card" style="text-align:center"><h3>${L('فترة تجريبية', 'Trial period')}</h3><p class="sub">${L('ادخل عن طريق رابط الدعوة من المضيف.', 'Join using the host’s invite link.')}</p></section>`;
+
+/* ---------- التخزين ---------- */
+const roomPath = c => GAME.key + '/' + c;
+const inpPath = (c, id) => GAME.key + '/' + c + '/inputs/' + id;
+let pubBusy = false, pubDirty = false, pubT = null;
+function publish() { if (!isHost() || !db) return; clearTimeout(pubT); pubT = setTimeout(flushRoom, 40); }
+async function flushRoom() {
+  if (!isHost() || !db) return;
+  if (pubBusy) { pubDirty = true; return; }
+  pubBusy = true;
+  try { G.rev = (G.rev || 0) + 1; G.sentAt = Date.now(); await db.doc(roomPath(G.code)).set(clone(G)); U.offline = ''; }
+  catch (e) { writeFailed(e); }
+  pubBusy = false;
+  if (pubDirty) { pubDirty = false; flushRoom(); }
+}
+async function flushDirect() { try { G.rev = (G.rev || 0) + 1; G.sentAt = Date.now(); await db.doc(roomPath(G.code)).set(clone(G)); } catch (e) { writeFailed(e); } }
+let meBusy = false, meDirty = false, meT = null;
+function saveMeSoon() { clearTimeout(meT); meT = setTimeout(saveMe, 350); }
+async function saveMe() {
+  if (!db || !ME || !U.code) return;
+  if (meBusy) { meDirty = true; return; }
+  meBusy = true;
+  try { await db.doc(inpPath(U.code, ME_ID)).set(clone(ME)); U.offline = ''; } catch (e) { writeFailed(e); }
+  meBusy = false;
+  if (meDirty) { meDirty = false; saveMe(); }
+  if (isHost()) hostStep();
+}
+function writeFailed() { U.offline = 'net'; toast(L('تعذر الحفظ، تأكد من الاتصال.', 'Couldn’t save — check your connection.')); render(); }
+
+/* ---------- دورة الغرفة ---------- */
+function freshRoom(code) {
+  return Object.assign({ v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {},
+    settings: clone(GAME.defaults), log: [], hostP: null }, GAME.freshExtra ? GAME.freshExtra() : {});
+}
+function blankMe(code) { return { room: code, name: U.name.trim(), at: Date.now(), reqN: 0, reqs: [] }; }
+function mine() { ME = ME || blankMe(U.code); if (G && ME.g !== G.gameNo) { GAME.resetMine && GAME.resetMine(ME); ME.g = G.gameNo; } return ME; }
+async function subscribe(code) {
+  unsubscribe();
+  U.code = code;
+  try { location.hash = 'room-' + code; } catch (e) { }
+  lsSet({ code });
+  const loading = setTimeout(() => { if (!G) { U.offline = 'net'; render(); } }, 10000);
+  unsubRoom = db.doc(roomPath(code)).onSnapshot(s => { clearTimeout(loading); onRoomSnap(s); }, () => { clearTimeout(loading); U.offline = 'net'; render(); });
+}
+function unsubscribe() {
+  if (unsubRoom) { try { unsubRoom(); } catch (e) { } unsubRoom = null; }
+  if (unsubInp) { try { unsubInp(); } catch (e) { } unsubInp = null; }
+  if (hostTick) { clearInterval(hostTick); hostTick = null; }
+  hostOn = false; INP = {};
+}
+function onRoomSnap(s) {
+  if (!s || !s.exists) { if (!G) { U.err = L('ما لقينا غرفة بهذا الرمز. تأكد من الرمز.', 'No room with that code. Check the code.'); leaveLocal(); render(); } return; }
+  const d = s.data();
+  if (!d || d.code !== U.code) return;
+  if (d.sentAt && d.host !== ME_ID) { const o = Date.now() - d.sentAt; if (skew === null || o < skew) skew = o; }
+  if (hostOn && G && G.host === ME_ID) {
+    if (d.host !== ME_ID && d.rev > G.rev) { hostOn = false; G = clone(d); stopHost(); } else return;
+  } else {
+    if (G && G.code === d.code && (d.rev || 0) < (G.rev || 0)) return;
+    G = clone(d);
+  }
+  if (G.host === ME_ID && !hostOn) becomeHost();
+  decideView(); showLog(); render();
+}
+function decideView() {
+  if (!G) return;
+  if (inRoom(ME_ID) || (G.host === ME_ID)) U.view = 'game';
+  else if (G.kicked && G.kicked[ME_ID]) U.view = 'kicked';
+  else if (G.phase === 'lobby') U.view = ME && ME.room === G.code && ME.name ? 'wait' : 'join';
+  else U.view = 'spect';
+}
+async function loadMe(code) {
+  try { const s = await db.doc(inpPath(code, ME_ID)).get(); ME = s.exists ? clone(s.data()) : null; } catch (e) { ME = null; }
+  if (ME && ME.room !== code) ME = null;
+}
+function becomeHost() {
+  hostOn = true;
+  if (unsubInp) { try { unsubInp(); } catch (e) { } }
+  unsubInp = db.collection(GAME.key + '/' + G.code + '/inputs').onSnapshot(onInputs, () => { });
+  if (!hostTick) hostTick = setInterval(() => { if (GAME.hostTick && GAME.hostTick()) publish(); }, 500);
+  publish();
+}
+function stopHost() {
+  if (unsubInp) { try { unsubInp(); } catch (e) { } unsubInp = null; }
+  if (hostTick) { clearInterval(hostTick); hostTick = null; }
+  INP = {};
+}
+function onInputs(snap) { const m = {}; snap.docs.forEach(d => { if (d.exists) m[d.id] = d.data(); }); INP = m; hostStep(); }
+function leaveLocal() {
+  unsubscribe();
+  G = null; ME = null; U.code = ''; U.view = 'home'; U.modal = null; skew = null; HIST.length = 0;
+  lsSet({ code: '' });
+  try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { try { location.hash = ''; } catch (e2) { } }
+}
+function uniqueName(n, id) {
+  let base = String(n || '').trim().slice(0, 20) || L('لاعب', 'Player'), name = base, k = 2;
+  while (G.players.some(p => p.id !== id && p.name === name)) name = base + ' ' + (k++);
+  return name;
 }
 
-/* ============================ رسم الأزياء ============================ */
+/* ---------- المضيف: الانضمام والطلبات ---------- */
+function hostStep() {
+  if (!isHost() || !G) return;
+  let ch = false;
+  Object.keys(INP).forEach(id => {
+    const d = INP[id];
+    if (!d || id === ME_ID) return;
+    const p = G.players.find(x => x.id === id);
+    if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
+    if (d.room !== G.code) return;
+    if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 26) { G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true; }
+    else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
+  });
+  Object.keys(INP).forEach(id => {
+    if (id === ME_ID || !inRoom(id)) return;
+    (INP[id].reqs || []).forEach(r => {
+      if (!r || !(r.n > (G.reqSeen[id] || 0))) return;
+      G.reqSeen[id] = r.n; ch = true;
+      try { GAME.applyReq(id, r); } catch (e) { console.error(e); }
+    });
+  });
+  if (GAME.hostSync && GAME.hostSync()) ch = true;
+  if (ch) publish();
+  render();
+}
+function sendReq(r) {
+  if (isHost()) { try { GAME.applyReq(ME_ID, r); } catch (e) { console.error(e); } publish(); render(); return; }
+  const m = mine(); m.reqN = (m.reqN || 0) + 1; r.n = m.reqN; m.reqs = (m.reqs || []).concat([r]).slice(-40);
+  saveMe(); render();
+}
+function addLog(text) { G.log = (G.log || []).concat([{ n: (G.log && G.log.length ? G.log[G.log.length - 1].n : 0) + 1, t: text }]).slice(-20); }
+function showLog() {
+  if (!G || !G.log || !G.log.length) return;
+  const last = G.log[G.log.length - 1].n;
+  if (U.logG !== G.gameNo || U.logN < 0) { U.logG = G.gameNo; U.logN = last; return; }
+  G.log.filter(x => x.n > U.logN).forEach(x => toast(x.t));
+  U.logN = last;
+}
+
+/* ---------- المؤقت (المضيف يحدده) ---------- */
+function setTimer(sec) { G.dur = sec || 0; G.endsAt = sec ? Date.now() + sec * 1000 : 0; }
+const remain = () => (G && G.endsAt ? Math.max(0, (G.endsAt - nowH()) / 1000) : 0);
+function clockBox(label) {
+  return `<div class="timer" id="timerBox"><div class="trow"><span class="tlabel">⏳ ${label}</span><span class="tval" data-clock></span></div><div class="tbar"><i data-bar></i></div></div>`;
+}
+function tickUI() {
+  if (!G || !G.endsAt) return;
+  const r = remain(), d = G.dur || 1;
+  document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = r > 0 ? fmt(r) : L('انتهى الوقت ⏰', 'Time’s up ⏰'); });
+  document.querySelectorAll('[data-bar]').forEach(el => { el.style.width = Math.min(100, r / d * 100) + '%'; });
+  const tb = $('timerBox'); if (tb) tb.classList.toggle('timeup', r <= 0);
+  const eb = $('endBtn'); if (eb) eb.classList.toggle('pulse', r <= 0);
+}
+setInterval(tickUI, 250);
+const endBtn = (label, act) => isHost() ? `<button class="btn end" id="endBtn" data-act="${act}">${L('إنهاء', 'End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>` : '';
+const waitHost = () => isHost() ? '' : `<p class="sub" style="text-align:center">${L('بانتظار المضيف', 'Waiting for the host')} ${esc(P(G.host).name)} ${L('ينقل اللعبة للمرحلة الجاية…', 'to move to the next stage…')}</p>`;
+
+/* ---------- رجوع المضيف للمرحلة السابقة ---------- */
+const HIST = [];
+function phaseTo(fn) { HIST.push(clone(G)); if (HIST.length > 15) HIST.shift(); fn(); }
+function hostBack() {
+  if (!isHost() || !HIST.length) return;
+  const prev = HIST.pop(), keepRev = G.rev, players = G.players;
+  G = prev; G.rev = keepRev; G.players = players; G.host = ME_ID;
+  publish();
+}
+
+/* ---------- الشاشات المشتركة ---------- */
+const BACK = L('→ رجوع', '← Back');
+function topbar() {
+  const inG = !!G && !!U.code;
+  const back = inG && isHost() && HIST.length && G.phase !== 'lobby' ? `<button class="backbtn" data-act="askBack">${BACK}</button>` : '';
+  return `<header class="top">${back}<div class="brand"><b>${L('أقنعني!', 'Aqnieni!')}</b><span>${N(GAME.name)}</span></div><div class="top-r">` +
+    (inG ? `<span class="chip">${L('غرفة', 'Room')} <b dir="ltr">${esc(U.code)}</b></span><button class="mini" data-act="menu">${L('القائمة', 'Menu')}</button>` : '') + `</div></header>` +
+    (U.offline === 'net' ? `<div class="warn">${L('الاتصال ضعيف. التحديثات بتوصل أول ما يرجع الاتصال.', 'Weak connection. Updates will arrive when it’s back.')}</div>` : '');
+}
+const errBox = () => (U.err ? `<div class="warn" role="alert">${esc(U.err)}</div>` : '');
+function noticeView() {
+  return `<section class="notice"><div class="nbox"><h2>${L('تنويه ودي قبل اللعب', 'A friendly note before you play')}</h2>` +
+    L(`<p>يا هلا فيكم! هذي نسخة تجريبية من لعبة «أقنعني» بفروعها: المنصة، المزاد، الرئيس، الأزياء، العقار، من فكرة وتطوير عبدالرحمن الفهد، بتاريخ 26/11/26.</p><p>حبيت أشارككم التجربة قبل نشرها للناس، والهدف نستانس ونجرّبها مع بعض. حقوق محتوى اللعبة وتصميمها وموادها محفوظة، وأتمنى ما تنسخونها أو تعيدون نشرها أو تسوّون نسخة مشابهة منها حتى مع تغييرات بسيطة. وأي استخدام لمحتواها بدون إذن قد يضطرني لاتخاذ الإجراءات المناسبة.</p><p>استمتعوا، وملاحظاتكم تهمني!</p>`,
+      `<p>Welcome, everyone! This is a trial version of “Aqnieni” and its games: ALMANASSA, ALMAZAD, ALRAEES, ALAZYAA and ALAQAR, created and developed by Abdulrahman Al-Fahad, dated 26/11/26.</p><p>I wanted to share it with you before releasing it to the public, so we can have fun and try it together. All rights to the game’s content, design and materials are reserved. Please don’t copy it, republish it, or make a similar version of it, even with small changes. Any use of its content without permission may force me to take appropriate action.</p><p>Enjoy, and your feedback matters to me!</p>`) +
+    `<button class="nbtn" data-act="noticeOk">${L('أوعدك، يلا نلعب', 'I promise, let’s play')}</button></div></section>`;
+}
+function splashView() {
+  return `<a class="backbtn aqfix" href="${HUB}">${BACK}</a><div class="intro"><div class="logo">${LOGO}</div><div class="gname">${N(GAME.name)}</div>
+  <p class="lead">${N(GAME.intro)}</p><button class="btn" data-act="enter">${L('فهمت', 'Got it')}</button></div>`;
+}
+function homeView() {
+  if (!U.ready) return `<section class="card"><p class="sub">${L('جاري التحميل…', 'Loading…')}</p></section>`;
+  if (!db) return `<section class="card"><p class="sub">${L('تعذر الاتصال. تأكد من الإنترنت وحدّث الصفحة.', 'Couldn’t connect. Check your internet and refresh.')}</p></section>`;
+  const me = `<section class="card"><h3>${L('اسمك أو لقبك', 'Your name or nickname')}</h3><input class="field" id="nm" data-bind="name" value="${esc(U.name)}" maxlength="20" autocomplete="off" placeholder="${L('مثال: أبو فهد', 'e.g. Captain Fahad')}"></section>`;
+  const join = `<section class="card"><h3>${L('انضم لغرفة', 'Join a room')}</h3><input class="field code-in" id="cd" data-bind="code" value="${esc(U.draft.code || '')}" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="${L('مثال: K7QX', 'e.g. K7QX')}" dir="ltr">
+    <button class="btn ${U.fromLink ? '' : 'ghost'}" data-act="join">${L('انضمام', 'Join')}</button></section>`;
+  const host = `<section class="card"><h3>${L('أو أنشئ غرفة جديدة', 'Or create a new room')}</h3><p class="sub">${L('تكون أنت المضيف: تبدأ اللعبة وتنقلها بين المراحل، وباقي اللاعبين يدخلون برمز الغرفة من تلفوناتهم.', 'You’ll be the host: you start the game and move it between stages; the others join with the room code from their phones.')}</p>
+    <button class="btn" data-act="create">${L('إنشاء غرفة', 'Create room')}</button></section>`;
+  return `<section class="card" style="text-align:center"><div class="gname sm">${N(GAME.name)}</div><p class="sub">${L('كل لاعب على تلفونه.', 'Everyone on their own phone.')}</p></section>` +
+    me + errBox() + (U.fromLink ? join : (isGuest() ? lockCard() : host + join));
+}
+function joinView() {
+  return `<section class="card" style="text-align:center"><span class="sub">${L('تنضم إلى الغرفة', 'Joining room')}</span><div class="bigcode" dir="ltr">${esc(U.code)}</div></section>
+  <section class="card"><h3>${L('اسمك أو لقبك', 'Your name or nickname')}</h3><input class="field" id="nm" data-bind="name" value="${esc(U.name)}" maxlength="20" autocomplete="off"></section>${errBox()}
+  <button class="btn" data-act="sendJoin">${L('دخول الغرفة', 'Enter the room')}</button><button class="btn ghost" data-act="leaveNow">${L('رجوع', 'Back')}</button>`;
+}
+const waitView = () => `<section class="card" style="text-align:center"><div class="spin"></div><h3>${L('بانتظار المضيف', 'Waiting for the host')}</h3><p class="sub">${L('أرسلنا اسمك للغرفة', 'We sent your name to room')} ${esc(U.code)}. ${L('بتظهر في قائمة اللاعبين خلال ثواني.', 'You’ll appear in the player list in a few seconds.')}</p></section><button class="btn ghost" data-act="leaveNow">${L('إلغاء والخروج', 'Cancel and leave')}</button>`;
+const spectView = () => `<section class="card" style="text-align:center"><h3>${L('اللعبة بدأت', 'The game has started')}</h3><p class="sub">${L('هذه الغرفة بدأت اللعب بدونك. تقدر تنضم لما يرجع المضيف للردهة.', 'This room started without you. You can join when the host returns to the lobby.')}</p><button class="btn" data-act="leaveNow">${L('خروج', 'Leave')}</button></section>`;
+const kickedView = () => `<section class="card" style="text-align:center"><h3>${L('خرجت من الغرفة', 'You left the room')}</h3><p class="sub">${L('المضيف أزالك من هذه الغرفة.', 'The host removed you from this room.')}</p><button class="btn" data-act="leaveNow">${L('رجوع', 'Back')}</button></section>`;
+
+const stp = (k, min, max, show) => { const v = G.settings[k]; return `<div class="row"><span>${show.label}</span><div class="stepper"><button data-act="step" data-k="${k}" data-v="1" ${v >= max ? 'disabled' : ''}>+</button><span class="v">${show.fmt ? show.fmt(v) : v}</span><button data-act="step" data-k="${k}" data-v="-1" ${v <= min ? 'disabled' : ''}>−</button></div></div>`; };
+const timeRow = (k, label) => stp(k, GAME.timer.min, GAME.timer.max, { label, fmt });
+function lobbyView() {
+  const s = G.settings, host = isHost(), link = ART_URL + '#room-' + G.code;
+  const real = G.players.length - (s.hostPlays === 0 ? 1 : 0), tgt = s.players;
+  const rows = G.players.map(p => `<div class="prow"><b>${esc(p.name)}${p.id === ME_ID ? ` <small>(${L('أنت', 'you')})</small>` : ''}</b>${p.id === G.host ? `<span class="chip on">${L('المضيف', 'Host')}</span>` : ''}${host && p.id !== ME_ID ? `<button class="x" data-act="kick" data-id="${p.id}">×</button>` : ''}</div>`).join('');
+  return `<section class="card" style="text-align:center"><span class="sub">${L('رمز الغرفة', 'Room code')}</span><div class="bigcode" dir="ltr">${esc(G.code)}</div>
+    <p class="sub">${L('اللاعبون يفتحون رابط اللعبة ويكتبون هذا الرمز، أو يفتحون رابط الدعوة مباشرة.', 'Players open the game and type this code, or open the invite link directly.')}</p>
+    <div class="linkrow"><input class="field" id="lnk" readonly value="${esc(link)}" dir="ltr"><button class="mini ok" data-act="copyLink">${L('نسخ الرابط', 'Copy link')}</button></div></section>
+  <section class="card"><h3>${L('اللاعبون', 'Players')} <span class="chip">${G.players.length} / 25</span></h3>${rows}
+    <p class="sub">${L('دخل', 'Joined')} ${real} ${L('من', 'of')} ${tgt}${s.hostPlays === 0 ? L(' (غير المضيف)', ' (not counting the host)') : ''}. ${real > tgt ? L('العدد أكثر من المحدد. زد عدد اللاعبين أو أزل لاعب.', 'More than set. Raise the player count or remove someone.') : real < tgt ? L('بانتظار', 'Waiting for') + ' ' + (tgt - real) + ' ' + L('لاعبين.', 'players.') : L('العدد كامل.', 'All here.')}</p></section>
+  ${host ? `<section class="card"><h3>${L('إعدادات المضيف', 'Host settings')}</h3>
+    <div class="row"><span>${L('المضيف', 'Host')}</span><div class="seg"><button data-act="set" data-k="hostPlays" data-v="1" class="${s.hostPlays !== 0 ? 'on' : ''}">${L('ألعب', 'I play')}</button><button data-act="set" data-k="hostPlays" data-v="0" class="${s.hostPlays === 0 ? 'on' : ''}">${L('مضيف بس', 'Host only')}</button></div></div>
+    ${stp('players', 3, 25, { label: L('عدد اللاعبين', 'Players') })}
+    ${GAME.settingsView()}</section>` : `<section class="card"><h3>${L('الإعدادات', 'Settings')}</h3><p class="sub">${GAME.settingsSummary()}</p></section>`}
+  ${errBox()}
+  ${host ? `<button class="btn" data-act="startGame" ${real !== tgt ? 'disabled' : ''}>${L('ابدأ اللعبة', 'Start the game')}</button>` : `<p class="sub" style="text-align:center">${L('بانتظار المضيف يبدأ اللعبة…', 'Waiting for the host to start…')}</p>`}`;
+}
+function podium(list) {
+  let pos = 0, prev = null;
+  const R = list.map((x, i) => { if (x.pts !== prev) { pos = i + 1; prev = x.pts; } return Object.assign({ pos }, x); });
+  const MED = { 1: '🥇', 2: '🥈', 3: '🥉' }, cls = { 1: 'g', 2: 's', 3: 'b' };
+  const cell = (x, k) => x ? `<div class="pod ${cls[k]}"><div class="md">${MED[k]}</div><div class="pn">${esc(x.name)}</div><div class="ps">${x.pts} ${L('نقطة', 'pts')}</div><div class="pb">${x.pos}</div></div>` : '<div class="pod"></div>';
+  return `<section class="card"><h3 style="text-align:center">${L('منصة التتويج', 'Podium')}</h3><div class="podium">${cell(R[1], 2)}${cell(R[0], 1)}${cell(R[2], 3)}</div>` +
+    (R.length > 3 ? `<div class="rest">${R.slice(3).map(x => `<div class="row"><span>${x.pos}. ${esc(x.name)}</span><b>${x.pts}</b></div>`).join('')}</div>` : '') + '</section>';
+}
+function progBox(label, ids) {
+  return `<div class="card"><h3>${label} <span class="chip">${ids.length} / ${G.players.length}</span></h3><div class="chips">${G.players.map(p => `<span class="chip ${ids.includes(p.id) ? 'on' : ''}">${ids.includes(p.id) ? '✓ ' : ''}${esc(p.name)}</span>`).join('')}</div></div>`;
+}
+function menuModal() {
+  const host = isHost(), others = G ? G.players.filter(p => p.id !== ME_ID) : [];
+  return `<h3>${L('القائمة', 'Menu')}</h3><p class="sub">${L('الغرفة', 'Room')} <b dir="ltr">${esc(U.code)}</b>${G ? ' · ' + L('المضيف', 'Host') + ': ' + esc(P(G.host).name) : ''}</p>` +
+    (!host && G && inRoom(ME_ID) ? `<button class="btn ghost" data-act="askTake">${L('المضيف ما يرد؟ استلم الاستضافة', 'Host not responding? Take over')}</button>` : '') +
+    (host && others.length ? `<button class="btn ghost" data-act="askHand">${L('نقل الاستضافة للاعب آخر', 'Hand hosting to another player')}</button>` : '') +
+    (isGuest() && G && G.phase === 'final' ? '' : `<button class="btn ghost danger" data-act="askLeave">${L('الخروج من الغرفة', 'Leave the room')}</button>`) +
+    `<button class="btn ghost" data-act="closeModal">${L('إغلاق', 'Close')}</button>`;
+}
+function modalView() {
+  const m = U.modal; if (!m) return '';
+  let body = '';
+  if (m.type === 'menu') body = menuModal();
+  else if (m.type === 'take') body = `<h3>${L('استلام الاستضافة؟', 'Take over hosting?')}</h3><p class="sub">${L('استخدمها فقط إذا المضيف طلع أو تلفونه فصل.', 'Only if the host left or their phone disconnected.')}</p><button class="btn" data-act="takeHost">${L('استلام', 'Take over')}</button><button class="btn ghost" data-act="closeModal">${L('إلغاء', 'Cancel')}</button>`;
+  else if (m.type === 'hand') body = `<h3>${L('اختر المضيف الجديد', 'Pick the new host')}</h3>${G.players.filter(p => p.id !== ME_ID).map(p => `<button class="votebtn" data-act="handTo" data-id="${p.id}">${esc(p.name)}</button>`).join('')}<button class="btn ghost" data-act="closeModal">${L('إلغاء', 'Cancel')}</button>`;
+  else if (m.type === 'leave') body = `<h3>${L('الخروج من الغرفة؟', 'Leave the room?')}</h3><p class="sub">${isHost() && G && G.players.length > 1 ? L('أنت المضيف. بننقل الاستضافة تلقائيًا للاعب ثاني.', 'You’re the host. Hosting will pass to another player.') : L('تقدر ترجع للغرفة بنفس الرمز.', 'You can come back with the same code.')}</p><button class="btn danger" data-act="leave">${L('خروج', 'Leave')}</button><button class="btn ghost" data-act="closeModal">${L('إلغاء', 'Cancel')}</button>`;
+  else if (m.type === 'back') body = `<h3>${L('ترجع للمرحلة السابقة؟', 'Go back to the previous stage?')}</h3><p class="sub">${L('كل اللي في الغرفة بيرجعون معاك للمرحلة اللي قبل.', 'Everyone in the room goes back with you.')}</p><button class="btn" data-act="doBack">${L('إيه، رجّع', 'Yes, go back')}</button><button class="btn ghost" data-act="closeModal">${L('لا', 'No')}</button>`;
+  else if (m.type === 'assume') body = `<h3>📝 ${L('افتراضات وقرارات تحتاج اعتماد', 'Assumptions & open decisions')}</h3><ol>${GAME.assumptions[LANG].map(a => `<li>${a}</li>`).join('')}</ol><button class="btn" data-act="closeModal">${L('تمام', 'OK')}</button>`;
+  else body = GAME.modalView(m);
+  if (!body) return '';
+  return `<div class="modal" data-act="ovClose"><div class="sheet" role="dialog">${body}</div></div>`;
+}
+
+/* ---------- العرض ---------- */
+function render() {
+  let html;
+  if (U.notice) html = noticeView();
+  else if (U.splash) html = splashView();
+  else {
+    html = topbar();
+    if (!U.code || U.view === 'home') html += homeView();
+    else if (!G) html += `<section class="card" style="text-align:center"><div class="spin"></div><h3>${L('جاري الاتصال بالغرفة', 'Connecting to room')} ${esc(U.code)}</h3></section><button class="btn ghost" data-act="leaveNow">${L('إلغاء', 'Cancel')}</button>`;
+    else if (U.view === 'join') html += joinView();
+    else if (U.view === 'wait') html += waitView();
+    else if (U.view === 'spect') html += spectView();
+    else if (U.view === 'kicked') html += kickedView();
+    else html += (G.phase === 'lobby' ? lobbyView() : GAME.view());
+    html += modalView();
+  }
+  const ls = $('langsw'); if (ls) ls.hidden = !(U.splash || U.notice || !U.code);
+  const fab = $('fab'); if (fab) fab.hidden = !!U.notice;
+  if (html === U.lastHtml) { tickUI(); return; }
+  const key = U.splash ? 'splash' : (G ? U.view + G.phase + (GAME.viewKey ? GAME.viewKey() : '') : U.view);
+  const ae = document.activeElement, fid = ae && ae.id && app.contains(ae) ? ae.id : null;
+  let ss = null, se = null;
+  try { if (fid && ae.setSelectionRange) { ss = ae.selectionStart; se = ae.selectionEnd; } } catch (e) { }
+  const y = window.scrollY;
+  const sy = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
+  app.innerHTML = html; U.lastHtml = html;
+  if (fid) { const el = $(fid); if (el) { try { el.focus({ preventScroll: true }); if (ss != null) el.setSelectionRange(ss, se); } catch (e) { } } }
+  if (key !== U.lastKey) { window.scrollTo(0, 0); U.lastKey = key; } else window.scrollTo(0, y);
+  const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sy;
+  tickUI();
+}
+
+/* ---------- الأفعال ---------- */
+const ACT = {};
+const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
+app.addEventListener('click', async ev => {
+  const el = ev.target.closest('[data-act]'); if (!el || !app.contains(el)) return;
+  if (el.disabled || el.getAttribute('aria-disabled') === 'true') return;
+  const fn = ACT[el.dataset.act]; if (!fn) return;
+  const r = await fn(el.dataset, el, ev);
+  if (r !== false) render();
+});
+app.addEventListener('input', e => {
+  const el = e.target, b = el.dataset && el.dataset.bind; if (!b) return;
+  if (b === 'name') { U.name = el.value; lsSet({ name: el.value.trim() }); }
+  else if (b === 'code') U.draft.code = el.value.toUpperCase();
+  else if (GAME.bind) GAME.bind(b, el);
+});
+ACT.enter = () => { U.splash = false; };
+ACT.noticeOk = () => { U.notice = false; try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
+ACT.closeModal = () => { U.modal = null; U.err = ''; };
+ACT.ovClose = (d, el, ev) => { if (ev.target !== el) return false; U.modal = null; U.err = ''; };
+ACT.menu = () => { U.modal = { type: 'menu' }; };
+ACT.askLeave = () => { U.modal = { type: 'leave' }; };
+ACT.askTake = () => { U.modal = { type: 'take' }; };
+ACT.askHand = () => { U.modal = { type: 'hand' }; };
+ACT.askBack = () => { U.modal = { type: 'back' }; };
+ACT.doBack = () => { U.modal = null; hostBack(); };
+ACT.leaveNow = () => { leaveLocal(); U.err = ''; };
+ACT.leave = async () => {
+  U.modal = null;
+  if (isHost() && G) {
+    const next = G.players.find(p => p.id !== ME_ID);
+    if (G.phase === 'lobby') G.players = G.players.filter(p => p.id !== ME_ID);
+    if (next) { G.host = next.id; hostOn = false; await flushDirect(); }
+  } else if (G && G.phase === 'lobby' && ME) { ME.room = ''; ME.name = ''; await saveMe(); }
+  leaveLocal(); render();
+};
+ACT.handTo = async d => { if (!isHost()) return; U.modal = null; G.host = d.id; hostOn = false; stopHost(); await flushDirect(); toast(L('انتقلت الاستضافة.', 'Hosting handed over.')); };
+ACT.takeHost = async () => {
+  U.modal = null;
+  try { const s = await db.doc(roomPath(U.code)).get(); if (s.exists) G = clone(s.data()); } catch (e) { }
+  if (!G || !inRoom(ME_ID)) return;
+  G.host = ME_ID; await flushDirect(); becomeHost(); toast(L('صرت المضيف.', 'You’re now the host.'));
+};
+ACT.create = async () => {
+  if (U.fromLink || isGuest()) return false;
+  const name = U.name.trim();
+  if (!name) { U.err = L('اكتب اسمك أو لقبك أول.', 'Type your name first.'); return; }
+  if (U.busy) return false;
+  U.busy = true; U.err = ''; render();
+  try {
+    let code = '';
+    for (let i = 0; i < 6; i++) { code = Array.from({ length: 4 }, () => CODE_CH[Math.floor(Math.random() * CODE_CH.length)]).join(''); const s = await db.doc(roomPath(code)).get(); if (!s.exists) break; }
+    G = freshRoom(code);
+    G.players.push({ id: ME_ID, name, at: Date.now() });
+    ME = blankMe(code); U.code = code;
+    await db.doc(inpPath(code, ME_ID)).set(clone(ME));
+    G.rev = 1; G.sentAt = Date.now();
+    await db.doc(roomPath(code)).set(clone(G));
+    hostOn = false;
+    await subscribe(code);
+    U.view = 'game'; becomeHost();
+  } catch (e) { G = null; U.code = ''; writeFailed(e); }
+  U.busy = false;
+};
+ACT.join = async () => {
+  const code = String(U.draft.code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if (code.length < 4) { U.err = L('اكتب رمز الغرفة (4 أحرف).', 'Type the room code (4 characters).'); return; }
+  if (!U.name.trim()) { U.err = L('اكتب اسمك أو لقبك أول.', 'Type your name first.'); return; }
+  U.err = ''; U.busy = true; render();
+  await openRoom(code, true);
+  U.busy = false;
+};
+async function openRoom(code, autoJoin) {
+  G = null; ME = null; U.view = 'connecting'; U.code = code;
+  await loadMe(code); await subscribe(code);
+  if (autoJoin && U.name.trim()) {
+    await new Promise(res => { let n = 0; const t = setInterval(() => { if (G || !U.code || ++n > 40) { clearInterval(t); res(); } }, 250); });
+    if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
+  }
+}
+async function sendJoin() {
+  ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), at: Date.now() });
+  lsSet({ name: U.name.trim() });
+  U.view = 'wait'; await saveMe(); render();
+}
+ACT.sendJoin = async () => { if (!U.name.trim()) { U.err = L('اكتب اسمك أو لقبك.', 'Type your name.'); return; } U.err = ''; await sendJoin(); };
+ACT.copyLink = () => {
+  const link = ART_URL + '#room-' + G.code;
+  try { navigator.clipboard.writeText(link).then(() => toast(L('نسخنا رابط الدعوة.', 'Invite link copied.')), () => selectLink()); } catch (e) { selectLink(); }
+  return false;
+};
+function selectLink() { const i = $('lnk'); if (i) { i.focus(); i.select(); } toast(L('انسخ الرابط من الخانة.', 'Copy the link from the box.')); }
+ACT.kick = H(d => { G.players = G.players.filter(p => p.id !== d.id); G.kicked[d.id] = true; });
+ACT.set = H(d => { G.settings[d.k] = +d.v; });
+ACT.step = H(d => {
+  if (G.phase !== 'lobby') return false;
+  const lim = Object.assign({ players: [3, 25, 1] }, GAME.limits)[d.k]; if (!lim) return false;
+  G.settings[d.k] = Math.min(lim[1], Math.max(lim[0], (+G.settings[d.k] || lim[0]) + (+d.v) * (lim[2] || 1)));
+  if (GAME.afterStep) GAME.afterStep();
+});
+ACT.startGame = H(() => {
+  const s = G.settings, real = G.players.length - (s.hostPlays === 0 ? 1 : 0);
+  if (real !== s.players) { U.err = real > s.players ? L('دخل لاعبين أكثر من العدد المحدد.', 'More players joined than set.') : L('بانتظار', 'Waiting for') + ' ' + (s.players - real) + ' ' + L('لاعبين.', 'players.'); return false; }
+  U.err = '';
+  if (s.hostPlays === 0) { G.hostP = G.players.find(p => p.id === ME_ID) || G.hostP; G.players = G.players.filter(p => p.id !== ME_ID); }
+  HIST.length = 0; G.gameNo = (G.gameNo || 0) + 1; G.log = [];
+  GAME.start();
+});
+ACT.toLobby = H(() => { if (G.hostP && G.hostP.id === ME_ID && !inRoom(ME_ID)) G.players.unshift(G.hostP); G.hostP = null; G.phase = 'lobby'; G.endsAt = 0; HIST.length = 0; });
+window.addEventListener('hashchange', () => {
+  const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
+  if (h && h[1].toUpperCase() !== U.code && db && U.ready) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); if (!U.code) render(); }
+});
+document.addEventListener('click', e => { if (e.target.closest('#fab')) { U.modal = { type: 'assume' }; render(); } });
+
+async function init() {
+  const saved = lsGet();
+  U.name = saved.name || '';
+  const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
+  if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
+  render();
+  if (window.__MZ_DB) db = window.__MZ_DB;
+  let id = saved.uid; if (!id) { id = 'l' + Math.random().toString(36).slice(2, 12); lsSet({ uid: id }); }
+  ME_ID = 'u' + id;
+  U.ready = true;
+  const code = h ? h[1].toUpperCase() : (saved.code || '');
+  if (db && code) {
+    await loadMe(code);
+    if (!h || (ME && ME.room === code)) { U.splash = false; await subscribe(code); }
+    else U.code = '';
+  }
+  render();
+}
+
+/* =====================================================================
+   أقنعني – الأزياء (أونلاين)
+   ⚙️ CONFIG: كل الأرقام هنا قيم تجريبية مؤقتة، تتعدل من هنا.
+   ===================================================================== */
+const CONFIG = {
+  currency: { ar: 'د.ك', en: 'KD' },
+  startCapital: 100, shoppingWallet: 50, designsCount: 5,
+  maxFabricColors: 2, maxFabricTypes: 2,
+  prices: { clothingType: 8, fabricColor: 4, fabricType: 5, storeBg: 6, storeBorder: 4, perk: 10 },
+  salePrice: { min: 1, max: 20, def: 5 }, extraTimeSec: 30, discountMax: 50, brandNameMax: 24, brandDescMax: 120,
+  categories: [
+    { id: 'capital', icon: '💰', name: { ar: 'رأس المال', en: 'Capital' }, hint: { ar: 'أعلى رأس مال متبقي', en: 'Highest remaining capital' }, points: 20, money: true },
+    { id: 'wallet', icon: '👛', name: { ar: 'محفظة التسوق', en: 'Shopping wallet' }, hint: { ar: 'أعلى رصيد متبقي', en: 'Highest remaining balance' }, points: 20, money: true },
+    { id: 'creative', icon: '✨', name: { ar: 'الإبداع', en: 'Creativity' }, hint: { ar: 'أفضل مصمم وأفضل تصميم — بالتصويت', en: 'Best designer & design — by vote' }, points: 20 },
+    { id: 'purchases', icon: '🛍️', name: { ar: 'أكثر مشتريات', en: 'Most purchases' }, hint: { ar: 'أكثر قطع انباعت من المتجر', en: 'Most pieces sold' }, points: 20 },
+    { id: 'visits', icon: '🚶', name: { ar: 'أكثر زيارات', en: 'Most visits' }, hint: { ar: 'أكثر زيارات للمتجر', en: 'Most store visits' }, points: 20 }
+  ]
+};
+const PERKS = [
+  { id: 'expand', icon: '🏬', name: { ar: 'توسعة المتجر', en: 'Store expansion' }, desc: { ar: 'مساحة أكبر للمتجر.', en: 'More space for your store.' } },
+  { id: 'location', icon: '📍', name: { ar: 'موقع يجذب زوارًا', en: 'Prime location' }, desc: { ar: 'مكان مميز في السوق.', en: 'A standout spot in the market.' } },
+  { id: 'sale', icon: '🏷️', name: { ar: 'تنزيلات يحددها اللاعب', en: 'Player-set sale' }, desc: { ar: 'تحدد نسبة خصم على تصاميمك.', en: 'Set a discount on your designs.' }, live: true },
+  { id: 'fineSell', icon: '🚫', name: { ar: 'مخالفة بيع', en: 'Sales fine' }, desc: { ar: 'مخالفة على بيع منافس.', en: 'A fine on a rival’s sales.' } },
+  { id: 'fineShow', icon: '⛔', name: { ar: 'مخالفة عرض', en: 'Display fine' }, desc: { ar: 'مخالفة على عرض منافس.', en: 'A fine on a rival’s display.' } },
+  { id: 'extraTime', icon: '⏱️', name: { ar: 'وقت إضافي للإقناع', en: 'Extra pitch time' }, desc: { ar: 'وقت زيادة وقت تتكلم.', en: 'More time when you speak.' }, live: true },
+  { id: 'taste', icon: '🔍', name: { ar: 'رصد ذوق الزبائن', en: 'Customer taste scan' }, desc: { ar: 'تعرف وش يحبون الزبائن.', en: 'Learn what customers like.' } },
+  { id: 'protect', icon: '🛡️', name: { ar: 'حماية المتجر', en: 'Store protection' }, desc: { ar: 'حماية من المخالفات.', en: 'Protection from fines.' } },
+  { id: 'exclusive', icon: '💎', name: { ar: 'خامة حصرية', en: 'Exclusive fabric' }, desc: { ar: 'خامة ما يملكها غيرك.', en: 'A fabric nobody else has.' } },
+  { id: 'vip', icon: '👑', name: { ar: 'زبون VIP افتراضي', en: 'Virtual VIP customer' }, desc: { ar: 'زبون افتراضي مميز.', en: 'A special virtual customer.' } }
+];
+const CLOTHES = [
+  { id: 'shirt', name: { ar: 'قميص', en: 'Shirt' }, zone: 'top' }, { id: 'jacket', name: { ar: 'جاكيت', en: 'Jacket' }, zone: 'outer' },
+  { id: 'pants', name: { ar: 'بنطلون', en: 'Trousers' }, zone: 'bottom' }, { id: 'skirt', name: { ar: 'تنورة', en: 'Skirt' }, zone: 'bottom' },
+  { id: 'dress', name: { ar: 'فستان', en: 'Dress' }, zone: 'full' }, { id: 'abaya', name: { ar: 'عباية', en: 'Abaya' }, zone: 'outer' },
+  { id: 'scarf', name: { ar: 'وشاح', en: 'Scarf' }, zone: 'acc' }, { id: 'bag', name: { ar: 'حقيبة', en: 'Bag' }, zone: 'acc' }
+];
+const ZORDER = { full: 0, bottom: 1, top: 2, outer: 3, acc: 4 };
+const COLORS = [
+  { id: 'black', name: { ar: 'أسود', en: 'Black' }, hex: '#1d1d1f' }, { id: 'white', name: { ar: 'أبيض', en: 'White' }, hex: '#f7f5f0' },
+  { id: 'beige', name: { ar: 'بيج', en: 'Beige' }, hex: '#d9c4a3' }, { id: 'red', name: { ar: 'أحمر', en: 'Red' }, hex: '#c81d25' },
+  { id: 'navy', name: { ar: 'كحلي', en: 'Navy' }, hex: '#1f2a5a' }, { id: 'olive', name: { ar: 'زيتي', en: 'Olive' }, hex: '#5d6b2f' },
+  { id: 'pink', name: { ar: 'وردي', en: 'Pink' }, hex: '#e9a3b8' }, { id: 'gold', name: { ar: 'ذهبي', en: 'Gold' }, hex: '#c9a227' },
+  { id: 'purple', name: { ar: 'بنفسجي', en: 'Purple' }, hex: '#7b2fbe' }, { id: 'sky', name: { ar: 'سماوي', en: 'Sky' }, hex: '#80c7e8' }
+];
+const FABRICS = [
+  { id: 'cotton', name: { ar: 'قطن', en: 'Cotton' } }, { id: 'silk', name: { ar: 'حرير', en: 'Silk' } }, { id: 'leather', name: { ar: 'جلد', en: 'Leather' } }, { id: 'velvet', name: { ar: 'مخمل', en: 'Velvet' } },
+  { id: 'denim', name: { ar: 'جينز', en: 'Denim' } }, { id: 'wool', name: { ar: 'صوف', en: 'Wool' } }, { id: 'linen', name: { ar: 'كتان', en: 'Linen' } }, { id: 'chiffon', name: { ar: 'شيفون', en: 'Chiffon' } }
+];
+const PATTERNS = [{ id: 'plain', name: { ar: 'سادة', en: 'Plain' } }, { id: 'stripe', name: { ar: 'مخطط', en: 'Striped' } }, { id: 'dots', name: { ar: 'منقط', en: 'Dotted' } }, { id: 'check', name: { ar: 'مربعات', en: 'Checked' } }];
+
+const byId = (a, id) => a.find(x => x.id === id);
+const money = v => `${Math.round(v * 100) / 100} ${N(CONFIG.currency)}`;
+const colorHex = id => (byId(COLORS, id) || { hex: '#ddd' }).hex;
+const isLight = hex => { const n = parseInt(hex.slice(1), 16); return ((n >> 16) * 299 + ((n >> 8) & 255) * 587 + (n & 255) * 114) / 1000 > 150; };
+const cloth = id => byId(CLOTHES, id);
+const pts = v => String(Math.round(v * 10) / 10);
+const finalPrice = (st, d) => st.discount ? Math.max(1, Math.round(d.price * (1 - st.discount / 100))) : d.price;
+
+/* ---------- رسم الأزياء ---------- */
 const SHAPES = {
-  shirt:  'M31 30 L41 26 L59 26 L69 30 L80 48 L72 53 L67 44 L67 74 L33 74 L33 44 L28 53 L20 48 Z',
+  shirt: 'M31 30 L41 26 L59 26 L69 30 L80 48 L72 53 L67 44 L67 74 L33 74 L33 44 L28 53 L20 48 Z',
   jacket: 'M28 29 L41 25 L50 36 L59 25 L72 29 L83 62 L74 65 L69 48 L69 82 L53 82 L50 42 L47 82 L31 82 L31 48 L26 65 L17 62 Z',
-  pants:  'M33 72 L67 72 L69 133 L55 133 L50 92 L45 133 L31 133 Z',
-  skirt:  'M34 72 L66 72 L77 120 L23 120 Z',
-  dress:  'M38 26 L62 26 L66 44 L61 60 L80 128 L20 128 L39 60 L34 44 Z',
-  abaya:  'M36 25 L64 25 L76 34 L85 72 L77 75 L70 50 L75 135 L25 135 L30 50 L23 75 L15 72 L24 34 Z',
-  scarf:  'M37 23 Q50 35 63 23 L65 30 Q50 44 35 30 Z M55 33 L62 60 L53 61 L51 35 Z',
-  bag:    'M69 80 L89 80 L91 103 L67 103 Z'
+  pants: 'M33 72 L67 72 L69 133 L55 133 L50 92 L45 133 L31 133 Z',
+  skirt: 'M34 72 L66 72 L77 120 L23 120 Z',
+  dress: 'M38 26 L62 26 L66 44 L61 60 L80 128 L20 128 L39 60 L34 44 Z',
+  abaya: 'M36 25 L64 25 L76 34 L85 72 L77 75 L70 50 L75 135 L25 135 L30 50 L23 75 L15 72 L24 34 Z',
+  scarf: 'M37 23 Q50 35 63 23 L65 30 Q50 44 35 30 Z M55 33 L62 60 L53 61 L51 35 Z',
+  bag: 'M69 80 L89 80 L91 103 L67 103 Z'
 };
 let PID = 0;
-function fillFor(hex, pattern, defs){
-  if(!pattern || pattern==='plain') return hex;
-  const id = 'pt'+(++PID);
-  const c = isLight(hex) ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.38)';
+function fillFor(hex, pattern, defs) {
+  if (!pattern || pattern === 'plain') return hex;
+  const id = 'pt' + (++PID), c = isLight(hex) ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.38)';
   let inner = '';
-  if(pattern==='stripe') inner = `<rect width="3" height="8" fill="${c}"/>`;
-  if(pattern==='dots')   inner = `<circle cx="4" cy="4" r="1.6" fill="${c}"/>`;
-  if(pattern==='check')  inner = `<rect width="4" height="4" fill="${c}"/><rect x="4" y="4" width="4" height="4" fill="${c}"/>`;
+  if (pattern === 'stripe') inner = `<rect width="3" height="8" fill="${c}"/>`;
+  if (pattern === 'dots') inner = `<circle cx="4" cy="4" r="1.6" fill="${c}"/>`;
+  if (pattern === 'check') inner = `<rect width="4" height="4" fill="${c}"/><rect x="4" y="4" width="4" height="4" fill="${c}"/>`;
   defs.push(`<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${hex}"/>${inner}</pattern>`);
   return `url(#${id})`;
 }
-// لمسة بصرية خفيفة لنوع الخامة
-function textureFor(f, defs){
-  if(!f) return null;
-  const id = 'tx'+(++PID);
-  if(f==='leather' || f==='silk'){
-    const a = f==='leather' ? .42 : .3;
-    defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="${a}"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${f==='leather'?.18:0}"/></linearGradient>`);
-  } else if(f==='velvet'){
-    defs.push(`<radialGradient id="${id}" cx=".5" cy=".4" r=".7"><stop offset=".3" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></radialGradient>`);
-  } else if(f==='denim'){
-    defs.push(`<pattern id="${id}" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="3" fill="#fff" fill-opacity=".16"/></pattern>`);
-  } else if(f==='wool'){
-    defs.push(`<pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#fff" fill-opacity=".22"/><circle cx="3" cy="3" r=".7" fill="#000" fill-opacity=".1"/></pattern>`);
-  } else if(f==='chiffon'){
-    defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity=".05"/></linearGradient>`);
-  } else return null;
+function textureFor(f, defs) {
+  if (!f) return null;
+  const id = 'tx' + (++PID);
+  if (f === 'leather' || f === 'silk') defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="${f === 'leather' ? .42 : .3}"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${f === 'leather' ? .18 : 0}"/></linearGradient>`);
+  else if (f === 'velvet') defs.push(`<radialGradient id="${id}" cx=".5" cy=".4" r=".7"><stop offset=".3" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></radialGradient>`);
+  else if (f === 'denim') defs.push(`<pattern id="${id}" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="3" fill="#fff" fill-opacity=".16"/></pattern>`);
+  else if (f === 'wool') defs.push(`<pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#fff" fill-opacity=".22"/><circle cx="3" cy="3" r=".7" fill="#000" fill-opacity=".1"/></pattern>`);
+  else if (f === 'chiffon') defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity=".05"/></linearGradient>`);
+  else return null;
   return `url(#${id})`;
 }
-function designSVG(d){
-  if(!d) return `<svg viewBox="0 0 100 140"><rect x="12" y="10" width="76" height="120" rx="14" fill="none" stroke="#d8d2e0" stroke-dasharray="5 5"/><text x="50" y="76" text-anchor="middle" font-size="13" fill="#b3abbd" font-family="inherit">Empty</text></svg>`;
+function designSVG(d) {
+  if (!d) return `<svg viewBox="0 0 100 140"><rect x="12" y="10" width="76" height="120" rx="14" fill="none" stroke="#d8d2e0" stroke-dasharray="5 5"/><text x="50" y="76" text-anchor="middle" font-size="13" fill="#b3abbd">${L('فاضي', 'Empty')}</text></svg>`;
   const defs = []; let body = '';
-  const pieces = [d.base, d.extra].filter(x=>x && x.type).sort((a,b)=>ZORDER[cloth(a.type).zone]-ZORDER[cloth(b.type).zone]);
-  pieces.forEach(p=>{
+  [d.base, d.extra].filter(x => x && x.type && cloth(x.type)).sort((a, b) => ZORDER[cloth(a.type).zone] - ZORDER[cloth(b.type).zone]).forEach(p => {
     const hex = colorHex(p.color);
-    if(p.type==='bag') body += `<path d="M72 80 Q79 66 86 80" fill="none" stroke="${hex}" stroke-width="2.6"/>`;
-    body += `<path d="${SHAPES[p.type]}" fill="${fillFor(hex,p.pattern,defs)}" stroke="rgba(0,0,0,.3)" stroke-width=".8" stroke-linejoin="round"/>`;
-    const tx = textureFor(p.fabric, defs);
-    if(tx) body += `<path d="${SHAPES[p.type]}" fill="${tx}" stroke="none" pointer-events="none"/>`;
+    if (p.type === 'bag') body += `<path d="M72 80 Q79 66 86 80" fill="none" stroke="${hex}" stroke-width="2.6"/>`;
+    body += `<path d="${SHAPES[p.type]}" fill="${fillFor(hex, p.pattern, defs)}" stroke="rgba(0,0,0,.3)" stroke-width=".8" stroke-linejoin="round"/>`;
+    const tx = textureFor(p.fabric, defs); if (tx) body += `<path d="${SHAPES[p.type]}" fill="${tx}"/>`;
   });
   return `<svg viewBox="0 0 100 140"><defs>${defs.join('')}</defs><circle cx="50" cy="13" r="9" fill="#ece4f3"/><rect x="46" y="20" width="8" height="8" fill="#ece4f3"/>${body}</svg>`;
 }
-
-// لوقو أقنعني الأصلي (ثابت في صفحة المقدمة)
-const LOGO = `<svg class="aqlogo" viewBox="0 0 920 790" role="img" aria-label="أقنعني"><defs><clipPath id="aqbub"><path d="M483.2,99.8 474.8,91.5 464.8,83.5 452.0,75.0 432.5,65.2 415.5,59.2 398.5,55.0 395.2,55.0 386.5,53.0 380.2,53.0 377.5,52.0 365.2,52.0 362.5,51.0 326.2,51.0 323.5,52.0 309.2,52.0 306.5,53.0 299.2,53.0 296.5,54.0 292.2,54.0 289.5,55.0 286.2,55.0 264.2,60.2 247.2,66.2 240.5,69.8 238.2,70.2 234.0,73.0 225.8,77.0 210.0,87.5 197.8,97.5 184.5,110.8 172.5,126.0 162.0,142.8 154.2,159.2 149.2,173.2 145.0,191.2 145.0,194.5 144.0,197.2 144.0,203.5 143.0,206.2 143.0,227.5 144.0,230.2 144.0,235.5 145.0,238.2 146.0,247.5 151.2,266.5 155.2,276.5 165.0,295.0 176.5,310.8 184.5,318.8 187.0,322.2 186.8,326.5 179.2,348.2 178.8,351.5 163.2,399.2 163.0,405.5 163.5,406.8 166.2,408.8 169.5,408.8 173.8,407.2 205.8,385.2 220.2,366.0 228.5,356.2 230.5,354.8 238.5,354.8 241.2,355.8 246.5,355.8 249.2,356.8 255.5,356.8 258.2,357.8 264.5,357.8 267.2,358.8 272.5,358.8 275.2,359.8 281.5,359.8 284.2,360.8 289.5,360.8 292.2,361.8 311.5,361.8 314.2,360.8 325.5,360.8 328.2,359.8 339.5,358.8 362.5,353.5 377.5,348.5 392.5,342.5 410.8,333.5 411.2,332.8 410.8,330.5 410.8,316.5 411.2,315.5 412.8,314.2 423.8,309.2 436.8,306.2 443.2,298.8 449.2,293.0 454.2,286.8 460.2,281.0 465.2,274.8 472.2,268.0 477.2,261.8 483.2,256.0 488.2,249.8 495.2,243.0 501.8,235.2 504.0,233.2 507.2,232.0 513.2,231.8 514.8,230.8 515.8,228.5 516.8,222.2 518.8,215.5 518.8,212.2 519.8,209.5 519.8,178.2 518.8,175.5 518.8,170.2 514.5,153.2 507.5,135.2 501.8,124.8 494.2,113.0Z"/><path d="M518.0,165.5 414.5,295.0 411.5,299.8 411.0,301.2 411.0,333.5 412.0,336.2 413.0,344.5 419.2,363.5 425.0,375.0 430.5,383.8 439.5,395.0 448.8,404.2 460.0,413.2 469.8,419.8 485.2,427.5 498.2,432.5 520.2,437.8 523.5,437.8 526.2,438.8 532.5,438.8 535.2,439.8 577.5,439.8 580.2,438.8 591.5,438.8 594.2,437.8 598.5,437.8 601.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 634.5,433.8 637.2,432.8 641.5,432.8 644.2,431.8 652.2,431.0 665.0,438.8 686.8,453.8 726.8,479.8 735.2,483.8 739.8,483.2 741.5,481.2 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 732.8,430.5 732.8,428.2 730.8,421.5 730.8,419.2 726.8,404.5 726.8,402.5 728.2,400.5 744.0,388.2 755.2,377.0 765.2,364.8 773.8,352.0 782.5,334.5 784.0,329.2 785.5,326.5 790.8,307.5 791.8,299.2 792.8,296.5 792.8,268.2 791.8,265.5 791.8,261.2 790.8,258.5 790.8,255.2 788.5,246.2 783.5,231.2 774.8,213.8 768.2,204.0 759.2,192.8 749.0,182.5 737.8,173.5 725.0,165.0 714.5,159.2 712.2,158.8 702.5,154.2 683.5,148.2 675.2,147.0 672.5,146.0 669.2,146.0 666.5,145.0 661.2,145.0 658.5,144.0 650.2,144.0 647.5,143.0 609.2,143.0 606.5,144.0 598.2,144.0 595.5,145.0 589.2,145.0 586.5,146.0 581.2,146.0 578.5,147.0 575.2,147.0 572.5,148.0 565.2,149.0 548.2,153.2 528.2,160.2Z"/><path d="M445,185 L600,168 L600,300 L445,318Z"/></clipPath></defs><g class="aq-red"><path fill="#DE0921" d="M483.2,99.8 474.8,91.5 464.8,83.5 452.0,75.0 432.5,65.2 415.5,59.2 398.5,55.0 395.2,55.0 386.5,53.0 380.2,53.0 377.5,52.0 365.2,52.0 362.5,51.0 326.2,51.0 323.5,52.0 309.2,52.0 306.5,53.0 299.2,53.0 296.5,54.0 292.2,54.0 289.5,55.0 286.2,55.0 264.2,60.2 247.2,66.2 240.5,69.8 238.2,70.2 234.0,73.0 225.8,77.0 210.0,87.5 197.8,97.5 184.5,110.8 172.5,126.0 162.0,142.8 154.2,159.2 149.2,173.2 145.0,191.2 145.0,194.5 144.0,197.2 144.0,203.5 143.0,206.2 143.0,227.5 144.0,230.2 144.0,235.5 145.0,238.2 146.0,247.5 151.2,266.5 155.2,276.5 165.0,295.0 176.5,310.8 184.5,318.8 187.0,322.2 186.8,326.5 179.2,348.2 178.8,351.5 163.2,399.2 163.0,405.5 163.5,406.8 166.2,408.8 169.5,408.8 173.8,407.2 205.8,385.2 220.2,366.0 228.5,356.2 230.5,354.8 238.5,354.8 241.2,355.8 246.5,355.8 249.2,356.8 255.5,356.8 258.2,357.8 264.5,357.8 267.2,358.8 272.5,358.8 275.2,359.8 281.5,359.8 284.2,360.8 289.5,360.8 292.2,361.8 311.5,361.8 314.2,360.8 325.5,360.8 328.2,359.8 339.5,358.8 362.5,353.5 377.5,348.5 392.5,342.5 410.8,333.5 411.2,332.8 410.8,330.5 410.8,316.5 411.2,315.5 412.8,314.2 423.8,309.2 436.8,306.2 443.2,298.8 449.2,293.0 454.2,286.8 460.2,281.0 465.2,274.8 472.2,268.0 477.2,261.8 483.2,256.0 488.2,249.8 495.2,243.0 501.8,235.2 504.0,233.2 507.2,232.0 513.2,231.8 514.8,230.8 515.8,228.5 516.8,222.2 518.8,215.5 518.8,212.2 519.8,209.5 519.8,178.2 518.8,175.5 518.8,170.2 514.5,153.2 507.5,135.2 501.8,124.8 494.2,113.0Z"/><circle cx="260.5" cy="172.7" r="22.7" fill="#fff"/><circle cx="330.0" cy="172.7" r="22.6" fill="#fff"/><circle cx="399.4" cy="172.7" r="22.5" fill="#fff"/></g><g class="aq-blue"><path fill="#0554A4" d="M518.0,165.5 414.5,295.0 411.5,299.8 411.0,301.2 411.0,333.5 412.0,336.2 413.0,344.5 419.2,363.5 425.0,375.0 430.5,383.8 439.5,395.0 448.8,404.2 460.0,413.2 469.8,419.8 485.2,427.5 498.2,432.5 520.2,437.8 523.5,437.8 526.2,438.8 532.5,438.8 535.2,439.8 577.5,439.8 580.2,438.8 591.5,438.8 594.2,437.8 598.5,437.8 601.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 634.5,433.8 637.2,432.8 641.5,432.8 644.2,431.8 652.2,431.0 665.0,438.8 686.8,453.8 726.8,479.8 735.2,483.8 739.8,483.2 741.5,481.2 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 732.8,430.5 732.8,428.2 730.8,421.5 730.8,419.2 726.8,404.5 726.8,402.5 728.2,400.5 744.0,388.2 755.2,377.0 765.2,364.8 773.8,352.0 782.5,334.5 784.0,329.2 785.5,326.5 790.8,307.5 791.8,299.2 792.8,296.5 792.8,268.2 791.8,265.5 791.8,261.2 790.8,258.5 790.8,255.2 788.5,246.2 783.5,231.2 774.8,213.8 768.2,204.0 759.2,192.8 749.0,182.5 737.8,173.5 725.0,165.0 714.5,159.2 712.2,158.8 702.5,154.2 683.5,148.2 675.2,147.0 672.5,146.0 669.2,146.0 666.5,145.0 661.2,145.0 658.5,144.0 650.2,144.0 647.5,143.0 609.2,143.0 606.5,144.0 598.2,144.0 595.5,145.0 589.2,145.0 586.5,146.0 581.2,146.0 578.5,147.0 575.2,147.0 572.5,148.0 565.2,149.0 548.2,153.2 528.2,160.2Z"/><circle cx="552.7" cy="332.3" r="22.5" fill="#fff"/><circle cx="621.1" cy="332.2" r="22.4" fill="#fff"/><circle cx="689.7" cy="332.2" r="22.4" fill="#fff"/></g><g clip-path="url(#aqbub)"><g class="aq-arrow"><path fill="#fff" d="M583.5,227.5 580.2,223.2 572.2,223.0 563.5,225.0 559.2,225.0 556.5,226.0 552.2,226.0 549.5,227.0 545.2,227.0 542.5,228.0 538.2,228.0 535.5,229.0 531.2,229.0 528.5,230.0 524.2,230.0 521.5,231.0 516.2,231.0 513.5,232.0 509.2,232.0 506.5,233.0 502.2,233.0 499.5,234.0 493.2,234.0 490.5,235.0 486.2,235.0 483.5,236.0 479.2,236.0 476.5,237.0 472.2,237.0 469.5,238.0 465.2,238.0 462.5,239.0 458.2,239.0 455.5,240.0 452.2,240.0 449.5,241.0 446.2,241.0 443.5,242.0 434.2,243.0 431.5,244.0 409.2,248.0 372.2,257.2 351.2,264.2 336.2,270.2 316.8,280.0 295.0,293.5 279.0,305.5 261.8,320.5 237.5,346.0 221.5,365.0 217.5,370.8 210.5,379.0 207.5,383.8 203.8,386.8 203.0,388.2 203.2,394.8 204.8,395.8 207.5,395.5 296.8,365.0 298.2,364.0 298.2,362.8 297.0,362.0 292.8,361.5 292.5,359.8 299.0,353.2 312.0,343.2 330.8,330.8 337.8,326.8 361.2,315.0 384.2,306.0 402.2,300.0 427.5,293.5 431.2,292.0 440.2,289.8 442.5,289.8 447.2,288.0 450.5,287.8 465.2,283.8 467.5,283.8 580.5,255.8 582.2,254.0 583.8,250.5 583.8,248.2 584.8,245.5 584.8,241.2 585.8,238.5 585.8,235.2Z"/></g></g><g class="aq-arrow"><path fill="#FBC611" d="M602.2,179.0 598.5,181.0 597.0,185.5 605.2,209.5 606.8,212.2 607.0,215.2 604.5,217.0 593.2,219.0 590.5,220.0 588.2,220.0 585.5,221.0 583.2,221.0 581.2,222.2 581.2,223.5 583.8,227.5 586.0,235.2 586.0,238.5 585.0,241.2 585.0,245.5 583.0,253.8 583.5,254.5 588.5,253.8 612.2,246.0 617.2,245.5 618.0,246.8 619.0,255.5 621.0,262.2 621.0,265.5 622.0,268.2 623.2,276.2 626.0,279.2 629.5,279.8 632.8,278.2 649.2,259.0 687.2,216.8 690.2,212.0 690.5,208.5 686.8,204.5 674.2,200.8 664.5,197.2 661.2,196.8 651.5,193.2 648.2,192.8 619.5,183.2 616.2,182.8 604.5,179.0Z"/></g><path class="aq-sp aq-sp0" fill="#FBC611" d="M581.0,63.5 576.0,68.8 573.0,76.2 573.2,80.5 575.5,85.8 588.5,98.8 593.5,105.0 617.0,128.2 621.2,130.8 628.5,130.8 632.8,128.2 634.8,126.0 636.8,120.5 636.8,115.2 635.8,112.8 601.2,66.0 596.0,62.0 593.5,61.0 587.2,61.0Z"/><path class="aq-sp aq-sp1" fill="#FBC611" d="M687.5,4.0 680.2,4.0 674.0,6.5 669.8,10.2 667.0,13.8 665.0,20.2 665.0,38.5 664.0,41.2 664.0,72.5 663.0,75.2 663.0,93.5 664.2,97.5 666.5,101.8 668.8,103.8 675.2,106.8 681.5,106.8 685.2,105.5 688.8,103.2 691.2,100.8 693.8,95.5 694.8,91.5 694.8,87.2 695.8,84.5 695.8,78.2 696.8,75.5 696.8,70.2 697.8,67.5 697.8,61.2 698.8,58.5 698.8,52.2 699.8,49.5 699.8,42.2 700.8,39.5 700.8,33.2 701.8,30.5 701.8,17.2 700.2,13.0 696.0,8.5 693.0,6.0Z"/><path class="aq-sp aq-sp2" fill="#FBC611" d="M796.2,76.0 790.8,70.5 785.5,68.0 775.2,68.0 769.0,71.5 722.5,114.0 719.0,121.2 719.2,127.5 722.5,133.8 727.2,136.5 731.2,137.8 738.2,136.5 791.8,99.2 796.8,94.0 798.8,88.5 798.8,82.2Z"/><g class="aq-word"><path fill="#0554A4" fill-rule="evenodd" d="M134.2,744.0 127.0,746.5 124.0,748.5 120.5,752.0 117.2,759.2 116.0,766.5 119.0,776.0 125.0,782.2 129.2,784.5 133.2,785.8 142.5,785.8 150.0,782.8 156.2,776.8 158.5,773.2 159.8,769.5 159.8,760.2 156.2,753.0 150.0,747.0 142.5,744.0ZM80.2,744.0 76.2,745.2 70.8,748.0 67.5,751.0 63.5,757.8 62.0,763.2 62.0,767.5 65.0,776.0 71.0,782.2 75.2,784.5 79.2,785.8 88.5,785.8 96.0,782.8 101.8,777.5 105.8,769.5 105.8,761.2 102.8,753.8 96.8,747.5 92.5,745.2 88.5,744.0ZM820.8,633.2 819.8,630.5 819.8,626.2 815.5,612.2 811.8,604.8 809.2,601.0 801.0,592.5 792.0,586.0 784.5,582.2 772.5,578.2 769.2,578.0 766.5,577.0 760.2,577.0 757.5,576.0 747.2,576.0 744.5,577.0 738.2,577.0 735.5,578.0 732.2,578.0 722.2,581.2 715.5,584.2 706.0,590.5 696.5,600.0 692.0,606.8 689.2,612.2 686.0,624.2 686.0,629.5 685.0,632.2 685.0,636.5 686.0,639.2 686.0,643.5 688.2,651.5 691.0,657.0 695.8,664.0 694.2,665.0 658.2,665.0 655.5,664.0 652.2,664.0 646.0,661.5 643.8,659.0 641.8,654.5 641.5,592.5 639.5,591.0 635.2,591.0 632.5,590.0 610.2,590.0 600.8,593.0 599.0,594.8 598.0,597.2 598.0,654.5 595.5,659.8 593.8,661.5 590.0,663.5 584.2,664.0 581.5,665.0 538.2,665.0 532.8,663.8 532.0,662.5 541.2,652.8 544.8,648.0 549.5,638.5 551.8,630.5 551.8,613.2 548.5,602.2 545.2,597.0 539.0,590.5 533.0,586.0 525.5,582.2 513.5,578.2 503.5,576.0 500.2,576.0 497.5,575.0 490.2,575.0 487.5,574.0 467.2,574.0 464.5,575.0 457.2,575.0 454.5,576.0 450.2,576.0 447.5,577.0 440.2,578.0 431.2,580.2 419.2,584.2 412.8,587.0 409.0,589.5 406.5,593.0 404.0,601.2 404.0,623.5 406.0,631.5 407.0,632.8 413.8,637.2 424.5,647.8 436.2,661.8 436.2,663.2 435.0,664.0 432.2,664.0 429.5,665.0 378.2,665.0 375.5,664.0 370.2,663.8 364.0,660.5 362.0,657.5 360.8,653.5 360.5,592.0 359.0,591.0 355.2,591.0 352.5,590.0 339.8,589.5 338.5,590.0 330.2,590.0 325.2,591.2 320.8,593.0 318.2,595.5 318.0,653.5 315.5,659.8 311.5,662.8 307.5,664.0 303.2,664.0 300.5,665.0 275.2,665.0 269.8,663.5 266.0,661.5 263.2,657.8 261.8,653.5 261.8,647.2 260.8,644.5 260.8,633.2 261.8,630.5 261.8,595.2 260.8,590.8 258.5,589.2 249.5,586.2 226.5,581.0 222.2,581.0 219.5,580.0 212.2,580.0 209.5,579.0 199.2,579.0 196.5,580.0 190.2,580.0 180.2,582.2 171.2,585.2 165.8,588.0 156.8,594.5 148.5,603.0 146.0,606.8 141.2,616.2 139.0,623.2 139.0,625.5 138.0,628.2 138.0,646.5 141.2,658.5 149.0,674.2 149.0,681.5 146.5,686.8 143.8,689.5 138.5,692.8 127.5,696.0 124.2,696.0 121.5,697.0 100.2,697.0 97.5,696.0 93.2,695.8 84.2,692.8 78.0,689.5 70.2,682.8 65.0,674.5 61.8,663.5 61.8,642.2 62.8,639.5 64.0,631.2 67.8,619.5 67.8,617.8 66.8,616.2 62.5,615.0 59.2,615.0 56.5,614.0 36.2,614.0 28.2,616.2 22.8,619.0 19.8,621.5 14.0,628.8 10.2,638.2 10.0,641.5 9.0,644.2 9.0,649.5 8.0,652.2 8.0,667.5 9.0,670.2 9.0,674.5 11.2,684.5 15.2,695.5 20.0,704.0 23.5,708.8 32.8,718.2 44.8,726.8 55.2,731.5 67.2,735.5 76.2,737.8 79.5,737.8 82.2,738.8 86.5,738.8 89.2,739.8 129.5,739.8 132.2,738.8 137.5,738.8 140.2,737.8 142.5,737.8 151.5,735.5 167.0,729.8 178.8,722.2 185.2,716.0 191.8,707.0 195.8,697.5 198.8,684.5 198.8,673.2 196.8,664.2 190.8,651.8 185.8,642.5 185.8,636.2 187.8,631.8 191.0,628.2 194.8,626.2 200.2,624.8 209.5,624.8 211.8,625.8 213.0,627.5 213.0,667.5 214.0,670.2 214.0,674.5 217.2,685.5 220.0,691.0 224.5,697.0 231.0,703.2 234.8,705.8 242.2,709.5 253.2,712.8 256.5,712.8 259.2,713.8 306.5,713.8 309.2,712.8 312.5,712.8 324.5,709.5 334.0,704.8 338.5,701.0 340.8,701.2 346.8,705.8 354.2,709.5 365.2,712.8 369.5,712.8 372.2,713.8 431.5,713.8 434.2,712.8 439.5,712.8 442.2,711.8 445.5,711.8 448.2,710.8 455.5,709.8 472.5,704.5 476.2,702.8 479.0,703.2 486.2,706.5 496.2,709.8 498.5,709.8 506.2,711.8 509.5,711.8 512.2,712.8 518.5,712.8 521.2,713.8 587.5,713.8 590.2,712.8 593.5,712.8 607.5,708.5 620.2,700.5 621.2,700.8 625.0,704.2 632.2,708.5 646.2,712.8 649.5,712.8 652.2,713.8 779.5,713.8 791.5,710.5 800.8,705.2 810.2,695.8 813.8,690.0 818.5,677.5 818.8,674.2 819.8,671.5 819.8,667.2 820.8,664.5ZM738.8,620.8 745.2,618.0 753.2,617.0 761.5,619.0 766.8,622.2 768.5,624.0 770.5,627.0 772.5,631.8 774.0,638.2 774.0,654.5 772.5,659.8 769.8,662.5 760.5,665.0 755.2,665.0 752.5,664.0 749.2,664.0 745.2,662.8 739.8,660.0 734.2,654.8 731.2,649.0 729.8,643.5 729.8,635.2 732.2,628.0 734.2,625.0ZM452.0,619.8 454.2,618.8 456.5,618.8 464.2,616.8 472.5,616.8 475.2,615.8 481.5,615.8 484.2,616.8 489.5,616.8 492.2,617.8 494.5,617.8 500.8,620.2 505.5,625.0 507.0,629.5 504.5,636.8 499.5,643.8 495.8,647.5 488.0,653.0 483.0,655.5 480.5,655.8 478.2,653.8 459.2,630.0 451.5,622.0 451.2,620.8ZM616.2,526.0 613.5,527.0 610.2,527.2 605.8,529.0 602.0,531.5 598.5,535.0 595.2,541.2 594.0,546.2 594.0,550.5 595.5,556.0 597.0,559.0 603.0,565.2 610.2,568.5 620.5,569.8 623.2,568.8 626.5,568.5 633.0,565.8 639.2,559.8 641.5,555.5 642.8,551.5 642.8,544.2 639.8,536.8 633.8,530.5 626.5,527.2 623.2,527.0 620.5,526.0ZM336.2,526.0 327.2,528.2 319.5,533.0 316.0,537.8 314.2,542.2 314.0,552.5 316.0,558.0 321.0,564.2 324.5,566.5 330.2,568.5 333.5,568.8 336.2,569.8 339.5,569.8 342.2,568.8 345.5,568.8 351.2,566.5 356.2,562.8 359.8,558.0 361.5,553.5 361.8,543.2 359.8,537.8 354.8,531.5 345.5,527.2 342.2,527.0 339.5,526.0ZM774.2,523.0 770.2,524.2 763.0,528.5 759.5,533.0 757.0,539.2 757.0,548.5 758.2,552.5 761.5,557.8 766.8,561.8 773.2,564.8 783.5,564.8 791.0,561.8 797.2,555.8 799.5,551.5 800.8,547.5 800.8,541.2 798.8,534.8 796.2,531.0 792.8,527.5 787.5,524.2 783.5,523.0ZM720.2,523.0 716.2,524.2 711.2,527.0 705.0,533.8 703.0,539.2 703.0,549.5 706.5,556.8 711.8,561.8 719.2,564.8 729.5,564.8 737.0,561.8 742.8,556.0 745.2,551.0 746.8,544.5 745.8,538.2 742.2,531.0 738.8,527.5 735.0,525.0 728.5,523.0ZM653.2,430.8 655.2,432.8 726.8,479.8 735.2,483.8 738.5,483.8 741.2,481.8 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 733.2,431.8 731.2,430.0 654.8,430.0ZM496.5,430.5 497.2,431.5 503.2,433.5 516.2,436.8 519.5,436.8 522.2,437.8 526.5,437.8 529.2,438.8 537.5,438.8 540.2,439.8 569.5,439.8 572.2,438.8 585.5,438.8 588.2,437.8 597.5,437.8 600.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 641.5,432.8 643.8,431.8 649.2,431.0 648.8,430.2 499.0,430.0Z"/><path fill="#DE0921" fill-rule="evenodd" d="M896.5,524.0 892.2,524.0 889.5,523.0 873.2,523.0 865.2,525.2 859.0,528.5 855.5,532.0 854.2,534.2 852.0,542.2 852.0,711.5 854.2,713.8 861.5,713.8 864.2,714.8 875.5,714.8 878.2,713.8 881.5,713.8 888.5,711.5 890.8,710.2 896.2,704.8 899.8,697.5 899.8,526.5 898.8,525.0ZM904.8,446.0 897.5,444.0 878.2,444.0 869.2,446.0 863.2,448.2 855.0,453.5 852.5,456.0 848.5,462.0 846.0,469.2 846.0,478.5 850.0,489.0 846.5,490.8 841.2,491.0 838.8,492.0 837.0,493.8 836.0,496.2 836.0,507.5 837.5,511.8 840.2,513.8 847.5,513.8 850.2,512.8 855.5,512.8 858.2,511.8 863.5,511.8 866.2,510.8 871.5,510.8 874.2,509.8 880.5,509.8 883.2,508.8 888.5,508.8 891.2,507.8 897.5,507.8 900.2,506.8 904.5,506.8 910.2,505.5 911.8,503.5 911.8,493.2 910.2,487.8 908.8,485.5 905.5,484.0 903.2,484.0 900.5,485.0 893.2,485.0 890.5,486.0 879.0,486.2 875.0,484.5 872.8,482.0 871.8,479.5 872.2,472.8 875.8,468.8 878.8,467.2 884.2,465.8 891.5,465.8 894.2,466.8 896.5,466.8 899.8,465.2 902.2,462.8 903.8,459.5 905.8,450.5 905.8,447.5Z"/></g></svg>`;
-
-/* ============================ الحالة ============================ */
-let S;
-function newState(keepSettings){
-  S = {
-    settings: keepSettings || { ...CONFIG.defaults, hostName:'' },
-    players: [], history: [], screen:'intro', phase:null,
-    draft:null, editIdx:null, talk:null, spoken:[], shop:null,
-    visitedRound:{}, voteChoice:null, modal:null, results:null
-  };
-}
-function newPlayer(id, name, isBot){
-  return { id, name, isBot, capital:CONFIG.startCapital, wallet:CONFIG.shoppingWallet,
-    perks:[], types:[], colors:[], fabrics:[], store:{bg:null, border:null},
-    designs:Array(CONFIG.designsCount).fill(null), featured:null,
-    brand:{name:'', desc:''}, discount:0, visits:0, sales:0, votes:0,
-    bought:[], extraUsed:false, score:0, awards:[] };
+function storeHTML(st, name, act) {
+  const bg = st.store && st.store.bg ? colorHex(st.store.bg) : '#f6f4f8', bd = st.store && st.store.border ? colorHex(st.store.border) : '#d6d0de';
+  const feat = (st.featured != null && st.designs && st.designs[st.featured]) || (st.designs || []).find(Boolean) || null;
+  return `<div class="store" style="background:${bg};border-color:${bd};color:${isLight(bg) ? '#1d1d1f' : '#fff'}" ${act || ''}>
+    ${st.discount ? `<span class="sbadges">🏷️${st.discount}%</span>` : ''}<div class="sname">${esc(st.brand && st.brand.name || L('متجر ', '') + name + L('', '’s store'))}</div>
+    <div class="sfeat">${designSVG(feat)}</div><div class="sowner">${esc(name)}</div></div>`;
 }
 
-/* ============================ المؤقت ============================ */
-const T = { left:0, total:0, id:null };
-const PHASES = {
-  buy:   {name:'Buying raw materials', key:'buyTime'},
-  design:{name:'Designing',            key:'designTime'},
-  build: {name:'Building the project',       key:'buildTime'},
-  talk:  {name:'Talking & persuading',    key:'talkTime'},
-  shop:  {name:'Shopping',             key:'shopTime'},
-  vote:  {name:'Voting',            key:'voteTime'}
-};
-function startTimer(sec){
-  stopTimer(); T.total = sec; T.left = sec;
-  T.id = setInterval(()=>{ T.left--; if(T.left<=0){ T.left=0; stopTimer(); } updTimer(); }, 1000);
-  updTimer();
-}
-function stopTimer(){ if(T.id){ clearInterval(T.id); T.id=null; } }
-function startPhaseTimer(){ stopTimer(); if(S.phase) startTimer(S.settings[PHASES[S.phase].key]); }
-function addTime(sec){ T.left += sec; T.total += sec; if(!T.id) startTimer(T.left); updTimer(); }
-function timerHTML(){
-  return `<div class="timer" id="timerBox"><div class="trow"><span class="tlabel">⏳ ${PHASES[S.phase].name}</span><span class="tval" id="tval"></span></div><div class="tbar"><i id="tbar"></i></div></div>`;
-}
-function updTimer(){
-  const v=$('tval'); if(!v) return;
-  v.textContent = T.left>0 ? fmt(T.left) : 'Time’s up ⏰';
-  $('tbar').style.width = (T.total ? T.left/T.total*100 : 0) + '%';
-  $('timerBox').classList.toggle('timeup', T.left<=0);
-  const eb=$('endBtn'); if(eb) eb.classList.toggle('pulse', T.left<=0);
-}
-const endBtn = (label, fn) => `<button class="btn end" id="endBtn" onclick="${fn}">End (${label})<span class="host-note">Host only</span></button>`;
+/* ---------- حسابات اللاعب ---------- */
+const P_ = CONFIG.prices;
+function spentOf(m) { return (m.perks || []).length * P_.perk + (m.types || []).length * P_.clothingType + (m.colors || []).length * P_.fabricColor + (m.fabrics || []).length * P_.fabricType + (m.store && m.store.bg ? P_.storeBg : 0) + (m.store && m.store.border ? P_.storeBorder : 0); }
+const stOf = id => (G.stores && G.stores[id]) || null;
+const capitalOf = id => { const s = stOf(id); const spent = s ? s.spent : spentOf(inp(id)); return CONFIG.startCapital - spent + ((G.salesMoney || {})[id] || 0); };
+const walletOf = id => (G.wallet && G.wallet[id] != null) ? G.wallet[id] : CONFIG.shoppingWallet;
 
-/* ============================ التنقل ============================ */
-function go(screen, phase){
-  S.history.push({screen:S.screen, phase:S.phase});
-  S.screen = screen;
-  if(phase !== undefined && phase !== S.phase){ S.phase = phase; startPhaseTimer(); }
-  render(); window.scrollTo(0,0);
-}
-function back(){
-  if(!S.history.length) return;
-  const prev = S.history[S.history.length-1];
-  const doBack = ()=>{
-    S.history.pop(); S.screen = prev.screen; S.modal = null;
-    if(prev.phase !== S.phase){ S.phase = prev.phase; startPhaseTimer(); }
-    render(); window.scrollTo(0,0);
-  };
-  if(prev.phase !== S.phase && S.phase) askConfirm('Take everyone back to the previous stage? (host only)', doBack);
-  else doBack();
-}
-function hdr(extra=''){
-  const showBack = S.history.length && S.screen!=='results';
-  return `<div class="top">${showBack?`<button class="backbtn" onclick="back()">← Back</button>`:'<span></span>'}${extra}</div>`;
-}
-const moneyBar = () => `<div class="moneybar"><span class="money">💰 Capital: ${money(me().capital)}</span><span class="money alt">👛 Shopping wallet: ${money(me().wallet)}</span></div>`;
-
-/* ============================ الشاشات ============================ */
-const SCREENS = {};
-
-SCREENS.intro = () => `
-<a class="backbtn aqfix" href="en.html">← Back</a>
-<div class="intro">
-  <div class="logo">${LOGO}</div>
-  <div class="gname">Alazyaa</div>
-  <p class="lead">Design your collection, set up your store and show your signature piece.<br>Convince the others to visit your store and buy from you.<br>The most persuasive and creative wins.</p>
-  <button class="btn" onclick="go('setup')">Got it</button>
-  <div class="proto">Prototype — mock data</div>
-</div>`;
-
-const STEP_META = {
-  players:   {label:'Players',            min:()=>CONFIG.limits.players[0],    max:()=>CONFIG.limits.players[1],   step:1},
-  buyTime:   {label:'Raw materials time', time:true},
-  designTime:{label:'Design time',             time:true},
-  buildTime: {label:'Project building time',        time:true},
-  talkRounds:{label:'Talk rounds',        min:()=>CONFIG.limits.talkRounds[0], max:()=>CONFIG.limits.talkRounds[1], step:1},
-  speakers:  {label:'Speakers per round',   min:()=>CONFIG.limits.speakers[0],   max:()=>Math.min(CONFIG.limits.speakers[1], S.settings.players), step:1},
-  talkTime:  {label:'Talk time (per speaker)', time:true},
-  shopRounds:{label:'Shopping rounds',        min:()=>CONFIG.limits.shopRounds[0], max:()=>CONFIG.limits.shopRounds[1], step:1},
-  shopTime:  {label:'Shopping time (per round)',   time:true},
-  voteTime:  {label:'Voting time',             time:true}
-};
-function bump(key, dir){
-  const m = STEP_META[key];
-  const min = m.time ? CONFIG.timer.min : m.min(), max = m.time ? CONFIG.timer.max : m.max(), step = m.time ? CONFIG.timer.step : m.step;
-  S.settings[key] = Math.min(max, Math.max(min, S.settings[key] + dir*step));
-  if(key==='players') S.settings.speakers = Math.min(S.settings.speakers, S.settings.players);
-  render();
-}
-const stepRow = key => {
-  const m = STEP_META[key], v = S.settings[key];
-  return `<div class="row"><span>${m.label}</span><div class="stepper"><button onclick="bump('${key}',1)">+</button><span class="v">${m.time?fmt(v):v}</span><button onclick="bump('${key}',-1)">−</button></div></div>`;
-};
-
-SCREENS.setup = () => `
-${hdr('<span class="tag">Host settings</span>')}
-<h2>Game settings</h2>
-<p class="sub">The host sets the times and rounds. Times go from 30 seconds to 5 minutes.</p>
-<div class="card"><h3>Your name</h3>
-  <input class="field" maxlength="20" placeholder="Type your name" value="${esc(S.settings.hostName)}" oninput="S.settings.hostName=this.value">
-</div>
-<div class="card"><h3>Players</h3>${stepRow('players')}
-  <div class="row"><span>Host</span><span class="chip on">Plays & runs <span class="assume">Host-only mode in the online version</span></span></div>
-</div>
-<div class="card"><h3>Stages</h3>${stepRow('buyTime')}${stepRow('designTime')}${stepRow('buildTime')}</div>
-<div class="card"><h3>Talking & persuading</h3>${stepRow('talkRounds')}${stepRow('speakers')}${stepRow('talkTime')}
-  <div class="sub" style="margin-top:6px">The game picks speakers at random each round.</div></div>
-<div class="card"><h3>Shopping & voting</h3>${stepRow('shopRounds')}${stepRow('shopTime')}${stepRow('voteTime')}</div>
-<div class="card"><h3>Budget <span class="badge">Temporary — edit in CONFIG</span></h3>
-  <div class="row"><span>💰 Capital (materials & perks)</span><b>${money(CONFIG.startCapital)}</b></div>
-  <div class="row"><span>👛 Shopping wallet (separate)</span><b>${money(CONFIG.shoppingWallet)}</b></div>
-  <div class="row"><span>🏆 Categories</span><b>${CONFIG.categories.length} × ${CONFIG.categories[0].points} = ${CONFIG.categories.reduce((a,c)=>a+c.points,0)}</b></div>
-</div>
-<button class="btn" onclick="startGame()">Start</button>`;
-
-function startGame(){
-  const n = S.settings.players;
-  const names = shuffle(BOT_NAMES).slice(0, n-1);
-  const brands = shuffle(BRANDS);
-  S.players = [newPlayer(0, S.settings.hostName.trim() || 'You', false), ...names.map((nm,i)=>newPlayer(i+1, nm, true))];
-  S.players.slice(1).forEach((p,i)=>botBuild(p, brands[i % brands.length]));
-  S.spoken = []; S.results = null; S.voteChoice = null;
-  go('perks', 'buy');
-}
-
-function botBuild(p, brandName){
-  const pr = CONFIG.prices;
-  const tryBuy = (cost, fn) => { if(p.capital >= cost){ p.capital -= cost; fn(); } };
-  shuffle(PERKS).slice(0, rand(0,2)).forEach(k=>tryBuy(pr.perk, ()=>p.perks.push(k.id)));
-  tryBuy(pr.storeBg, ()=>p.store.bg = pick(COLORS).id);
-  tryBuy(pr.storeBorder, ()=>p.store.border = pick(COLORS).id);
-  shuffle(CLOTHES).slice(0, rand(2,4)).forEach(c=>tryBuy(pr.clothingType, ()=>p.types.push(c.id)));
-  shuffle(COLORS).slice(0, rand(1,CONFIG.maxFabricColors)).forEach(c=>tryBuy(pr.fabricColor, ()=>p.colors.push(c.id)));
-  shuffle(FABRICS).slice(0, rand(1,CONFIG.maxFabricTypes)).forEach(f=>tryBuy(pr.fabricType, ()=>p.fabrics.push(f.id)));
-  if(p.types.length && p.colors.length && p.fabrics.length){
-    for(let i=0;i<CONFIG.designsCount;i++){
-      const bt = pick(p.types);
-      const others = p.types.filter(t=>t!==bt);
-      p.designs[i] = {
-        name: 'Design ' + (i+1),
-        base: {type:bt, color:pick(p.colors), fabric:pick(p.fabrics), pattern:pick(PATTERNS).id},
-        extra: (others.length && Math.random()<.55) ? {type:pick(others), color:pick(p.colors), fabric:pick(p.fabrics), pattern:pick(PATTERNS).id} : null,
-        price: rand(Math.max(CONFIG.salePrice.min,3), Math.min(CONFIG.salePrice.max,12))
-      };
-    }
-    p.featured = rand(0, CONFIG.designsCount-1);
-  }
-  p.brand = { name: brandName, desc: pick(DESCS) };
-  if(p.perks.includes('sale')) p.discount = rand(1,4)*10;
-}
-
-/* ---------- المزايا ---------- */
-function spend(cost){ if(me().capital < cost){ toast('Not enough capital'); return false; } me().capital -= cost; return true; }
-function togglePerk(id){
-  const p = me(), i = p.perks.indexOf(id);
-  if(i>=0){ p.perks.splice(i,1); p.capital += CONFIG.prices.perk; if(id==='sale') p.discount=0; }
-  else if(spend(CONFIG.prices.perk)) p.perks.push(id);
-  render();
-}
-SCREENS.perks = () => `
-${hdr('<span class="tag">Step 1 of 2</span>')}
-${timerHTML()}
-<h2>Perks</h2>
-<p class="sub">You can buy perks before the raw materials. <span class="badge">Trial — not final</span></p>
-${moneyBar()}
-<div class="perks">${PERKS.map(k=>{ const on = me().perks.includes(k.id); return `
-  <button class="perk ${on?'on':''}" onclick="togglePerk('${k.id}')">
-    <span class="pi">${k.icon}</span>
-    <span class="pt"><b>${k.name}</b><small>${k.desc} ${k.live?'<span class="assume">Active for testing</span>':'<span class="assume">Effect not decided</span>'}</small></span>
-    <span class="pp">${on?'✓ Bought':money(CONFIG.prices.perk)}<small>Temporary price</small></span>
-  </button>`; }).join('')}</div>
-<button class="btn" onclick="go('materials')">Next: Raw materials →</button>
-${endBtn('go to Designing','endBuy()')}`;
-
-/* ---------- المواد الأولية ---------- */
-const OWN_MAX = { colors:()=>CONFIG.maxFabricColors, fabrics:()=>CONFIG.maxFabricTypes };
-const OWN_MSG = { colors:'two colours', fabrics:'two types' };
-function toggleOwned(listKey, id, cost){
-  const p = me(), arr = p[listKey], i = arr.indexOf(id);
-  if(i>=0){ arr.splice(i,1); p.capital += cost; }
-  else if(OWN_MAX[listKey] && arr.length >= OWN_MAX[listKey]()){ toast('You can pick only '+OWN_MSG[listKey]+' — remove one first'); return; }
-  else if(spend(cost)) arr.push(id);
-  render();
-}
-function setStore(part, id){
-  const p = me(), cost = part==='bg' ? CONFIG.prices.storeBg : CONFIG.prices.storeBorder;
-  if(p.store[part] === id){ p.store[part] = null; p.capital += cost; }
-  else if(p.store[part]){ p.store[part] = id; }          // تبديل لون بلون: نفس السعر
-  else if(spend(cost)) p.store[part] = id;
-  render();
-}
-const swatch = (c, on, fn) => `<div class="swwrap"><button class="sw ${on?'on':''}" style="background:${c.hex}" onclick="${fn}" aria-label="${c.name}"></button><div class="swl">${c.name}</div></div>`;
-
-SCREENS.materials = () => { const p = me(); return `
-${hdr('<span class="tag">Step 2 of 2</span>')}
-${timerHTML()}
-<h2>Raw materials</h2>
-<p class="sub">Buy clothing types, two fabric types, two fabric colours and your store colours. Tap again to refund. <span class="badge">Temporary prices</span></p>
-${moneyBar()}
-<div class="card"><h3>👗 Clothing types <small style="color:var(--mut)">— ${money(CONFIG.prices.clothingType)} each</small></h3>
-  <div class="chips">${CLOTHES.map(c=>`<button class="chip ${p.types.includes(c.id)?'on':''}" onclick="toggleOwned('types','${c.id}',CONFIG.prices.clothingType)">${p.types.includes(c.id)?'✓ ':''}${c.name}</button>`).join('')}</div>
-</div>
-<div class="card"><h3>🧵 Fabric type <small style="color:var(--mut)">— ${money(CONFIG.prices.fabricType)} each • ${p.fabrics.length}/${CONFIG.maxFabricTypes}</small></h3>
-  <p class="sub">Pick two fabric types, e.g. leather and velvet.</p>
-  <div class="chips">${FABRICS.map(f=>`<button class="chip ${p.fabrics.includes(f.id)?'on':''}" onclick="toggleOwned('fabrics','${f.id}',CONFIG.prices.fabricType)">${p.fabrics.includes(f.id)?'✓ ':''}${f.name}</button>`).join('')}</div>
-</div>
-<div class="card"><h3>🎨 Fabric colour <small style="color:var(--mut)">— ${money(CONFIG.prices.fabricColor)} each • ${p.colors.length}/${CONFIG.maxFabricColors}</small></h3>
-  <p class="sub">Pick two fabric colours, e.g. white and red.</p>
-  <div class="swatches">${COLORS.map(c=>swatch(c, p.colors.includes(c.id), `toggleOwned('colors','${c.id}',CONFIG.prices.fabricColor)`)).join('')}</div>
-</div>
-<div class="card"><h3>🏬 Store colours</h3>
-  <p class="sub">Your store is a square: pick a background and a frame colour to show off your designs.</p>
-  <b>Background — ${money(CONFIG.prices.storeBg)}</b>
-  <div class="swatches" style="margin:8px 0 14px">${COLORS.map(c=>swatch(c, p.store.bg===c.id, `setStore('bg','${c.id}')`)).join('')}</div>
-  <b>Frame — ${money(CONFIG.prices.storeBorder)}</b>
-  <div class="swatches" style="margin:8px 0 14px">${COLORS.map(c=>swatch(c, p.store.border===c.id, `setStore('border','${c.id}')`)).join('')}</div>
-  <div class="storebig">${storeHTML(p, {preview:true})}</div>
-</div>
-${endBtn('go to Designing','endBuy()')}`; };
-
-function endBuy(){ go('design','design'); }
-
-/* ---------- المتجر ---------- */
-function storeHTML(p, opts={}){
-  const bg = p.store.bg ? colorHex(p.store.bg) : '#f6f4f8';
-  const bd = p.store.border ? colorHex(p.store.border) : '#d6d0de';
-  const ink = isLight(bg) ? '#1d1d1f' : '#ffffff';
-  const feat = (p.featured!=null && p.designs[p.featured]) || p.designs.find(Boolean) || null;
-  const badges = [p.perks.includes('location')?'📍':'', p.discount?`🏷️${p.discount}%`:''].join(' ');
-  return `<div class="store" style="background:${bg};border-color:${bd};color:${ink}" ${opts.onclick?`onclick="${opts.onclick}"`:''}>
-    ${badges.trim()?`<span class="sbadges">${badges}</span>`:''}
-    <div class="sname">${esc(p.brand.name || (opts.preview ? 'Your store' : p.name+'’s store'))}</div>
-    <div class="sfeat">${feat?designSVG(feat):designSVG(null)}</div>
-    <div class="sowner">${esc(p.name)}</div>
-  </div>`;
-}
-
-/* ---------- التصميم ---------- */
-SCREENS.design = () => { const p = me(); const done = p.designs.filter(Boolean).length; return `
-${hdr(`<span class="tag">${done} / ${CONFIG.designsCount} ready</span>`)}
-${timerHTML()}
-<h2>Design your collection</h2>
-<p class="sub">Make ${CONFIG.designsCount} designs from the pieces and colours you bought, then pick a pattern and price.</p>
-${(!p.types.length || !p.colors.length || !p.fabrics.length) ? `<div class="warn">You have no ${!p.types.length?'clothing types':!p.fabrics.length?'fabric type':'fabric colour'}. Go back to buying (Back button) before designing.</div>` : ''}
-<div class="dgrid">${p.designs.map((d,i)=>`
-  <button class="dcard" onclick="openEditor(${i})">${designSVG(d)}<b>${d?esc(d.name):'Design '+(i+1)}</b><small>${d?money(d.price):'Tap to design'}</small></button>`).join('')}</div>
-${endBtn('go to Building the project','endDesign()')}`; };
-
-function openEditor(i){
-  const p = me();
-  if(!p.types.length || !p.colors.length || !p.fabrics.length){ toast('Buy a clothing type, fabric type and fabric colour first'); return; }
-  const d = p.designs[i];
-  S.editIdx = i;
-  S.draft = d ? JSON.parse(JSON.stringify(d)) : {
-    name:'Design '+(i+1),
-    base:{type:p.types[0], color:p.colors[0], fabric:p.fabrics[0], pattern:'plain'},
-    extra:null, price:CONFIG.salePrice.def
-  };
-  go('editor');
-}
-function setD(part, key, val){
-  if(part==='extra' && key==='type'){
-    if(val==='none'){ S.draft.extra = null; render(); return; }
-    if(!S.draft.extra) S.draft.extra = {type:val, color:me().colors[0], fabric:me().fabrics[0], pattern:'plain'};
-  }
-  S.draft[part][key] = val; render();
-}
-function bumpPrice(dir){ const sp = CONFIG.salePrice; S.draft.price = Math.min(sp.max, Math.max(sp.min, S.draft.price + dir)); render(); }
-function saveDesign(){ me().designs[S.editIdx] = JSON.parse(JSON.stringify(S.draft)); toast('Design saved ✓'); back(); }
-function clearDesign(){ me().designs[S.editIdx] = null; if(me().featured===S.editIdx) me().featured=null; back(); }
-
-const pieceEditor = (part) => { const p = me(), x = S.draft[part]; return `
-  <div class="chips" style="margin-bottom:10px">
-    ${part==='extra'?`<button class="chip ${!x?'on':''}" onclick="setD('extra','type','none')">None</button>`:''}
-    ${p.types.map(t=>`<button class="chip ${x&&x.type===t?'on':''}" onclick="setD('${part}','type','${t}')">${cloth(t).name}</button>`).join('')}
-  </div>
-  ${x?`<div class="chips" style="margin-bottom:10px">${p.fabrics.map(f=>`<button class="chip ${x.fabric===f?'on':''}" onclick="setD('${part}','fabric','${f}')">🧵 ${fabric(f).name}</button>`).join('')}</div>
-  <div class="swatches" style="margin-bottom:10px">${p.colors.map(c=>swatch(COLORS.find(k=>k.id===c), x.color===c, `setD('${part}','color','${c}')`)).join('')}</div>
-  <div class="chips">${PATTERNS.map(pt=>`<button class="chip ${x.pattern===pt.id?'on':''}" onclick="setD('${part}','pattern','${pt.id}')">${pt.name}</button>`).join('')}</div>`:''}`; };
-
-SCREENS.editor = () => `
-${hdr(`<span class="tag">Design ${S.editIdx+1}</span>`)}
-${timerHTML()}
-<div class="preview">${designSVG(S.draft)}</div>
-<div class="card"><h3>Design name</h3><input class="field" maxlength="20" value="${esc(S.draft.name)}" oninput="S.draft.name=this.value"></div>
-<div class="card"><h3>Main piece</h3>${pieceEditor('base')}</div>
-<div class="card"><h3>Extra piece <span class="assume">optional</span></h3>${pieceEditor('extra')}
-  <div class="sub" style="margin-top:8px">Patterns are free <span class="assume">assumption</span></div></div>
-<div class="card"><div class="row"><span>Price <span class="assume">assumption ${CONFIG.salePrice.min}–${CONFIG.salePrice.max}</span></span>
-  <div class="stepper"><button onclick="bumpPrice(1)">+</button><span class="v">${money(S.draft.price)}</span><button onclick="bumpPrice(-1)">−</button></div></div></div>
-<button class="btn" onclick="saveDesign()">Save design</button>
-${me().designs[S.editIdx]?`<button class="btn ghost" onclick="clearDesign()">Delete design</button>`:''}`;
-
-function endDesign(){ go('build','build'); }
-
-/* ---------- بناء المشروع ---------- */
-function setFeatured(i){ me().featured = i; render(); }
-function bumpDiscount(dir){ me().discount = Math.min(CONFIG.discountMax, Math.max(0, me().discount + dir*5)); render(); }
-SCREENS.build = () => { const p = me(); const done = p.designs.map((d,i)=>d?i:null).filter(i=>i!==null); return `
-${hdr()}
-${timerHTML()}
-<h2>Building the project</h2>
-<p class="sub">Name your brand, write a short description and pick the signature piece you’ll show.</p>
-<div class="storebig">${storeHTML(p,{preview:true})}</div>
-<div class="card"><h3>Brand name</h3>
-  <input class="field" maxlength="${CONFIG.brandNameMax}" placeholder="e.g. House of ..." value="${esc(p.brand.name)}" oninput="me().brand.name=this.value">
-</div>
-<div class="card"><h3>Brand description <span class="assume">up to ${CONFIG.brandDescMax} characters</span></h3>
-  <textarea class="field" rows="3" maxlength="${CONFIG.brandDescMax}" placeholder="One or two sentences about your brand" oninput="me().brand.desc=this.value;$('dcount').textContent=this.value.length">${esc(p.brand.desc)}</textarea>
-  <div class="counter"><span id="dcount">${p.brand.desc.length}</span> / ${CONFIG.brandDescMax}</div>
-</div>
-<div class="card"><h3>⭐ Signature piece</h3>
-  ${done.length ? `<div class="dgrid">${done.map(i=>`<button class="dcard ${p.featured===i?'on':''}" onclick="setFeatured(${i})">${designSVG(p.designs[i])}<b>${esc(p.designs[i].name)}</b><small>${p.featured===i?'✓ Signature':money(p.designs[i].price)}</small></button>`).join('')}</div>`
-    : `<div class="warn">You have no finished designs. Go back to designing.</div>`}
-</div>
-${p.perks.includes('sale')?`<div class="card"><div class="row"><span>🏷️ Sale percentage <span class="assume">trial</span></span>
-  <div class="stepper"><button onclick="bumpDiscount(1)">+</button><span class="v">${p.discount}%</span><button onclick="bumpDiscount(-1)">−</button></div></div></div>`:''}
-${endBtn('go to the talk rounds','endBuild()')}`; };
-
-function endBuild(){
-  const p = me();
-  if(p.featured===null || !p.designs[p.featured]){ const i = p.designs.findIndex(Boolean); p.featured = i>=0 ? i : null; }
-  if(!p.brand.name.trim()) p.brand.name = p.name + '’s store';
-  startTalkRound(1);
-  go('talk','talk');
-}
-
-/* ---------- التحدث والإقناع ---------- */
-function startTalkRound(r){
-  const k = Math.min(S.settings.speakers, S.players.length);
-  const all = S.players.map(p=>p.id);
-  let picks = shuffle(all.filter(id=>!S.spoken.includes(id))).slice(0,k);
-  if(picks.length < k){ S.spoken = []; picks = picks.concat(shuffle(all.filter(id=>!picks.includes(id))).slice(0, k-picks.length)); }
-  S.spoken.push(...picks);
-  S.talk = { round:r, speakers:picks, idx:0 };
-}
-function useExtraTime(){
-  const sp = S.players[S.talk.speakers[S.talk.idx]];
-  sp.extraUsed = true; addTime(CONFIG.extraTimeSec); toast(`+${CONFIG.extraTimeSec} s for ${sp.name}`); render();
-}
-function talkNextLabel(){
-  const t = S.talk;
-  if(t.idx < t.speakers.length-1) return 'go to ' + S.players[t.speakers[t.idx+1]].name + '’s pitch';
-  if(t.round < S.settings.talkRounds) return 'go to talk round ' + (t.round+1);
-  return 'go to Shopping';
-}
-function endTalk(){
-  const t = S.talk;
-  if(t.idx < t.speakers.length-1){ t.idx++; startTimer(S.settings.talkTime); render(); window.scrollTo(0,0); return; }
-  if(t.round < S.settings.talkRounds){ startTalkRound(t.round+1); startTimer(S.settings.talkTime); render(); window.scrollTo(0,0); return; }
-  S.shop = { round:1 }; S.visitedRound = {}; S.modal = null;
-  go('mall','shop');
-}
-SCREENS.talk = () => {
-  const t = S.talk, sp = S.players[t.speakers[t.idx]];
-  const feat = sp.featured!=null ? sp.designs[sp.featured] : null;
-  return `
-${hdr(`<span class="tag">Talk round ${t.round} / ${S.settings.talkRounds}</span>`)}
-${timerHTML()}
-<div class="speakers">${t.speakers.map((id,i)=>`<span class="spk ${i===t.idx?'now':i<t.idx?'done':''}">${esc(S.players[id].name)}</span>`).join('')}</div>
-<div class="stage">
-  <div class="who">Now pitching<b>${esc(sp.name)}${sp.id===0?' (you)':''}</b></div>
-  <div class="card">
-    <div style="font-weight:900;font-size:20px">${esc(sp.brand.name)}</div>
-    <div class="preview">${designSVG(feat)}</div>
-    <div style="font-weight:800">⭐ ${feat?esc(feat.name)+' — '+money(finalPrice(sp,feat)):'No signature piece'}</div>
-    ${sp.brand.desc?`<div class="desc">${esc(sp.brand.desc)}</div>`:''}
-  </div>
-  ${sp.perks.includes('extraTime') && !sp.extraUsed ? `<button class="btn ghost" onclick="useExtraTime()">⏱️ Use the extra time perk (+${CONFIG.extraTimeSec} s) <span class="assume">trial</span></button>`:''}
-</div>
-${endBtn(talkNextLabel(),'endTalk()')}`;
-};
-
-/* ---------- التسوق ---------- */
-function openStore(id){
-  const p = S.players[id];
-  if(!S.visitedRound[id]){ S.visitedRound[id] = true; p.visits++; }
-  S.modal = {type:'store', id}; renderModal();
-}
-function buyDesign(sid, i){
-  const s = S.players[sid], d = s.designs[i], b = me(), price = finalPrice(s,d), key = sid+':'+i;
-  if(b.bought.includes(key)) return;
-  if(b.wallet < price){ toast('Not enough in your shopping wallet'); return; }
-  b.wallet -= price; b.bought.push(key); s.sales++;
-  if(CONFIG.saleRevenueTo==='capital') s.capital += price;
-  toast(`You bought “${d.name}” from ${s.brand.name}`);
-  renderModal(); render();
-}
-function botsShop(){
-  S.players.filter(p=>p.isBot).forEach(bot=>{
-    const targets = shuffle(S.players.filter(p=>p.id!==bot.id)).slice(0, rand(1,3));
-    targets.forEach(s=>{
-      s.visits++;
-      if(Math.random() < .4){
-        const opts = s.designs.map((d,i)=>({d,i})).filter(o=>o.d && !bot.bought.includes(s.id+':'+o.i) && finalPrice(s,o.d) <= bot.wallet);
-        if(opts.length){ const o = pick(opts), pr = finalPrice(s,o.d); bot.wallet -= pr; bot.bought.push(s.id+':'+o.i); s.sales++; if(CONFIG.saleRevenueTo==='capital') s.capital += pr; }
-      }
+/* ---------- تعريف اللعبة ---------- */
+const GAME = {
+  key: 'azyaa',
+  name: { ar: 'الأزياء', en: 'ALAZYAA' },
+  intro: { ar: 'صمّم تشكيلتك وجهّز متجرك واعرض قطعتك المميزة.<br>أقنع الباقين يزورون متجرك ويشترون منك.<br>الأكثر إقناعًا وإبداعًا يفوز.', en: 'Design your collection, set up your store and show your signature piece.<br>Convince the others to visit your store and buy from you.<br>The most persuasive and creative wins.' },
+  timer: { min: 30, max: 300, step: 30 },
+  defaults: { hostPlays: 1, players: 3, buyTime: 120, designTime: 300, buildTime: 120, talkRounds: 1, speakers: 2, talkTime: 60, shopRounds: 2, shopTime: 90, voteTime: 60 },
+  limits: { buyTime: [30, 300, 30], designTime: [30, 300, 30], buildTime: [30, 300, 30], talkTime: [30, 300, 30], shopTime: [30, 300, 30], voteTime: [30, 300, 30], talkRounds: [1, 5, 1], speakers: [1, 5, 1], shopRounds: [1, 5, 1] },
+  afterStep() { G.settings.speakers = Math.min(G.settings.speakers, G.settings.players); },
+  settingsView() {
+    return timeRow('buyTime', L('وقت شراء المواد الأولية', 'Raw materials time')) + timeRow('designTime', L('وقت التصميم', 'Design time')) + timeRow('buildTime', L('وقت بناء المشروع', 'Project building time')) +
+      stp('talkRounds', 1, 5, { label: L('عدد جولات التحدث', 'Talk rounds') }) + stp('speakers', 1, Math.min(5, G.settings.players), { label: L('عدد المتحدثين بالجولة (عشوائي)', 'Speakers per round (random)') }) + timeRow('talkTime', L('وقت التحدث والإقناع', 'Talk time')) +
+      stp('shopRounds', 1, 5, { label: L('عدد جولات التسوق', 'Shopping rounds') }) + timeRow('shopTime', L('وقت التسوق', 'Shopping time')) + timeRow('voteTime', L('وقت التصويت', 'Voting time')) +
+      `<p class="sub">${L('رأس المال', 'Capital')} ${money(CONFIG.startCapital)} · ${L('محفظة التسوق', 'Shopping wallet')} ${money(CONFIG.shoppingWallet)} <span class="badge">${L('مؤقت', 'temporary')}</span></p>`;
+  },
+  settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · ${s.talkRounds} ${L('جولات تحدث', 'talk rounds')} · ${s.shopRounds} ${L('جولات تسوق', 'shopping rounds')} · ${L('رأس المال', 'capital')} ${money(CONFIG.startCapital)}`; },
+  freshExtra: () => ({ stores: {}, wallet: {}, visits: {}, sales: {}, salesMoney: {}, bought: {}, votes: {}, talk: null, shop: null, results: null, extraUsed: {}, spoken: [] }),
+  resetMine(m) { Object.assign(m, { perks: [], types: [], colors: [], fabrics: [], store: { bg: null, border: null }, designs: Array(CONFIG.designsCount).fill(null), featured: null, brand: { name: '', desc: '' }, discount: 0, done: {}, vote: null }); },
+  viewKey: () => (G.talk ? 't' + G.talk.round + G.talk.idx : '') + (G.shop ? 's' + G.shop.round : '') + (U.edit != null ? 'e' + U.edit : ''),
+  start() {
+    phaseTo(() => {
+      Object.assign(G, GAME.freshExtra());
+      G.players.forEach(p => { G.wallet[p.id] = CONFIG.shoppingWallet; G.visits[p.id] = 0; G.sales[p.id] = 0; G.salesMoney[p.id] = 0; G.bought[p.id] = []; G.votes[p.id] = 0; });
+      G.phase = 'buy'; setTimer(G.settings.buyTime);
     });
-  });
-}
-function endShop(){
-  botsShop(); S.modal = null;
-  if(S.shop.round < S.settings.shopRounds){
-    S.shop.round++; S.visitedRound = {}; startTimer(S.settings.shopTime);
-    toast('Shopping round ' + S.shop.round + ' started'); render(); window.scrollTo(0,0); return;
+  },
+  hostSync() { return false; },
+  applyReq(id, r) {
+    if (r.g !== G.gameNo) return;
+    if (r.type === 'extra' && G.phase === 'talk') {
+      const sp = G.talk.speakers[G.talk.idx];
+      if (sp === id && !G.extraUsed[id] && (stOf(id) || {}).perks && stOf(id).perks.includes('extraTime')) { G.extraUsed[id] = 1; G.endsAt += CONFIG.extraTimeSec * 1000; G.dur += CONFIG.extraTimeSec; addLog(L(`+${CONFIG.extraTimeSec} ثانية لـ${P(id).name}`, `+${CONFIG.extraTimeSec}s for ${P(id).name}`)); }
+    }
+    if (G.phase !== 'shop') return;
+    const k = G.shop.round;
+    if (r.type === 'visit' && r.sid !== id && inRoom(r.sid)) {
+      G.shop.seen = G.shop.seen || {}; const key = k + ':' + id + ':' + r.sid;
+      if (!G.shop.seen[key]) { G.shop.seen[key] = 1; G.visits[r.sid] = (G.visits[r.sid] || 0) + 1; }
+    }
+    if (r.type === 'buy' && r.sid !== id) {
+      const st = stOf(r.sid), d = st && st.designs[r.i]; if (!d) return;
+      const key = r.sid + ':' + r.i, price = finalPrice(st, d);
+      if ((G.bought[id] || []).includes(key) || walletOf(id) < price) return;
+      G.wallet[id] = walletOf(id) - price; G.bought[id] = (G.bought[id] || []).concat([key]);
+      G.sales[r.sid] = (G.sales[r.sid] || 0) + 1; G.salesMoney[r.sid] = (G.salesMoney[r.sid] || 0) + price;
+      addLog(L(`🛍️ ${P(id).name} اشترى من ${st.brand.name}`, `🛍️ ${P(id).name} bought from ${st.brand.name}`));
+    }
+  },
+  view() {
+    const host = isHost(), me = amPlayer();
+    const lbl = { buy: L('شراء المواد الأولية', 'Buying raw materials'), design: L('التصميم', 'Designing'), build: L('بناء المشروع', 'Building the project'), talk: L('التحدث والإقناع', 'Talking & persuading'), shop: L('التسوق', 'Shopping'), vote: L('التصويت', 'Voting') }[G.phase];
+    let h = G.phase !== 'final' ? clockBox(lbl) : '';
+    if (G.phase === 'buy') h += me ? (U.sub === 'mat' ? matView() : perksView()) : '';
+    if (G.phase === 'design') h += me ? (U.edit != null ? editorView() : designView()) : '';
+    if (G.phase === 'build') h += me ? buildView() : '';
+    if (['buy', 'design', 'build'].includes(G.phase)) {
+      const done = G.players.filter(p => (inp(p.id).done || {})[G.phase] === G.gameNo).map(p => p.id);
+      if (host) h += progBox(L('مين خلص', 'Who’s done'), done) + endBtn({ buy: L('الذهاب للتصميم', 'go to Designing'), design: L('الذهاب لبناء المشروع', 'go to Building'), build: L('الذهاب لجولات التحدث', 'go to the talk rounds') }[G.phase], 'next');
+      else h += waitHost();
+    }
+    if (G.phase === 'talk') h += talkView();
+    if (G.phase === 'shop') h += mallView();
+    if (G.phase === 'vote') h += voteView();
+    if (G.phase === 'final') h += finalView();
+    return h;
+  },
+  modalView(m) {
+    if (m.type === 'store') return storeModal(m.id);
+    return '';
+  },
+  bind(b, el) {
+    const m = mine();
+    if (b === 'dname') { U.draft.name = el.value; }
+    if (b === 'bname') { m.brand.name = el.value; saveMeSoon(); }
+    if (b === 'bdesc') { m.brand.desc = el.value; const c = $('dcount'); if (c) c.textContent = el.value.length; saveMeSoon(); }
+  },
+  assumptions: {
+    ar: ['اللون البنفسجي مؤقت.', 'العملة «د.ك» ورأس المال ١٠٠ ومحفظة التسوق ٥٠ — أرقام مؤقتة.', 'كل الأسعار مؤقتة: نوع الملابس ٨، لون الخامة ٤، نوع الخامة ٥، خلفية المتجر ٦، إطار المتجر ٤، كل ميزة ١٠.', 'الخامات: لين لونين ولين نوعين.', 'المزايا تجريبية؛ مفعّل منها «وقت إضافي» (+٣٠ ث) و«تنزيلات». الباقي بدون تأثير.', 'الأنماط مجانية. كل تصميم = قطعة أساسية + إضافية اختيارية. سعر البيع من ١ إلى ٢٠.', 'فلوس المبيعات تنضاف لرأس المال.', 'الزيارة تنحسب مرة لكل زائر لكل متجر بكل جولة تسوق.', 'كل لاعب يشتري التصميم مرة، وما يشتري من متجره.', '«محفظة التسوق»: ياخذها أعلى رصيد متبقي.', 'التصويت: صوت واحد لأكثر مصمم إبداعًا، وما يصوت لنفسه.', 'التعادل يقسم النقاط، وإذا الأعلى صفر ما أحد ياخذها.', 'إذا خلص الوقت ما تنتقل اللعبة تلقائيًا؛ المضيف يضغط «إنهاء».'],
+    en: ['Purple is temporary.', 'Currency “KD”, capital 100, shopping wallet 50 — temporary.', 'All prices temporary: clothing type 8, fabric colour 4, fabric type 5, store background 6, frame 4, each perk 10.', 'Fabrics: up to two colours and two types.', 'Perks are trial; active: “Extra time” (+30 s) and “Sale”. The rest have no effect yet.', 'Patterns are free. Each design = main piece + optional extra. Price 1–20.', 'Sales money is added to capital.', 'A visit counts once per visitor per store per shopping round.', 'Each player buys a design once, never from their own store.', '“Shopping wallet” goes to the highest remaining balance.', 'Voting: one vote for the most creative designer, no self-votes.', 'Ties split points; if the top value is zero nobody scores.', 'When time runs out nothing moves on by itself; the host presses “End”.']
   }
-  S.voteChoice = null; go('vote','vote');
-}
-SCREENS.mall = () => { const p = me(); const others = S.players.filter(x=>x.id!==0); return `
-${hdr(`<span class="tag">Shopping round ${S.shop.round} / ${S.settings.shopRounds}</span>`)}
-${timerHTML()}
-<h2>The market</h2>
-<p class="sub">Enter the stores, browse the collections and buy with your shopping wallet.</p>
-${moneyBar()}
-<div class="moneybar"><span class="money">🚶 Your store visits: ${p.visits}</span><span class="money">🛍️ Your sales: ${p.sales}</span></div>
-<div class="grid">${others.map(s=>storeHTML(s,{onclick:`openStore(${s.id})`})).join('')}</div>
-${endBtn(S.shop.round < S.settings.shopRounds ? 'go to shopping round '+(S.shop.round+1) : 'go to Voting','endShop()')}`; };
-
-function storeModal(id){
-  const s = S.players[id], b = me();
-  const bg = s.store.bg?colorHex(s.store.bg):'#f6f4f8', bd = s.store.border?colorHex(s.store.border):'#d6d0de';
-  return `<div style="border:7px solid ${bd};background:${bg};color:${isLight(bg)?'#1d1d1f':'#fff'};border-radius:10px;padding:12px;text-align:center">
-    <div style="font-weight:900;font-size:20px">${esc(s.brand.name)}</div>
-    <div style="font-size:13px;opacity:.85">${esc(s.name)} ${s.discount?` • 🏷️ ${s.discount}% sale`:''}</div>
-  </div>
-  ${s.brand.desc?`<div class="desc">${esc(s.brand.desc)}</div>`:''}
-  ${s.designs.map((d,i)=>{ if(!d) return `<div class="item">${designSVG(null)}<div class="in"><b>Unfinished design</b></div></div>`;
-    const pr = finalPrice(s,d), owned = b.bought.includes(id+':'+i);
-    return `<div class="item">${designSVG(d)}<div class="in"><b>${s.featured===i?'⭐ ':''}${esc(d.name)}</b>
-      <small>${[d.base,d.extra].filter(Boolean).map(x=>cloth(x.type).name+' '+colorName(x.color)+(x.fabric?' '+fabric(x.fabric).name:'')).join(' + ')}</small>
-      <b style="color:var(--p)">${money(pr)}</b>${pr!==d.price?`<span class="old">${money(d.price)}</span>`:''}</div>
-      <button class="buy" ${owned||b.wallet<pr?'disabled':''} onclick="buyDesign(${id},${i})">${owned?'✓ Bought':'Buy'}</button></div>`; }).join('')}
-  <button class="btn ghost" onclick="closeModal()">Leave store</button>`;
-}
-
-/* ---------- التصويت ---------- */
-function vote(id){ S.voteChoice = id; render(); }
-function endVote(){
-  if(S.voteChoice!==null) S.players[S.voteChoice].votes++;
-  S.players.filter(p=>p.isBot).forEach(bot=>{ pick(S.players.filter(p=>p.id!==bot.id)).votes++; });
-  computeScores();
-  go('results', null);
-}
-SCREENS.vote = () => { const others = S.players.filter(x=>x.id!==0); return `
-${hdr()}
-${timerHTML()}
-<h2>✨ Vote for creativity</h2>
-<p class="sub">Who is the most creative designer, across the whole collection and best design? One vote, and you can’t vote for yourself.</p>
-${others.map(s=>`<div class="card" style="cursor:pointer;${S.voteChoice===s.id?'border-color:var(--p);background:var(--pl)':''}" onclick="vote(${s.id})">
-  <div class="row" style="border:0;padding:0 0 6px"><b>${esc(s.brand.name)} <small style="color:var(--mut)">— ${esc(s.name)}</small></b><span>${S.voteChoice===s.id?'✓ Your vote':''}</span></div>
-  <div class="dgrid">${s.designs.map(d=>`<div class="dcard" style="cursor:inherit">${designSVG(d)}</div>`).join('')}</div>
-</div>`).join('')}
-${endBtn('go to Results','endVote()')}`; };
-
-/* ---------- النتائج ---------- */
-function computeScores(){
-  S.players.forEach(p=>{ p.score = 0; p.awards = []; });
-  S.results = CONFIG.categories.map(c=>{
-    const max = Math.max(...S.players.map(c.metric));
-    const winners = (CONFIG.zeroNoAward && max<=0) ? [] : S.players.filter(p=>c.metric(p)===max);
-    const share = winners.length ? (CONFIG.tieRule==='split' ? c.points/winners.length : c.points) : 0;
-    winners.forEach(w=>{ w.score += share; w.awards.push(c.name); });
-    return { c, max, winners, share };
-  });
-}
-SCREENS.results = () => {
-  const ranked = [...S.players].sort((a,b)=>b.score-a.score);
-  const [g,s,b] = ranked;
-  const MED = {1:'🥇',2:'🥈',3:'🥉'};
-  const pod = (p,cls,n) => p ? `<div class="pod ${cls}"><div class="md">${MED[n]}</div><div class="pn">${esc(p.name)}</div><div class="ps">${pts(p.score)} pts</div><div class="pb">${n}</div></div>` : '';
-  const val = (c,v) => (c.id==='capital'||c.id==='wallet') ? money(v) : v;
-  return `
-${hdr('<span class="tag">Results</span>')}
-<h2>🏆 Results</h2>
-<div class="card">${S.results.map(r=>`<div class="cat"><span class="ci">${r.c.icon}</span>
-  <span class="cn"><b>${r.c.name}</b><small>${r.winners.length ? r.winners.map(w=>esc(w.name)).join(', ')+' — '+val(r.c,r.max) : 'Nobody takes it'} • ${r.c.hint}</small></span>
-  <span class="cp">${r.winners.length?'+'+pts(r.share):'—'}</span></div>`).join('')}</div>
-<div class="podium">${pod(s,'s',2)}${pod(g,'g',1)}${pod(b,'b',3)}</div>
-${ranked.length>3?`<div class="card rest">${ranked.slice(3).map((p,i)=>`<div class="row"><span>${i+4}. ${esc(p.name)}</span><b>${pts(p.score)}</b></div>`).join('')}</div>`:''}
-<button class="btn" onclick="newGame()">New game</button>`;
 };
-function newGame(){ stopTimer(); newState(S.settings); S.screen = 'setup'; render(); window.scrollTo(0,0); }
 
-/* ============================ النوافذ ============================ */
-let confirmFn = null;
-function askConfirm(text, fn){ confirmFn = fn; S.modal = {type:'confirm', text}; renderModal(); }
-function confirmYes(){ const f = confirmFn; confirmFn = null; closeModal(); if(f) f(); }
-function openAssumptions(){ S.modal = {type:'assume'}; renderModal(); }
-function closeModal(){ S.modal = null; renderModal(); }
-function renderModal(){
-  const root = $('modalRoot'), m = S.modal;
-  if(!m){ root.innerHTML = ''; return; }
-  let inner = '';
-  if(m.type==='store') inner = storeModal(m.id);
-  if(m.type==='assume') inner = `<h3>📝 Open assumptions</h3><p class="sub">All editable in CONFIG at the top of the script.</p><ol>${ASSUMPTIONS.map(a=>`<li>${a}</li>`).join('')}</ol><button class="btn" onclick="closeModal()">OK</button>`;
-  if(m.type==='confirm') inner = `<h3>${m.text}</h3><button class="btn" onclick="confirmYes()">Yes, go back</button><button class="btn ghost" onclick="closeModal()">No</button>`;
-  root.innerHTML = `<div class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet">${inner}</div></div>`;
+/* ---------- انتقال المراحل (المضيف) ---------- */
+ACT.next = H(() => {
+  phaseTo(() => {
+    if (G.phase === 'buy') { G.phase = 'design'; setTimer(G.settings.designTime); }
+    else if (G.phase === 'design') { G.phase = 'build'; setTimer(G.settings.buildTime); }
+    else if (G.phase === 'build') {
+      G.stores = {};
+      G.players.forEach(p => {
+        const m = inp(p.id), ok = m.g === G.gameNo;
+        const designs = ok ? (m.designs || []).slice(0, CONFIG.designsCount) : Array(CONFIG.designsCount).fill(null);
+        let feat = ok ? m.featured : null; if (feat == null || !designs[feat]) { const i = designs.findIndex(Boolean); feat = i >= 0 ? i : null; }
+        G.stores[p.id] = { brand: { name: (ok && m.brand && m.brand.name.trim()) || L('متجر ', '') + p.name + L('', '’s store'), desc: ok && m.brand ? m.brand.desc : '' },
+          store: ok ? m.store : {}, designs, featured: feat, discount: ok && (m.perks || []).includes('sale') ? (m.discount || 0) : 0, perks: ok ? (m.perks || []) : [], spent: ok ? spentOf(m) : 0 };
+      });
+      G.spoken = []; startTalk(1);
+    }
+  });
+});
+function startTalk(r) {
+  const k = Math.min(G.settings.speakers, G.players.length), all = G.players.map(p => p.id);
+  let picks = shuffle(all.filter(id => !G.spoken.includes(id))).slice(0, k);
+  if (picks.length < k) { G.spoken = []; picks = picks.concat(shuffle(all.filter(id => !picks.includes(id))).slice(0, k - picks.length)); }
+  G.spoken = G.spoken.concat(picks);
+  G.talk = { round: r, speakers: picks, idx: 0 }; G.phase = 'talk'; setTimer(G.settings.talkTime);
 }
+ACT.talkNext = H(() => {
+  phaseTo(() => {
+    const t = G.talk;
+    if (t.idx < t.speakers.length - 1) { t.idx++; setTimer(G.settings.talkTime); }
+    else if (t.round < G.settings.talkRounds) startTalk(t.round + 1);
+    else { G.phase = 'shop'; G.shop = { round: 1, seen: {} }; setTimer(G.settings.shopTime); }
+  });
+});
+ACT.shopNext = H(() => {
+  phaseTo(() => {
+    if (G.shop.round < G.settings.shopRounds) { G.shop.round++; setTimer(G.settings.shopTime); addLog(L('بدت جولة التسوق ', 'Shopping round ') + G.shop.round); }
+    else { G.phase = 'vote'; setTimer(G.settings.voteTime); }
+  });
+});
+ACT.voteEnd = H(() => {
+  phaseTo(() => {
+    G.votes = {}; G.players.forEach(p => { G.votes[p.id] = 0; });
+    G.players.forEach(p => { const v = inp(p.id).vote; if (v && v.g === G.gameNo && v.v !== p.id && inRoom(v.v)) G.votes[v.v]++; });
+    const metric = { capital: id => capitalOf(id), wallet: id => walletOf(id), creative: id => G.votes[id] || 0, purchases: id => G.sales[id] || 0, visits: id => G.visits[id] || 0 };
+    const score = {}; G.players.forEach(p => { score[p.id] = 0; });
+    G.results = CONFIG.categories.map(c => {
+      const vals = G.players.map(p => ({ id: p.id, v: metric[c.id](p.id) }));
+      const max = Math.max(...vals.map(x => x.v));
+      const win = max <= 0 ? [] : vals.filter(x => x.v === max).map(x => x.id);
+      const share = win.length ? c.points / win.length : 0; win.forEach(id => { score[id] += share; });
+      return { id: c.id, max, win, share };
+    });
+    G.score = score; G.phase = 'final'; G.endsAt = 0;
+  });
+});
 
-/* ============================ العرض ============================ */
-function render(){
-  const app = $('app');
-  app.className = (S.screen==='mall') ? 'wide' : '';
-  app.innerHTML = SCREENS[S.screen]();
-  const ls = $('langsw'); if(ls) ls.hidden = !(S.screen==='intro' || S.screen==='setup');
-  updTimer();
-  renderModal();
+/* ---------- واجهات اللاعب ---------- */
+const capBar = () => `<div class="moneybar"><span class="money">💰 ${L('رأس المال', 'Capital')}: ${money(G.stores && G.stores[ME_ID] ? capitalOf(ME_ID) : CONFIG.startCapital - spentOf(mine()))}</span><span class="money alt">👛 ${L('محفظة التسوق', 'Shopping wallet')}: ${money(walletOf(ME_ID))}</span></div>`;
+const doneBtn = () => { const d = (mine().done || {})[G.phase] === G.gameNo; return d ? `<div class="note" style="text-align:center">✓ ${L('سجّلنا إنك خلصت. تقدر تعدّل لين المضيف ينهي المرحلة.', 'Marked as done. You can still edit until the host ends this stage.')}</div>` : `<button class="btn ghost" data-act="markDone">✓ ${L('خلصت', 'I’m done')}</button>`; };
+ACT.markDone = () => { const m = mine(); m.done = m.done || {}; m.done[G.phase] = G.gameNo; saveMe(); };
+function spendOk(cost) { if (CONFIG.startCapital - spentOf(mine()) < cost) { toast(L('رأس المال ما يكفي', 'Not enough capital')); return false; } return true; }
+function perksView() {
+  const m = mine();
+  return `<h2>${L('المزايا', 'Perks')}</h2><p class="sub">${L('تقدر تشتري مزايا قبل المواد الأولية.', 'You can buy perks before the raw materials.')} <span class="badge">${L('تجريبي — غير نهائي', 'Trial — not final')}</span></p>${capBar()}
+  <div class="perks">${PERKS.map(k => { const on = m.perks.includes(k.id); return `<button class="perk ${on ? 'on' : ''}" data-act="togPerk" data-id="${k.id}"><span class="pi">${k.icon}</span><span class="pt"><b>${N(k.name)}</b><small>${N(k.desc)} <span class="assume">${k.live ? L('مفعّلة للتجربة', 'Active for testing') : L('تأثيرها غير محسوم', 'Effect not decided')}</span></small></span><span class="pp">${on ? '✓' : money(P_.perk)}</span></button>`; }).join('')}</div>
+  <button class="btn" data-act="sub" data-v="mat">${L('التالي: المواد الأولية ←', 'Next: Raw materials →')}</button>`;
 }
+ACT.sub = d => { U.sub = d.v; window.scrollTo(0, 0); };
+ACT.togPerk = d => { const m = mine(), i = m.perks.indexOf(d.id); if (i >= 0) m.perks.splice(i, 1); else if (spendOk(P_.perk)) m.perks.push(d.id); saveMe(); };
+const MAX = { colors: () => CONFIG.maxFabricColors, fabrics: () => CONFIG.maxFabricTypes };
+const COST = { types: () => P_.clothingType, colors: () => P_.fabricColor, fabrics: () => P_.fabricType };
+ACT.togOwn = d => {
+  const m = mine(), arr = m[d.k], i = arr.indexOf(d.id);
+  if (i >= 0) arr.splice(i, 1);
+  else if (MAX[d.k] && arr.length >= MAX[d.k]()) { toast(L(`تقدر تختار ${d.k === 'colors' ? 'لونين' : 'نوعين'} بس — شيل واحد أول`, `You can pick only ${d.k === 'colors' ? 'two colours' : 'two types'} — remove one first`)); return false; }
+  else if (spendOk(COST[d.k]())) arr.push(d.id);
+  saveMe();
+};
+ACT.setStore = d => { const m = mine(), cost = d.k === 'bg' ? P_.storeBg : P_.storeBorder; if (m.store[d.k] === d.id) m.store[d.k] = null; else if (m.store[d.k]) m.store[d.k] = d.id; else if (spendOk(cost)) m.store[d.k] = d.id; saveMe(); };
+const swatch = (c, on, act) => `<div class="swwrap"><button class="sw ${on ? 'on' : ''}" style="background:${c.hex}" ${act}></button><div class="swl">${N(c.name)}</div></div>`;
+function matView() {
+  const m = mine();
+  return `<button class="mini" data-act="sub" data-v="">${BACK} ${L('المزايا', 'Perks')}</button><h2>${L('المواد الأولية', 'Raw materials')}</h2><p class="sub">${L('اضغط مرة ثانية للاسترجاع.', 'Tap again to refund.')} <span class="badge">${L('الأسعار مؤقتة', 'Temporary prices')}</span></p>${capBar()}
+  <div class="card"><h3>👗 ${L('نوع الملابس', 'Clothing types')} <small>— ${money(P_.clothingType)}</small></h3><div class="chips">${CLOTHES.map(c => `<button class="chip ${m.types.includes(c.id) ? 'on' : ''}" data-act="togOwn" data-k="types" data-id="${c.id}">${N(c.name)}</button>`).join('')}</div></div>
+  <div class="card"><h3>🧵 ${L('نوع الخامة', 'Fabric type')} <small>— ${money(P_.fabricType)} • ${m.fabrics.length}/${CONFIG.maxFabricTypes}</small></h3><p class="sub">${L('تختار نوعين خام، مثلًا جلد ومخمل.', 'Pick two fabric types, e.g. leather and velvet.')}</p><div class="chips">${FABRICS.map(f => `<button class="chip ${m.fabrics.includes(f.id) ? 'on' : ''}" data-act="togOwn" data-k="fabrics" data-id="${f.id}">${N(f.name)}</button>`).join('')}</div></div>
+  <div class="card"><h3>🎨 ${L('لون الخامة', 'Fabric colour')} <small>— ${money(P_.fabricColor)} • ${m.colors.length}/${CONFIG.maxFabricColors}</small></h3><p class="sub">${L('تختار لونين خام، مثلًا أبيض وأحمر.', 'Pick two fabric colours, e.g. white and red.')}</p><div class="swatches">${COLORS.map(c => swatch(c, m.colors.includes(c.id), `data-act="togOwn" data-k="colors" data-id="${c.id}"`)).join('')}</div></div>
+  <div class="card"><h3>🏬 ${L('لون المتجر', 'Store colours')}</h3><p class="sub">${L('المتجر مربع: تختار لون الخلفية ولون الإطار.', 'Your store is a square: pick a background and a frame colour.')}</p>
+    <b>${L('الخلفية', 'Background')} — ${money(P_.storeBg)}</b><div class="swatches" style="margin:8px 0 14px">${COLORS.map(c => swatch(c, m.store.bg === c.id, `data-act="setStore" data-k="bg" data-id="${c.id}"`)).join('')}</div>
+    <b>${L('الإطار', 'Frame')} — ${money(P_.storeBorder)}</b><div class="swatches" style="margin:8px 0 14px">${COLORS.map(c => swatch(c, m.store.border === c.id, `data-act="setStore" data-k="border" data-id="${c.id}"`)).join('')}</div>
+    <div class="storebig">${storeHTML({ store: m.store, designs: m.designs, featured: m.featured, brand: m.brand }, P(ME_ID).name)}</div></div>${doneBtn()}`;
+}
+function designView() {
+  const m = mine(), ok = m.types.length && m.colors.length && m.fabrics.length;
+  return `<h2>${L('تصميم التشكيلة', 'Design your collection')}</h2><p class="sub">${L(`جهّز ${CONFIG.designsCount} تصاميم من الخامات اللي اشتريتها.`, `Make ${CONFIG.designsCount} designs from what you bought.`)}</p>
+  ${ok ? '' : `<div class="warn">${L('ما اشتريت نوع ملابس ونوع خامة ولون خامة.', 'You didn’t buy a clothing type, fabric type and colour.')}</div>`}
+  <div class="dgrid">${m.designs.map((d, i) => `<button class="dcard" data-act="edit" data-i="${i}">${designSVG(d)}<b>${d ? esc(d.name) : L('تصميم ', 'Design ') + (i + 1)}</b><small>${d ? money(d.price) : L('اضغط للتصميم', 'Tap to design')}</small></button>`).join('')}</div>${doneBtn()}`;
+}
+ACT.edit = d => {
+  const m = mine(); if (!(m.types.length && m.colors.length && m.fabrics.length)) { toast(L('اشترِ نوع ملابس ونوع خامة ولون خامة أول', 'Buy a clothing type, fabric type and colour first')); return false; }
+  const i = +d.i; U.edit = i;
+  U.dd = m.designs[i] ? clone(m.designs[i]) : { name: L('تصميم ', 'Design ') + (i + 1), base: { type: m.types[0], color: m.colors[0], fabric: m.fabrics[0], pattern: 'plain' }, extra: null, price: CONFIG.salePrice.def };
+  U.draft.name = U.dd.name;
+};
+ACT.setD = d => {
+  const x = U.dd;
+  if (d.part === 'extra' && d.key === 'type') { if (d.v === 'none') { x.extra = null; return; } if (!x.extra) x.extra = { type: d.v, color: mine().colors[0], fabric: mine().fabrics[0], pattern: 'plain' }; }
+  x[d.part][d.key] = d.v;
+};
+ACT.price = d => { U.dd.price = Math.min(CONFIG.salePrice.max, Math.max(CONFIG.salePrice.min, U.dd.price + (+d.v))); };
+ACT.saveD = () => { U.dd.name = (U.draft.name || '').trim() || U.dd.name; mine().designs[U.edit] = clone(U.dd); U.edit = null; saveMe(); toast(L('انحفظ التصميم ✓', 'Design saved ✓')); };
+ACT.delD = () => { const m = mine(); m.designs[U.edit] = null; if (m.featured === U.edit) m.featured = null; U.edit = null; saveMe(); };
+ACT.cancelD = () => { U.edit = null; };
+function pieceEd(part) {
+  const m = mine(), x = U.dd[part];
+  return `<div class="chips" style="margin-bottom:10px">${part === 'extra' ? `<button class="chip ${!x ? 'on' : ''}" data-act="setD" data-part="extra" data-key="type" data-v="none">${L('بدون', 'None')}</button>` : ''}${m.types.map(t => `<button class="chip ${x && x.type === t ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="type" data-v="${t}">${N(cloth(t).name)}</button>`).join('')}</div>
+  ${x ? `<div class="chips" style="margin-bottom:10px">${m.fabrics.map(f => `<button class="chip ${x.fabric === f ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="fabric" data-v="${f}">🧵 ${N(byId(FABRICS, f).name)}</button>`).join('')}</div>
+  <div class="swatches" style="margin-bottom:10px">${m.colors.map(c => swatch(byId(COLORS, c), x.color === c, `data-act="setD" data-part="${part}" data-key="color" data-v="${c}"`)).join('')}</div>
+  <div class="chips">${PATTERNS.map(p => `<button class="chip ${x.pattern === p.id ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="pattern" data-v="${p.id}">${N(p.name)}</button>`).join('')}</div>` : ''}`;
+}
+function editorView() {
+  return `<button class="mini" data-act="cancelD">${BACK} ${L('التصاميم', 'Designs')}</button><div class="preview">${designSVG(U.dd)}</div>
+  <div class="card"><h3>${L('اسم التصميم', 'Design name')}</h3><input class="field" id="dname" data-bind="dname" maxlength="20" value="${esc(U.draft.name || '')}"></div>
+  <div class="card"><h3>${L('القطعة الأساسية', 'Main piece')}</h3>${pieceEd('base')}</div>
+  <div class="card"><h3>${L('قطعة إضافية', 'Extra piece')} <span class="assume">${L('اختيارية', 'optional')}</span></h3>${pieceEd('extra')}</div>
+  <div class="card"><div class="row"><span>${L('سعر البيع', 'Price')}</span><div class="stepper"><button data-act="price" data-v="1">+</button><span class="v">${money(U.dd.price)}</span><button data-act="price" data-v="-1">−</button></div></div></div>
+  <button class="btn" data-act="saveD">${L('حفظ التصميم', 'Save design')}</button>${mine().designs[U.edit] ? `<button class="btn ghost" data-act="delD">${L('مسح التصميم', 'Delete design')}</button>` : ''}`;
+}
+ACT.feat = d => { mine().featured = +d.i; saveMe(); };
+ACT.disc = d => { const m = mine(); m.discount = Math.min(CONFIG.discountMax, Math.max(0, (m.discount || 0) + (+d.v) * 5)); saveMe(); };
+function buildView() {
+  const m = mine(), done = m.designs.map((d, i) => d ? i : null).filter(i => i !== null);
+  return `<h2>${L('بناء المشروع', 'Building the project')}</h2><p class="sub">${L('سمّ البراند، اكتب وصف قصير، واختر القطعة المميزة.', 'Name your brand, write a short description and pick your signature piece.')}</p>
+  <div class="storebig">${storeHTML({ store: m.store, designs: m.designs, featured: m.featured, brand: m.brand, discount: m.perks.includes('sale') ? m.discount : 0 }, P(ME_ID).name)}</div>
+  <div class="card"><h3>${L('اسم البراند', 'Brand name')}</h3><input class="field" id="bname" data-bind="bname" maxlength="${CONFIG.brandNameMax}" value="${esc(m.brand.name)}"></div>
+  <div class="card"><h3>${L('وصف البراند', 'Brand description')}</h3><textarea class="field" id="bdesc" data-bind="bdesc" rows="3" maxlength="${CONFIG.brandDescMax}">${esc(m.brand.desc)}</textarea><div class="counter"><span id="dcount">${m.brand.desc.length}</span> / ${CONFIG.brandDescMax}</div></div>
+  <div class="card"><h3>⭐ ${L('القطعة المميزة', 'Signature piece')}</h3>${done.length ? `<div class="dgrid">${done.map(i => `<button class="dcard ${m.featured === i ? 'on' : ''}" data-act="feat" data-i="${i}">${designSVG(m.designs[i])}<b>${esc(m.designs[i].name)}</b></button>`).join('')}</div>` : `<div class="warn">${L('ما عندك تصاميم جاهزة.', 'No finished designs.')}</div>`}</div>
+  ${m.perks.includes('sale') ? `<div class="card"><div class="row"><span>🏷️ ${L('نسبة التنزيلات', 'Sale %')}</span><div class="stepper"><button data-act="disc" data-v="1">+</button><span class="v">${m.discount || 0}%</span><button data-act="disc" data-v="-1">−</button></div></div></div>` : ''}${doneBtn()}`;
+}
+function talkView() {
+  const t = G.talk, sp = t.speakers[t.idx], st = stOf(sp) || {}, feat = st.featured != null ? st.designs[st.featured] : null;
+  const nxt = t.idx < t.speakers.length - 1 ? L('الذهاب لإقناع ', 'go to ') + P(t.speakers[t.idx + 1]).name + L('', '’s pitch') : t.round < G.settings.talkRounds ? L('الذهاب لجولة التحدث ', 'go to talk round ') + (t.round + 1) : L('الذهاب للتسوق', 'go to Shopping');
+  return `<span class="tag">${L('جولة التحدث', 'Talk round')} ${t.round} / ${G.settings.talkRounds}</span>
+  <div class="speakers">${t.speakers.map((id, i) => `<span class="spk ${i === t.idx ? 'now' : i < t.idx ? 'done' : ''}">${esc(P(id).name)}</span>`).join('')}</div>
+  <div class="stage"><div class="who">${L('الحين يقنعكم', 'Now pitching')}<b>${esc(P(sp).name)}${sp === ME_ID ? L(' (أنت)', ' (you)') : ''}</b></div>
+  <div class="card"><div class="ptitle">${esc(st.brand ? st.brand.name : '')}</div><div class="preview">${designSVG(feat)}</div>
+  <div>⭐ ${feat ? esc(feat.name) + ' — ' + money(finalPrice(st, feat)) : L('ما في قطعة مميزة', 'No signature piece')}</div>${st.brand && st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}</div>
+  ${sp === ME_ID && (st.perks || []).includes('extraTime') && !G.extraUsed[ME_ID] ? `<button class="btn ghost" data-act="extra">⏱️ ${L('استخدم الوقت الإضافي', 'Use extra time')} (+${CONFIG.extraTimeSec}s)</button>` : ''}</div>
+  ${endBtn(nxt, 'talkNext')}${waitHost()}`;
+}
+ACT.extra = () => sendReq({ type: 'extra', g: G.gameNo });
+function mallView() {
+  const others = G.players.filter(p => p.id !== ME_ID);
+  return `<span class="tag">${L('جولة التسوق', 'Shopping round')} ${G.shop.round} / ${G.settings.shopRounds}</span><h2>${L('السوق', 'The market')}</h2>
+  ${amPlayer() ? capBar() + `<div class="moneybar"><span class="money">🚶 ${L('زيارات متجرك', 'Your visits')}: ${G.visits[ME_ID] || 0}</span><span class="money">🛍️ ${L('مبيعاتك', 'Your sales')}: ${G.sales[ME_ID] || 0}</span></div>` : ''}
+  <div class="grid">${others.map(p => storeHTML(stOf(p.id) || {}, p.name, `data-act="openStore" data-id="${p.id}"`)).join('')}</div>
+  ${endBtn(G.shop.round < G.settings.shopRounds ? L('الذهاب لجولة التسوق ', 'go to shopping round ') + (G.shop.round + 1) : L('الذهاب للتصويت', 'go to Voting'), 'shopNext')}${waitHost()}`;
+}
+ACT.openStore = d => { U.modal = { type: 'store', id: d.id }; if (amPlayer()) sendReq({ type: 'visit', sid: d.id, g: G.gameNo }); };
+ACT.buy = d => { sendReq({ type: 'buy', sid: d.sid, i: +d.i, g: G.gameNo }); };
+function storeModal(id) {
+  const st = stOf(id); if (!st) return '';
+  const bg = st.store && st.store.bg ? colorHex(st.store.bg) : '#f6f4f8', bd = st.store && st.store.border ? colorHex(st.store.border) : '#d6d0de', mineB = G.bought[ME_ID] || [];
+  return `<div style="border:7px solid ${bd};background:${bg};color:${isLight(bg) ? '#1d1d1f' : '#fff'};border-radius:10px;padding:12px;text-align:center"><div class="ptitle">${esc(st.brand.name)}</div><small>${esc(P(id).name)}${st.discount ? ` • 🏷️ ${st.discount}%` : ''}</small></div>
+  ${st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}
+  ${st.designs.map((d, i) => { if (!d) return `<div class="item">${designSVG(null)}<div class="in"><b>${L('تصميم ناقص', 'Unfinished design')}</b></div></div>`; const pr = finalPrice(st, d), owned = mineB.includes(id + ':' + i);
+    return `<div class="item">${designSVG(d)}<div class="in"><b>${st.featured === i ? '⭐ ' : ''}${esc(d.name)}</b><small>${[d.base, d.extra].filter(Boolean).map(x => N(cloth(x.type).name) + ' ' + N(byId(COLORS, x.color).name) + (x.fabric ? ' ' + N(byId(FABRICS, x.fabric).name) : '')).join(' + ')}</small><b style="color:var(--p)">${money(pr)}</b>${pr !== d.price ? `<span class="old">${money(d.price)}</span>` : ''}</div>
+    ${amPlayer() ? `<button class="buy" data-act="buy" data-sid="${id}" data-i="${i}" ${owned || walletOf(ME_ID) < pr ? 'disabled' : ''}>${owned ? '✓ ' + L('اشتريته', 'Bought') : L('اشترِ', 'Buy')}</button>` : ''}</div>`; }).join('')}
+  <button class="btn ghost" data-act="closeModal">${L('طلعة من المتجر', 'Leave store')}</button>`;
+}
+function voteView() {
+  const v = mine().vote, done = G.players.filter(p => { const x = inp(p.id).vote; return x && x.g === G.gameNo; }).map(p => p.id);
+  return `<h2>✨ ${L('صوّت للإبداع', 'Vote for creativity')}</h2><p class="sub">${L('مين أكثر مصمم مبدع على التشكيلة كاملة وأفضل تصميم؟ صوت واحد، وما تقدر تصوت لنفسك.', 'Who is the most creative designer overall? One vote, not for yourself.')}</p>
+  ${amPlayer() ? G.players.filter(p => p.id !== ME_ID).map(p => { const st = stOf(p.id) || { designs: [] }, on = v && v.g === G.gameNo && v.v === p.id; return `<div class="card votecard ${on ? 'on' : ''}" data-act="vote" data-id="${p.id}"><div class="row" style="border:0;padding:0 0 6px"><b>${esc(st.brand ? st.brand.name : p.name)} <small>— ${esc(p.name)}</small></b><span>${on ? '✓ ' + L('صوتك', 'Your vote') : ''}</span></div><div class="dgrid">${st.designs.map(d => `<div class="dcard">${designSVG(d)}</div>`).join('')}</div></div>`; }).join('') : ''}
+  ${isHost() ? progBox(L('مين صوّت', 'Who voted'), done) : ''}${endBtn(L('الذهاب للنتائج', 'go to Results'), 'voteEnd')}${waitHost()}`;
+}
+ACT.vote = d => { mine().vote = { g: G.gameNo, v: d.id }; saveMe(); };
+function finalView() {
+  const list = G.players.map(p => ({ name: p.name, pts: Math.round((G.score[p.id] || 0) * 10) / 10 })).sort((a, b) => b.pts - a.pts);
+  const val = (id, c) => ({ capital: capitalOf(id), wallet: walletOf(id) }[c.id]);
+  return `<h2>🏆 ${L('النتائج', 'Results')}</h2>` + podium(list) +
+    `<div class="card">${G.results.map(r => { const c = byId(CONFIG.categories, r.id); return `<div class="cat"><span class="ci">${c.icon}</span><span class="cn"><b>${N(c.name)}</b><small>${r.win.length ? r.win.map(id => esc(P(id).name)).join(L('، ', ', ')) + ' — ' + (c.money ? money(r.max) : r.max) : L('ما أحد ياخذها', 'Nobody takes it')} • ${N(c.hint)}</small></span><span class="cp">${r.win.length ? '+' + pts(r.share) : '—'}</span></div>`; }).join('')}</div>` +
+    (isHost() ? `<button class="btn" data-act="rematch">${L('لعبة جديدة بنفس اللاعبين', 'New game, same players')}</button><button class="btn ghost" data-act="toLobby">${L('رجوع للردهة', 'Back to the lobby')}</button>` : '');
+}
+ACT.rematch = H(() => { G.gameNo++; G.log = []; HIST.length = 0; GAME.start(); });
 
-newState();
-render();
+init();
 </script>
 </body>
 </html>
