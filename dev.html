@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>أقنعني | نسخة المطوّر</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#12203A;font:500 16px/1.5 "Readex Pro","Alexandria",system-ui,-apple-system,sans-serif;padding:max(18px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+.wrap{max-width:520px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+h1{margin:0;font-size:1.6rem;color:#0554A4}
+.badge{background:#12203A;color:#fff;border-radius:99px;padding:4px 12px;font-weight:800;font-size:.85rem}
+.lang{border:1.5px solid #D5DBE5;background:#fff;border-radius:99px;padding:6px 14px;font:700 .9rem inherit;color:#12203A}
+.sub{color:#5B6578;margin:0 0 16px;font-size:.95rem}
+.card{border:1.5px solid #E6EAF0;border-radius:20px;padding:14px 16px;margin-bottom:14px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;flex-wrap:wrap}
+.stepper{display:flex;align-items:center;gap:12px}
+.stepper button{width:44px;height:44px;border-radius:14px;border:1.5px solid #D5DBE5;background:#fff;font:800 1.3rem inherit;color:#12203A}
+.stepper .v{min-width:28px;text-align:center;font-weight:800;font-size:1.2rem}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{border:1.5px solid #D5DBE5;background:#fff;border-radius:12px;padding:8px 14px;font:800 1rem inherit;color:#12203A}
+.chip.on{background:#12203A;border-color:#12203A;color:#fff}
+.sw{display:flex;align-items:center;gap:10px;font-weight:700}
+.sw input{width:24px;height:24px;accent-color:#12203A}
+.tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:4px}
+.tile{width:calc((100% - 24px) / 3);aspect-ratio:1;border-radius:22px;color:#fff;text-decoration:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:1rem;box-shadow:0 6px 16px rgba(18,32,58,.12)}
+.tile .i{font-size:2rem;line-height:1}
+.note{background:#F4F6F9;border-radius:14px;padding:10px 12px;font-size:.88rem;color:#3B4659;margin-top:16px}
+.note b{color:#12203A}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<script>
+(function () {
+  var qs = new URLSearchParams(location.search);
+  var S = { lang: qs.get('lang') === 'en' ? 'en' : 'ar', bots: 3, speed: 2, auto: false };
+  var GAMES = [
+    { f: 'murafaat', ar: 'المنصة', en: 'ALMANASSA', c: '#DE0921', i: '⚖️' },
+    { f: 'mazad', ar: 'المزاد', en: 'ALMAZAD', c: '#0554A4', i: '$' },
+    { f: 'nadik', ar: 'الرئيس', en: 'ALRAEES', c: '#E0A800', i: '⚽' },
+    { f: 'azyaa', ar: 'الأزياء', en: 'ALAZYAA', c: '#7B2FBE', i: '🎀' },
+    { f: 'aqar', ar: 'العقار', en: 'ALAQAR', c: '#1E8A4C', i: '🏠' }
+  ];
+  function T(ar, en) { return S.lang === 'en' ? en : ar; }
+  function url(g) { return g.f + (S.lang === 'en' ? '-en' : '') + '.html?dev=1&bots=' + S.bots + '&speed=' + S.speed + (S.auto ? '&auto=1' : ''); }
+  function render() {
+    document.documentElement.lang = S.lang; document.documentElement.dir = S.lang === 'en' ? 'ltr' : 'rtl';
+    document.getElementById('app').innerHTML =
+      '<header><h1>' + T('أقنعني', 'Aqnieni') + '</h1><span class="badge">🛠️ ' + T('نسخة المطوّر', 'Developer') + '</span><button class="lang" data-a="lang">' + T('English', 'عربي') + '</button></header>' +
+      '<p class="sub">' + T('العب مع بوتات عشان تلقى العيوب وشنو ناقص. كل شي على تلفونك بس، وما يأثر على الغرف الحقيقية.', 'Play with bots to find bugs and gaps. Everything stays on your phone and never touches real rooms.') + '</p>' +
+      '<div class="card">' +
+      '<div class="row"><span>🤖 ' + T('عدد البوتات', 'Bots') + '</span><div class="stepper"><button data-a="bots" data-v="-1">−</button><span class="v">' + S.bots + '</span><button data-a="bots" data-v="1">+</button></div></div>' +
+      '<div class="row"><span>⏩ ' + T('سرعة الوقت', 'Time speed') + '</span><div class="chips">' + [1, 2, 5, 10].map(function (s) { return '<button class="chip ' + (S.speed === s ? 'on' : '') + '" data-a="speed" data-v="' + s + '">×' + s + '</button>'; }).join('') + '</div></div>' +
+      '<div class="row"><label class="sw"><input type="checkbox" data-a="auto" ' + (S.auto ? 'checked' : '') + '> ' + T('البوتات تلعب عني بعد (أتفرج بس)', 'Bots also play for me (watch only)') + '</label></div>' +
+      '</div>' +
+      '<div class="tiles">' + GAMES.map(function (g) { return '<a class="tile" style="background:' + g.c + '" href="' + url(g) + '"><span class="i">' + g.i + '</span>' + T(g.ar, g.en) + '</a>'; }).join('') + '</div>' +
+      '<div class="note">' + T('<b>طريقة الاستخدام:</b> اختر لعبة، اكتب اسمك وسوّ غرفة، والبوتات تدخل لحالها. زر <b>🛠️ المطوّر</b> تحت فيه: سرعة الوقت، إضافة بوتات، «شوف شاشة البوت»، والأخطاء والسجل. ما في روابط دعوة ولا إنترنت، فلو سكّرت الصفحة تروح الغرفة.',
+        '<b>How to use:</b> pick a game, enter your name and create a room; the bots join on their own. The <b>🛠️ Developer</b> button has time speed, add bots, view a bot’s screen, errors and the log. No invite links or internet — closing the page ends the room.') + '</div>';
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-a]'); if (!t) return;
+    var a = t.dataset.a;
+    if (a === 'lang') S.lang = S.lang === 'en' ? 'ar' : 'en';
+    else if (a === 'bots') S.bots = Math.max(2, Math.min(9, S.bots + (+t.dataset.v)));
+    else if (a === 'speed') S.speed = +t.dataset.v;
+    else if (a === 'auto') S.auto = t.checked;
+    else return;
+    render();
+  });
+  render();
+})();
+</script>
+</body>
+</html>

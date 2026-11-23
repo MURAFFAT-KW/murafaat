@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta charset="utf-8">
+<script>if(/[?&]dev(=|&|$)/.test(location.search))document.write('<script src="dev-core.js"><\/script><script src="dev-bots.js"><\/script>')</script>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>أقنعني! | الرئيس</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800;900&family=Readex+Pro:wght@400;500;600;700&display=swap">
@@ -1860,8 +1862,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const AQB = (function () {
     const L = window.__AQ_LANG === 'en' ? 'en' : 'ar';
     const T = L === 'en'
-      ? { back: '← Back', hub: 'en.html', hTitle: 'Go back a stage?', hBody: 'Everyone in the room goes back to the previous stage with you.', yes: 'Yes, go back', no: 'Cancel', only: 'Only the host can go back a stage' }
-      : { back: '→ رجوع', hub: 'index.html', hTitle: 'ترجع للمرحلة السابقة؟', hBody: 'كل اللي في الغرفة بيرجعون معاك للمرحلة اللي قبل.', yes: 'إيه، ارجع', no: 'إلغاء', only: 'الرجوع للمرحلة السابقة بيد المضيف' };
+      ? { back: '← Back', hub: window.__DEV_HUB || 'en.html', hTitle: 'Go back a stage?', hBody: 'Everyone in the room goes back to the previous stage with you.', yes: 'Yes, go back', no: 'Cancel', only: 'Only the host can go back a stage' }
+      : { back: '→ رجوع', hub: window.__DEV_HUB || 'index.html', hTitle: 'ترجع للمرحلة السابقة؟', hBody: 'كل اللي في الغرفة بيرجعون معاك للمرحلة اللي قبل.', yes: 'إيه، ارجع', no: 'إلغاء', only: 'الرجوع للمرحلة السابقة بيد المضيف' };
     let HIST = [], cur = null, curKey = '', histRoom = '';
     const keyOf = g => JSON.stringify([g.phase, g.gameNo, g.caseNo, g.roundNo, g.ansRound,
       g.cur && g.cur.stage, g.cur && g.cur.no, g.mk && g.mk.stage, g.mk && g.mk.no,
