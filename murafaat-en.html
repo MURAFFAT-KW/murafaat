@@ -204,6 +204,7 @@ textarea.field{min-height:92px;resize:vertical}
 .ring.low .fg{stroke:var(--bad)}
 .ring.ended .fg{stroke:var(--bad)}
 .clock{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-d);font-size:2.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tctl>.btn{flex:1 1 120px;min-height:50px}
 .tcontrols{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
 .timeup{border:1px solid var(--bad);color:#9E1219;background:rgba(192,22,31,.12);border-radius:12px;padding:10px 14px;font-weight:700;text-align:center}
 .notes{display:grid;gap:6px;font-size:.92rem;color:var(--muted)}
@@ -879,6 +880,14 @@ if (typeof module !== 'undefined') module.exports = MZ;
   }
   function startT() { const t = G.cur.timer; if (t.running || t.done) return; t.running = true; t.started = true; t.endsAt = Date.now() + t.remaining * 1000; }
   function pauseT() { const t = G && G.cur && G.cur.timer; if (!t || !t.running) return; t.remaining = left(); t.running = false; }
+  function restartT() { const t = G.cur.timer; t.remaining = t.total; t.done = false; if (t.running || t.started) { t.running = true; t.started = true; t.endsAt = Date.now() + t.total * 1000; } }
+  const vPz = o => !!(o && o.endsAt && o.pz > 0 && o.endsAt - Date.now() > 1e9);
+  const vLeft = o => (vPz(o) ? o.pz : (o.endsAt - nowH()) / 1000);
+  function vCtl() {
+    const v = G.cur && G.cur.vote; if (!isHost() || !v || !v.endsAt) return '';
+    const p = vPz(v);
+    return '<div class="btn-row tctl"><button class="btn ' + (p ? 'primary' : 'ghost') + '" data-act="vPause">' + (p ? '▶️ Resume' : '⏸️ Pause') + '</button><button class="btn ghost" data-act="vRestart">🔄 Restart timer</button></div>';
+  }
   function addT(sec) { const t = G.cur.timer; if (t.running) t.endsAt += sec * 1000; else { t.remaining += sec; t.done = false; } t.total += sec; }
   function paintClocks() {
     if (!G || !G.cur) return;
@@ -891,7 +900,8 @@ if (typeof module !== 'undefined') module.exports = MZ;
     }
     const vc = document.getElementById('vclock');
     const end = G.cur.obj ? G.cur.obj.endsAt : (G.cur.vote ? G.cur.vote.endsAt : 0);
-    if (vc && end) vc.textContent = fmt((end - nowH()) / 1000);
+    const eo = G.cur.obj || G.cur.vote;
+    if (vc && end) vc.textContent = fmt(vLeft(eo)) + (vPz(eo) ? ' ⏸️' : '');
   }
   setInterval(paintClocks, 250);
 
@@ -1029,7 +1039,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   function startVote(kind, round) {
     const c = G.cur;
     c.jurors = jurorsNow();
-    c.vote = { kind, round: round || 1, key: 'g' + G.gameNo + 'c' + G.caseNo + kind + (round || 1) + '-' + uid('v'), endsAt: Date.now() + SEC('voteSec') * 1000, done: [] };
+    c.vote = { kind, round: round || 1, key: 'g' + G.gameNo + 'c' + G.caseNo + kind + (round || 1) + '-' + uid('v'), endsAt: Date.now() + SEC('voteSec') * 1000, dur: SEC('voteSec'), done: [] };
     c.stage = 'vote';
   }
   function voteStep() {
@@ -1357,8 +1367,8 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const ended = t.done && l <= 0, busy = c.obj || (c.witness && c.witness.pending);
     let ctl;
     if (!isHost()) ctl = '<div class="muted">' + (t.running ? 'Timer running.' : (ended ? 'Time’s up. Waiting for the host.' : 'Timer paused. The host controls it.')) + '</div>';
-    else if (ended) ctl = '<div class="timeup" role="alert">Time’s up</div><button class="btn xl primary" data-act="next">' + m[2] + '</button>';
-    else ctl = '<button class="btn xl ' + (t.running ? '' : 'primary') + '" data-act="timer"' + (busy ? ' aria-disabled="true"' : '') + '>' + (t.running ? 'Pause' : (t.started ? 'Resume timer' : 'Start timer')) + '</button><button class="btn ghost" data-act="next"' + (busy ? ' aria-disabled="true"' : '') + '>' + 'Finish (' + (c.stage === 'reply2' ? 'go to the vote' : 'next: ' + m[2]) + ')' + '</button>';
+    else if (ended) ctl = '<div class="timeup" role="alert">Time’s up</div><button class="btn xl primary" data-act="next">' + m[2] + '</button>' + '<button class="btn ghost" data-act="tRestart"' + (busy ? ' aria-disabled="true"' : '') + '>🔄 Restart timer</button>';
+    else ctl = '<button class="btn xl ' + (t.running ? '' : 'primary') + '" data-act="timer"' + (busy ? ' aria-disabled="true"' : '') + '>' + (t.running ? '⏸️ ' : '▶️ ') + '' + (t.running ? 'Pause' : (t.started ? 'Resume timer' : 'Start timer')) + '</button>' + '<button class="btn ghost" data-act="tRestart"' + (busy ? ' aria-disabled="true"' : '') + '>🔄 Restart timer</button>' + '<button class="btn ghost" data-act="next"' + (busy ? ' aria-disabled="true"' : '') + '>' + 'Finish (' + (c.stage === 'reply2' ? 'go to the vote' : 'next: ' + m[2]) + ')' + '</button>';
     return '<section class="card" style="display:grid;gap:14px"><div><h2 style="margin:0">' + m[0] + '</h2><p class="muted">' + m[1] + '</p></div><div class="timerbox"><div class="ring' + (l <= 10 ? ' low' : '') + (ended ? ' ended' : '') + '" id="ring"><svg viewBox="0 0 140 140" aria-hidden="true"><circle class="bg" cx="70" cy="70" r="60" fill="none" stroke-width="10"/><circle class="fg" id="ringfg" cx="70" cy="70" r="60" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="377" style="stroke-dashoffset:' + off + '"/></svg><div class="clock" id="clock" role="timer">' + fmt(l) + '</div></div><div class="tcontrols">' + ctl + '</div></div></section>';
   }
   function caseNotes() { const c = G.cur; return c.notes.length ? '<div class="notes">' + c.notes.slice(-6).map(n => '<div>• ' + esc(n) + '</div>').join('') + '</div>' : ''; }
@@ -1390,7 +1400,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const c = G.cur, o = c.obj;
     if (!o) return '';
     const by = P(c[o.side]), sp = P(c[o.side === 'A' ? 'B' : 'A']);
-    const head = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span class="chip gold">Objection</span><span class="chip num" id="vclock">' + fmt((o.endsAt - nowH()) / 1000) + '</span></div>';
+    const head = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span class="chip gold">Objection</span><span class="chip num" id="vclock">' + fmt(vLeft(o)) + '</span></div>';
     if (o.jurors.includes(ME_ID)) {
       const mineV = ME && ME.obj && ME.obj.key === o.key ? ME.obj.v : null;
       return '<section class="card action" style="display:grid;gap:12px">' + head + '<h2 style="margin:0">Objection from ' + esc(by.name) + '</h2><p class="muted">Against ' + esc(sp.name) + '. You’re on the jury: do you sustain the objection?</p>' +
@@ -1409,7 +1419,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     return caseTop() + objBox() + timerPanel() + witnessBox() + '<div class="parties">' + partyCard('A') + partyCard('B') + '</div>' + caseNotes();
   }
   function voteView() {
-    const hb = isHost() ? '<button class="btn xl primary" data-act="endVote">Finish (go to the vote result)</button>' : '';
+    const hb = isHost() ? vCtl() + '<button class="btn xl primary" data-act="endVote">Finish (go to the vote result)</button>' : '';
     return voteView0() + hb;
   }
   function voteView0() {
@@ -1417,7 +1427,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const title = first ? 'First vote' : (v.kind === 'appeal' ? 'Appeal vote: final verdict' : 'Tie-break round ' + (v.round - 1));
     const expl = first ? 'Pick the more convincing side. Pick “Nobody” if neither side made a winning case.' :
       'You must pick one of the two sides. There’s no “Nobody” option. Your first-vote ballot doesn’t count here.';
-    const head = '<div class="vkind ' + (first ? '' : 'appeal') + '"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>' + title + '</b><span class="chip num" id="vclock">' + fmt((v.endsAt - nowH()) / 1000) + '</span></div><span class="muted">Vote ' + v.done.length + ' of ' + c.jurors.length + '. Votes are secret until everyone has voted.</span></div>';
+    const head = '<div class="vkind ' + (first ? '' : 'appeal') + '"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>' + title + '</b><span class="chip num" id="vclock">' + fmt(vLeft(v)) + (vPz(v) ? ' ⏸️' : '') + '</span></div><span class="muted">Vote ' + v.done.length + ' of ' + c.jurors.length + '. Votes are secret until everyone has voted.</span></div>';
     if (!c.jurors.includes(ME_ID)) return head + '<section class="card pass"><h2>' + (mySide() ? 'The jury is voting on your argument' : 'The jury is voting') + '</h2><p class="muted">The result shows when everyone votes or time runs out.</p></section>';
     const voted = ME && ME.vote && ME.vote.key === v.key;
     if (voted) return head + '<section class="card pass"><h2>Vote received</h2><p class="muted">Waiting for the other jurors.</p></section>';
@@ -1791,6 +1801,18 @@ if (typeof module !== 'undefined') module.exports = MZ;
   });
 
   /* case flow (host) */
+  ACT.tRestart = H(() => { const c = G.cur; if (!c || !c.timer || c.obj || (c.witness && c.witness.pending)) return false; if (!confirm('Restart the timer from the beginning?')) return false; restartT(); });
+  ACT.vPause = H(() => {
+    const v = G.cur && G.cur.vote; if (!v || !v.endsAt) return false;
+    if (vPz(v)) { v.endsAt = Date.now() + v.pz * 1000; v.pz = 0; return; }
+    const l = (v.endsAt - Date.now()) / 1000; if (l <= 0) return false;
+    v.pz = l; v.endsAt = Date.now() + 3e9;
+  });
+  ACT.vRestart = H(() => {
+    const v = G.cur && G.cur.vote; if (!v || !v.endsAt) return false;
+    if (!confirm('Restart the timer from the beginning?')) return false;
+    v.endsAt = Date.now() + (v.dur || SEC('voteSec')) * 1000; v.pz = 0;
+  });
   ACT.timer = H(() => { const c = G.cur, t = c.timer; if (c.obj || (c.witness && c.witness.pending)) return false; if (t.running) pauseT(); else if (!t.done) startT(); });
   ACT.next = H(() => {
     const c = G.cur;

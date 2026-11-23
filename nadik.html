@@ -166,6 +166,9 @@ textarea.field{min-height:92px;resize:vertical}
 .ring.low .fg{stroke:var(--bad)}
 .ring.ended .fg{stroke:var(--bad)}
 .clock{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-d);font-size:2.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tctl>.btn{flex:1 1 120px;min-height:50px;white-space:nowrap;font-size:.98rem;padding-inline:10px}
+.ring.paused{margin-bottom:22px}
+.ring.paused::after{content:'⏸️ متوقف';position:absolute;left:0;right:0;bottom:-24px;text-align:center;font-size:.85rem;font-weight:700;color:#6b7280}
 .tcontrols{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
 .timeup{border:1px solid var(--bad);color:#9E1219;background:rgba(211,47,47,.12);border-radius:12px;padding:10px 14px;font-weight:700;text-align:center}
 .notes{display:grid;gap:6px;font-size:.92rem;color:var(--muted)}
@@ -1307,10 +1310,17 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   }
   const waitHost = () => '<p class="muted small" style="text-align:center">بانتظار المضيف ' + esc(P(G.host).name) + ' ينقل اللعبة للمرحلة التالية.</p>';
   const hostBtn = (label, act, extra) => isHost() ? '<button class="btn xl primary" data-act="' + act + '"' + (extra || '') + '>' + label + '</button>' : waitHost();
-  const remain = t => Math.max(0, (t - nowH()) / 1000);
+  const curT = () => (G && G.phase === 'market' && G.mk ? G.mk : (G && G.phase === 'cup' && G.cup ? G.cup : null));
+  const isPz = o => !!(o && o.endsAt && o.pz > 0 && o.endsAt - Date.now() > 1e9);
+  const remain = t => { const o = curT(); if (o && isPz(o) && t - Date.now() > 1e9) return o.pz; return Math.max(0, (t - nowH()) / 1000); };
+  function tCtl() {
+    const o = curT(); if (!isHost() || !o || !o.endsAt) return '';
+    const p = isPz(o);
+    return '<div class="btn-row tctl"><button class="btn ' + (p ? 'primary' : 'ghost') + '" data-act="tPause">' + (p ? '▶️ متابعة' : '⏸️ إيقاف') + '</button><button class="btn ghost" data-act="tRestart">🔄 إعادة المؤقت</button></div>';
+  }
   function clockBox(label, endsAt, dur, nxt) {
     return '<section class="card timerbox"><div class="ring" data-ring="' + (dur || 0) + '" data-end="' + (endsAt || 0) + '"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="clock num" data-clock="' + (endsAt || 0) + '">' + fmt(remain(endsAt)) + '</div></div>' +
-      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn primary" data-act="skip">إنهاء' + (nxt ? ' (' + nxt + ')' : '') + '</button>' : '') + '</div></section>';
+      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? tCtl() + '<button class="btn primary" data-act="skip">إنهاء' + (nxt ? ' (' + nxt + ')' : '') + '</button>' : '') + '</div></section>';
   }
 
   function lobbyView() {
@@ -1641,12 +1651,24 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const r = remain(+el.dataset.end), d = +el.dataset.ring || 1;
       const fg = el.querySelector('.fg'); if (fg) fg.style.strokeDashoffset = String(326.7 * (1 - Math.min(1, r / d)));
       el.classList.toggle('low', r <= 10);
+      el.classList.toggle('paused', +el.dataset.end - Date.now() > 1e9);
     });
   }
   setInterval(tickUI, 250);
 
   /* ---------- actions ---------- */
   const ACT = {};
+  ACT.tPause = (...a) => H(() => {
+    const o = curT(); if (!o || !o.endsAt) return false;
+    if (isPz(o)) { o.endsAt = Date.now() + o.pz * 1000; o.pz = 0; return; }
+    const l = (o.endsAt - Date.now()) / 1000; if (l <= 0) return false;
+    o.pz = l; o.endsAt = Date.now() + 3e9;
+  })(...a);
+  ACT.tRestart = (...a) => H(() => {
+    const o = curT(); if (!o || !o.endsAt || !o.dur) return false;
+    if (!confirm('تبي تعيد المؤقت من البداية؟')) return false;
+    o.endsAt = Date.now() + o.dur * 1000; o.pz = 0;
+  })(...a);
   const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) { publish(); setTimeout(hostStep, 60); } return r; };
   ACT.enter = () => { U.splash = false; };
   ACT.noticeOk = () => { U.notice = false; try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };

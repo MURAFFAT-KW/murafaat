@@ -167,6 +167,9 @@ textarea.field{min-height:92px;resize:vertical}
 .ring.low .fg{stroke:var(--bad)}
 .ring.ended .fg{stroke:var(--bad)}
 .clock{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-d);font-size:2.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+.tctl>.btn{flex:1 1 120px;min-height:50px;white-space:nowrap;font-size:.98rem;padding-inline:10px}
+.ring.paused{margin-bottom:22px}
+.ring.paused::after{content:'⏸️ متوقف';position:absolute;left:0;right:0;bottom:-24px;text-align:center;font-size:.85rem;font-weight:700;color:#6b7280}
 .tcontrols{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
 .timeup{border:1px solid var(--bad);color:#9E1219;background:rgba(211,47,47,.12);border-radius:12px;padding:10px 14px;font-weight:700;text-align:center}
 .notes{display:grid;gap:6px;font-size:.92rem;color:var(--muted)}
@@ -877,7 +880,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     G.used.push(c.item);
     setStage('price', SEC('priceSec'));
   }
-  function setStage(s, sec) { const c = G.cur; c.stage = s; c.dur = sec || 0; c.endsAt = sec ? Date.now() + sec * 1000 : 0; G.prog = []; }
+  function setStage(s, sec) { const c = G.cur; c.stage = s; c.dur = sec || 0; c.endsAt = sec ? Date.now() + sec * 1000 : 0; c.pz = 0; G.prog = []; }
 
   /* advances the current round when everyone is in, the clock ran out, or force */
   function roundStep(force) {
@@ -1097,9 +1100,15 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function clockBox(label, nxt) {
     const c = G.cur;
     return '<section class="card timerbox"><div class="ring" data-ring="' + (c.dur || 0) + '"><svg viewBox="0 0 120 120"><circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"/><circle class="fg" cx="60" cy="60" r="52" fill="none" stroke-width="10" stroke-linecap="round" stroke-dasharray="326.7" stroke-dashoffset="0"/></svg><div class="clock num" data-clock>' + fmt(remain()) + '</div></div>' +
-      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? '<button class="btn primary" data-act="skip">إنهاء' + (nxt ? ' (' + nxt + ')' : '') + '</button>' : '') + '</div></section>';
+      '<div class="tcontrols"><h3>' + label + '</h3>' + (isHost() ? tCtl() + '<button class="btn primary" data-act="skip">إنهاء' + (nxt ? ' (' + nxt + ')' : '') + '</button>' : '') + '</div></section>';
   }
-  const remain = () => (G && G.cur && G.cur.endsAt ? Math.max(0, (G.cur.endsAt - nowH()) / 1000) : 0);
+  const isPz = () => !!(G && G.cur && G.cur.endsAt && G.cur.pz > 0 && G.cur.endsAt - Date.now() > 1e9);
+  const remain = () => (G && G.cur && G.cur.endsAt ? (isPz() ? G.cur.pz : Math.max(0, (G.cur.endsAt - nowH()) / 1000)) : 0);
+  function tCtl() {
+    if (!isHost() || !G || !G.cur || !G.cur.endsAt) return '';
+    const p = isPz();
+    return '<div class="btn-row tctl"><button class="btn ' + (p ? 'primary' : 'ghost') + '" data-act="tPause">' + (p ? '▶️ متابعة' : '⏸️ إيقاف') + '</button><button class="btn ghost" data-act="tRestart">🔄 إعادة المؤقت</button></div>';
+  }
   function sellersBox(showPrice) {
     const c = G.cur;
     const one = s => {
@@ -1312,7 +1321,9 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function tickUI() {
     if (!G || !G.cur || !G.cur.endsAt) return;
     const r = remain(), d = G.cur.dur || 1;
+    const pz = isPz();
     document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = fmt(r); });
+    document.querySelectorAll('[data-ring]').forEach(el => el.classList.toggle('paused', pz));
     document.querySelectorAll('[data-ring]').forEach(el => {
       const fg = el.querySelector('.fg'); if (fg) fg.style.strokeDashoffset = String(326.7 * (1 - Math.min(1, r / d)));
       el.classList.toggle('low', r <= 10);
@@ -1322,6 +1333,17 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
 
   /* ---------- actions ---------- */
   const ACT = {};
+  ACT.tPause = (...a) => H(() => {
+    const c = G && G.cur; if (!c || !c.endsAt) return false;
+    if (isPz()) { c.endsAt = Date.now() + c.pz * 1000; c.pz = 0; return; }
+    const l = (c.endsAt - Date.now()) / 1000; if (l <= 0) return false;
+    c.pz = l; c.endsAt = Date.now() + 3e9;
+  })(...a);
+  ACT.tRestart = (...a) => H(() => {
+    const c = G && G.cur; if (!c || !c.endsAt || !c.dur) return false;
+    if (!confirm('تبي تعيد المؤقت من البداية؟')) return false;
+    c.endsAt = Date.now() + c.dur * 1000; c.pz = 0;
+  })(...a);
   const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
 
   ACT.enter = () => { U.splash = false; };

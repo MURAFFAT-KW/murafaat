@@ -35,6 +35,7 @@ h2{font-size:1.6rem;margin:14px 0 4px;font-weight:700;line-height:1.3}
 .btn{display:block;width:100%;min-height:62px;border:1px solid var(--p);border-radius:14px;padding:10px 22px;font-size:1.12rem;font-weight:700;background:var(--p);color:#fff;cursor:pointer;margin-top:12px;box-shadow:0 6px 16px rgba(18,32,58,.12);transition:transform .08s}
 .btn:active{transform:scale(.985)}
 .btn.ghost{background:#fff;color:var(--p);border:1.5px solid var(--p);box-shadow:none}
+.tctl{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tctl .btn{min-height:52px;font-size:1rem;padding:8px 10px}
 .btn.end{background:var(--ink);border-color:var(--ink)}
 .btn.end.pulse{animation:pulse 1s infinite}
 @keyframes pulse{50%{transform:scale(1.02);background:var(--red)}}
@@ -435,21 +436,29 @@ function showLog() {
 }
 
 /* ---------- المؤقت (المضيف يحدده) ---------- */
-function setTimer(sec) { G.dur = sec || 0; G.endsAt = sec ? Date.now() + sec * 1000 : 0; }
-const remain = () => (G && G.endsAt ? Math.max(0, (G.endsAt - nowH()) / 1000) : 0);
+function setTimer(sec) { G.dur = sec || 0; G.endsAt = sec ? Date.now() + sec * 1000 : 0; G.pz = 0; }
+/* إيقاف مؤقت: الوقت المتبقي يتخزن في G.pz ونهاية المؤقت تنرفع لبعيد */
+const isPz = () => !!(G && G.endsAt && G.pz > 0 && G.endsAt - Date.now() > 1e9);
+const remain = () => (G && G.endsAt ? (isPz() ? G.pz : Math.max(0, (G.endsAt - nowH()) / 1000)) : 0);
+function tCtl() {
+  if (!isHost() || !G || !G.endsAt) return '';
+  const p = isPz();
+  return `<div class="tctl"><button class="btn ${p ? '' : 'ghost'}" data-act="tPause">${p ? L('▶️ متابعة', '▶️ Resume') : L('⏸️ إيقاف', '⏸️ Pause')}</button><button class="btn ghost" data-act="tRestart">${L('🔄 إعادة المؤقت', '🔄 Restart timer')}</button></div>`;
+}
 function clockBox(label) {
   return `<div class="timer" id="timerBox"><div class="trow"><span class="tlabel">⏳ ${label}</span><span class="tval" data-clock></span></div><div class="tbar"><i data-bar></i></div></div>`;
 }
 function tickUI() {
   if (!G || !G.endsAt) return;
   const r = remain(), d = G.dur || 1;
-  document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = r > 0 ? fmt(r) : L('انتهى الوقت ⏰', 'Time’s up ⏰'); });
+  const pz = isPz();
+  document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = pz ? fmt(r) + ' ⏸️ ' + L('متوقف', 'Paused') : (r > 0 ? fmt(r) : L('انتهى الوقت ⏰', 'Time’s up ⏰')); });
   document.querySelectorAll('[data-bar]').forEach(el => { el.style.width = Math.min(100, r / d * 100) + '%'; });
   const tb = $('timerBox'); if (tb) tb.classList.toggle('timeup', r <= 0);
   const eb = $('endBtn'); if (eb) eb.classList.toggle('pulse', r <= 0);
 }
 setInterval(tickUI, 250);
-const endBtn = (label, act) => isHost() ? `<button class="btn end" id="endBtn" data-act="${act}">${L('إنهاء', 'End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>` : '';
+const endBtn = (label, act) => isHost() ? tCtl() + `<button class="btn end" id="endBtn" data-act="${act}">${L('إنهاء', 'End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>` : '';
 const waitHost = () => isHost() ? '' : `<p class="sub" style="text-align:center">${L('بانتظار المضيف', 'Waiting for the host')} ${esc(P(G.host).name)} ${L('ينقل اللعبة للمرحلة الجاية…', 'to move to the next stage…')}</p>`;
 
 /* ---------- رجوع المضيف للمرحلة السابقة ---------- */
@@ -588,6 +597,17 @@ function render() {
 /* ---------- الأفعال ---------- */
 const ACT = {};
 const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
+ACT.tPause = H(() => {
+  if (!G || !G.endsAt) return false;
+  if (isPz()) { G.endsAt = Date.now() + G.pz * 1000; G.pz = 0; return; }
+  const l = (G.endsAt - Date.now()) / 1000; if (l <= 0) return false;
+  G.pz = l; G.endsAt = Date.now() + 3e9;
+});
+ACT.tRestart = H(() => {
+  if (!G || !G.endsAt || !G.dur) return false;
+  if (!confirm(L('تبي تعيد المؤقت من البداية؟', 'Restart the timer from the beginning?'))) return false;
+  G.endsAt = Date.now() + G.dur * 1000; G.pz = 0;
+});
 app.addEventListener('click', async ev => {
   const el = ev.target.closest('[data-act]'); if (!el || !app.contains(el)) return;
   if (el.disabled || el.getAttribute('aria-disabled') === 'true') return;
@@ -868,7 +888,7 @@ const GAME = {
     if (r.g !== G.gameNo) return;
     if (r.type === 'extra' && G.phase === 'talk') {
       const sp = G.talk.speakers[G.talk.idx];
-      if (sp === id && !G.extraUsed[id] && (stOf(id) || {}).perks && stOf(id).perks.includes('extraTime')) { G.extraUsed[id] = 1; G.endsAt += CONFIG.extraTimeSec * 1000; G.dur += CONFIG.extraTimeSec; addLog(L(`+${CONFIG.extraTimeSec} ثانية لـ${P(id).name}`, `+${CONFIG.extraTimeSec}s for ${P(id).name}`)); }
+      if (sp === id && !G.extraUsed[id] && (stOf(id) || {}).perks && stOf(id).perks.includes('extraTime')) { G.extraUsed[id] = 1; if (isPz()) G.pz += CONFIG.extraTimeSec; else G.endsAt += CONFIG.extraTimeSec * 1000; G.dur += CONFIG.extraTimeSec; addLog(L(`+${CONFIG.extraTimeSec} ثانية لـ${P(id).name}`, `+${CONFIG.extraTimeSec}s for ${P(id).name}`)); }
     }
     if (G.phase !== 'shop') return;
     const k = G.shop.round;
