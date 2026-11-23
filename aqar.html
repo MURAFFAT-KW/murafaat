@@ -50,6 +50,7 @@ h2{font-size:1.6rem;margin:14px 0 4px;font-weight:700;line-height:1.3}
 .stepper .v{min-width:58px;text-align:center;font-weight:800}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px 12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:15px}
+.chip .sw{width:18px;height:18px;border-radius:50%;border:1.5px solid #12203A;flex:none}
 .chip.on{border-color:var(--p);background:var(--pl);color:var(--p2)}
 .chip small{color:var(--mut);font-weight:600}
 .swatches{display:flex;flex-wrap:wrap;gap:10px}
@@ -151,7 +152,7 @@ h2{font-size:1.6rem;margin:14px 0 4px;font-weight:700;line-height:1.3}
 html[dir=ltr] .stepper{flex-direction:row-reverse}
 .money.link{border:0;cursor:pointer;font:inherit;font-weight:800}
 .house{width:100%;height:auto;display:block}
-.preview .house{height:170px;width:auto}
+.preview .house{height:200px;width:auto;max-width:100%}
 .prop{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:16px;padding:8px;margin:8px 0 4px;background:#fff}
 .prop .pv{width:88px;flex:none;background:#F4FAF6;border-radius:12px;padding:4px}
 .prop .pi2{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
@@ -800,8 +801,9 @@ const CONFIG = {
     { id: 'coast', name: { ar: 'منطقة ساحلية', en: 'Coastal' }, price: 200 }, { id: 'city', name: { ar: 'وسط المدينة', en: 'Downtown' }, price: 180 },
     { id: 'res', name: { ar: 'سكنية هادئة', en: 'Quiet residential' }, price: 140 }, { id: 'sub', name: { ar: 'الضواحي', en: 'Suburbs' }, price: 100 }],
   lands: [{ id: 'l400', name: { ar: '400 م²', en: '400 m²' }, price: 80 }, { id: 'l600', name: { ar: '600 م²', en: '600 m²' }, price: 120 }, { id: 'l800', name: { ar: '800 م²', en: '800 m²' }, price: 160 }, { id: 'l1000', name: { ar: '1000 م²', en: '1000 m²' }, price: 200 }],
-  floorPrice: 60, maxFloors: 4,
-  styles: [{ id: 'modern', name: { ar: 'مودرن', en: 'Modern' }, price: 60 }, { id: 'classic', name: { ar: 'كلاسيك', en: 'Classic' }, price: 40 }, { id: 'heritage', name: { ar: 'تراثي', en: 'Heritage' }, price: 50 }, { id: 'minimal', name: { ar: 'مينيمال', en: 'Minimal' }, price: 30 }],
+  floorPrice: 60, maxFloors: 3, basementPrice: 50,
+  styles: [{ id: 'classic', name: { ar: 'كلاسيك', en: 'Classic' }, price: 40 }, { id: 'modern', name: { ar: 'مودرن', en: 'Modern' }, price: 60 }, { id: 'heritage', name: { ar: 'تراثي', en: 'Heritage' }, price: 50 }, { id: 'minimal', name: { ar: 'أوروبي', en: 'European' }, price: 45 }],
+  colors: [{ id: 'white', hex: '#FFFFFF', name: { ar: 'أبيض', en: 'White' }, price: 0 }, { id: 'sand', hex: '#E8CFA0', name: { ar: 'رملي', en: 'Sand' }, price: 20 }, { id: 'grey', hex: '#D3D9E1', name: { ar: 'رمادي', en: 'Grey' }, price: 20 }, { id: 'blue', hex: '#CFE3F5', name: { ar: 'أزرق', en: 'Blue' }, price: 20 }, { id: 'green', hex: '#D2ECD8', name: { ar: 'أخضر', en: 'Green' }, price: 20 }, { id: 'pink', hex: '#F6D5DA', name: { ar: 'وردي', en: 'Pink' }, price: 20 }],
   extras: [{ id: 'pool', icon: '🏊', name: { ar: 'مسبح', en: 'Pool' }, price: 50 }, { id: 'garden', icon: '🌳', name: { ar: 'حديقة', en: 'Garden' }, price: 30 }, { id: 'elevator', icon: '🛗', name: { ar: 'مصعد', en: 'Elevator' }, price: 40 }, { id: 'parking', icon: '🚗', name: { ar: 'مواقف', en: 'Parking' }, price: 20 }]
 };
 const byId = (a, id) => a.find(x => x.id === id);
@@ -825,13 +827,12 @@ const PERKS = [
   { id: 'glitch', icon: '⚠️', name: { ar: 'خلل بالإجراءات', en: 'Paperwork glitch' }, effect: () => L('تلغي بيعة قبل ما تكتمل، ويرجع العقار لصاحبه.', 'Cancel a deal before it completes; the property returns to its owner.') },
   { id: 'violation', icon: '⛔', name: { ar: 'مخالفة نظم', en: 'Regulation breach' }, effect: () => L('قبل بداية الجولة توقف مكتب تختاره عن اللعب طول الجولة.', 'Before a round, suspend an office of your choice for the whole round.') },
   { id: 'protect', icon: '🛡️', name: { ar: 'أحمي نفسك', en: 'Protect yourself' }, effect: () => L('تحميك من المزايدة وخطف الصفقة.', 'Protects you from Outbid and Deal hijack.') },
-  { id: 'addons', icon: '🏗️', name: { ar: 'إضافات البيت', en: 'Home add-ons' }, effect: () => L('تضيف تجهيزات لعقارك (مسبح، حديقة…) وتزيد قيمته.', 'Add fittings (pool, garden…) to raise your property’s value.') }
 ];
 const PERK_WHEN = { budgetUp: ['pre', 'pitch', 'deals', 'summary'], budgetDown: ['pre', 'pitch', 'deals', 'summary'], protect: ['pre', 'pitch', 'deals', 'summary'], addons: ['pre', 'pitch', 'deals', 'summary'], violation: ['pre'], negotiator: ['pitch'], outbid: ['deals'], glitch: ['deals'], deposit: ['deals'], rent: ['deals'], hijack: ['summary'] };
 
 /* ---------- العقار ---------- */
 function specValue(sp) {
-  let v = (byId(CONFIG.areas, sp.area) || { price: 0 }).price + (byId(CONFIG.lands, sp.land) || { price: 0 }).price + sp.floors * CONFIG.floorPrice + (byId(CONFIG.styles, sp.style) || { price: 0 }).price;
+  let v = (byId(CONFIG.areas, sp.area) || { price: 0 }).price + (byId(CONFIG.lands, sp.land) || { price: 0 }).price + sp.floors * CONFIG.floorPrice + (byId(CONFIG.styles, sp.style) || { price: 0 }).price + (sp.basement ? CONFIG.basementPrice : 0) + (byId(CONFIG.colors, sp.color) || { price: 0 }).price;
   (sp.extras || []).forEach(e => { v += (byId(CONFIG.extras, e) || { price: 0 }).price; });
   return v;
 }
@@ -839,22 +840,34 @@ const owned = id => (G.props || []).filter(x => x.owner === id);
 const wealth = id => (G.budget[id] || 0) + owned(id).reduce((a, x) => a + specValue(x), 0);
 const office = id => L('مكتب ', '') + P(id).name + L('', '’s office');
 const propTitle = pr => `${N(byId(CONFIG.areas, pr.area).name)} • ${N(byId(CONFIG.lands, pr.land).name)}`;
-const propSpecs = pr => `${pr.floors} ${L(pr.floors === 1 ? 'دور' : 'أدوار', pr.floors === 1 ? 'floor' : 'floors')} • ${N(byId(CONFIG.styles, pr.style).name)}${pr.extras.length ? ' • ' + pr.extras.map(e => byId(CONFIG.extras, e).icon).join(' ') : ''}`;
+const propSpecs = pr => `${pr.floors} ${L(pr.floors === 1 ? 'دور' : 'أدوار', pr.floors === 1 ? 'floor' : 'floors')} • ${N(byId(CONFIG.styles, pr.style).name)}${pr.basement ? ' • ' + L('سرداب', 'basement') : ''}${pr.color && pr.color !== 'white' ? ' • ' + N(byId(CONFIG.colors, pr.color).name) : ''}${pr.extras.length ? ' • ' + pr.extras.map(e => byId(CONFIG.extras, e).icon).join(' ') : ''}`;
 function houseSVG(sp) {
-  const STY = { modern: { wall: '#E9EDF1', roof: 'flat', win: '#2B3A4A' }, classic: { wall: '#EAD9B8', roof: 'pitch', win: '#5B4A2E' }, heritage: { wall: '#D8B98A', roof: 'crenel', win: '#6B4E2A' }, minimal: { wall: '#FAFAFA', roof: 'flat', win: '#9AA5B1' } };
-  const st = STY[sp.style] || STY.modern, f = Math.max(1, Math.min(CONFIG.maxFloors, sp.floors || 1)), fh = 18, w = 70, x = 45, base = 112, top = base - f * fh, ex = sp.extras || [];
-  let s = `<rect x="0" y="${base}" width="160" height="8" fill="#CFE6D6"/><rect x="${x}" y="${top}" width="${w}" height="${f * fh}" fill="${st.wall}" stroke="#12203A" stroke-width="1.6"/>`;
-  for (let i = 0; i < f; i++) { const y = top + i * fh + 5; s += `<rect x="${x + 9}" y="${y}" width="11" height="9" fill="${st.win}"/><rect x="${x + w - 20}" y="${y}" width="11" height="9" fill="${st.win}"/>`; if (i < f - 1) s += `<rect x="${x + w / 2 - 5}" y="${y}" width="10" height="9" fill="${st.win}"/>`; }
-  s += `<rect x="${x + w / 2 - 6}" y="${base - 14}" width="12" height="14" fill="#1E8A4C"/>`;
-  if (st.roof === 'pitch') s += `<path d="M${x - 6} ${top} L${x + w / 2} ${top - 20} L${x + w + 6} ${top} Z" fill="#B5543A" stroke="#12203A" stroke-width="1.6" stroke-linejoin="round"/>`;
-  else if (st.roof === 'crenel') { for (let i = 0; i < 5; i++) s += `<rect x="${x + 2 + i * 14}" y="${top - 6}" width="8" height="6" fill="${st.wall}" stroke="#12203A" stroke-width="1.4"/>`; }
-  else s += `<rect x="${x - 4}" y="${top - 4}" width="${w + 8}" height="4" fill="#12203A"/>`;
-  if (ex.includes('garden')) s += `<circle cx="22" cy="${base - 10}" r="10" fill="#3FA65F"/><rect x="20.5" y="${base - 4}" width="3" height="5" fill="#7A5230"/><circle cx="34" cy="${base - 6}" r="6" fill="#56B873"/>`;
-  if (ex.includes('pool')) s += `<rect x="122" y="${base - 5}" width="32" height="7" rx="3" fill="#5BC0EB" stroke="#2F8FC0"/>`;
-  if (ex.includes('elevator')) s += `<rect x="${x + w - 4}" y="${top}" width="6" height="${f * fh}" fill="#C9D2DC" stroke="#12203A" stroke-width="1"/>`;
-  if (ex.includes('parking')) s += `<rect x="124" y="${base - 20}" width="24" height="11" rx="3" fill="#E4572E"/><circle cx="130" cy="${base - 8}" r="2.5" fill="#12203A"/><circle cx="142" cy="${base - 8}" r="2.5" fill="#12203A"/>`;
-  return `<svg viewBox="0 0 160 122" class="house">${s}</svg>`;
+  /* الشكل يبين الستايل وعدد الأدوار والسرداب واللون: كلاسيك مربع، مودرن حواف دائرية، تراثي زوائد مثل القلعة، أوروبي سقف مثلث */
+  const f = Math.max(1, Math.min(CONFIG.maxFloors, sp.floors || 1)), fh = 26, w = 96, x = 52, ground = 128, ex = sp.extras || [];
+  const wall = (byId(CONFIG.colors, sp.color) || CONFIG.colors[0]).hex, ink = '#12203A', glass = '#2B3A4A', st = sp.style, top = ground - f * fh;
+  let s = `<rect x="0" y="${ground}" width="200" height="${sp.basement ? 34 : 10}" fill="${sp.basement ? '#D9C7A7' : '#CFE6D6'}"/><rect x="0" y="${ground - 2}" width="200" height="4" fill="#8BC79B"/>`;
+  if (sp.basement) { s += `<rect x="${x}" y="${ground}" width="${w}" height="24" fill="#B9A27C" stroke="${ink}" stroke-width="1.8" stroke-dasharray="5 3"/>`; for (let i = 0; i < 3; i++) s += `<rect x="${x + 12 + i * 28}" y="${ground + 7}" width="16" height="8" rx="1" fill="#4A3B22"/>`; }
+  if (ex.includes('pool')) s += `<rect x="156" y="${ground - 1}" width="38" height="8" rx="3" fill="#5BC0EB" stroke="#2F8FC0"/>`;
+  s += `<rect x="${x}" y="${top}" width="${w}" height="${f * fh}"${st === 'modern' ? ` rx="${f === 1 ? 10 : 16}"` : ''} fill="${wall}" stroke="${ink}" stroke-width="2"/>`;
+  for (let i = 0; i < f; i++) {
+    const y = top + i * fh + 7, mid = i < f - 1;
+    if (st === 'modern') [x + 10, x + w - 36].forEach(wx => { s += `<rect x="${wx}" y="${y}" width="26" height="11" rx="5.5" fill="${glass}"/>`; });
+    else if (st === 'heritage') [x + 14, x + w - 26].concat(mid ? [x + w / 2 - 6] : []).forEach(wx => { s += `<path d="M${wx} ${y + 13} V${y + 5} a6 6 0 0 1 12 0 V${y + 13} Z" fill="#5A4122"/>`; });
+    else [x + 12, x + w - 26].concat(mid ? [x + w / 2 - 7] : []).forEach(wx => { s += `<rect x="${wx}" y="${y}" width="14" height="12" fill="${glass}"/>`; });
+  }
+  for (let i = 1; i < f; i++) s += `<line x1="${x + (st === 'modern' ? 3 : 0)}" x2="${x + w - (st === 'modern' ? 3 : 0)}" y1="${top + i * fh}" y2="${top + i * fh}" stroke="${ink}" stroke-width="1" opacity=".35"/>`;
+  if (st === 'heritage') s += `<path d="M${x + w / 2 - 8} ${ground} V${ground - 12} a8 8 0 0 1 16 0 V${ground} Z" fill="#7A5230" stroke="${ink}" stroke-width="1.4"/>`;
+  else s += `<rect x="${x + w / 2 - 8}" y="${ground - 19}" width="16" height="19"${st === 'modern' ? ' rx="4"' : ''} fill="#1E8A4C"/>`;
+  if (st === 'classic') s += `<rect x="${x - 5}" y="${top - 6}" width="${w + 10}" height="6" fill="${ink}"/>`;
+  else if (st === 'heritage') { const n = 7, mw = w / (2 * n - 1); for (let i = 0; i < n; i++) s += `<rect x="${x + i * 2 * mw}" y="${top - 10}" width="${mw}" height="10" fill="${wall}" stroke="${ink}" stroke-width="2"/>`; s += `<rect x="${x - 4}" y="${top - 2}" width="${w + 8}" height="4" fill="${ink}"/>`; }
+  else if (st === 'minimal') s += `<path d="M${x - 10} ${top} L${x + w / 2} ${top - 32} L${x + w + 10} ${top} Z" fill="#B5543A" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/>`;
+  if (ex.includes('elevator')) s += `<rect x="${x + w - 2}" y="${top}" width="7" height="${f * fh}" fill="#C9D2DC" stroke="${ink}" stroke-width="1.2"/>`;
+  if (ex.includes('garden')) s += `<circle cx="22" cy="${ground - 14}" r="13" fill="#3FA65F"/><rect x="20" y="${ground - 4}" width="4" height="6" fill="#7A5230"/><circle cx="38" cy="${ground - 8}" r="8" fill="#56B873"/>`;
+  if (ex.includes('parking')) s += `<rect x="158" y="${ground - 17}" width="32" height="12" rx="4" fill="#E4572E"/><circle cx="166" cy="${ground - 4}" r="3" fill="${ink}"/><circle cx="182" cy="${ground - 4}" r="3" fill="${ink}"/>`;
+  const vt = 128 - 3 * 26 - 40;
+  return `<svg viewBox="0 ${vt} 200 ${166 - vt}" class="house">${s}</svg>`;
 }
+
 
 /* ---------- حالة اللعب ---------- */
 const perkLeft = (id, k) => (G.perks[id] || []).includes(k) && !(G.used[id] || []).includes(k);
@@ -944,8 +957,8 @@ const GAME = {
     return '';
   },
   assumptions: {
-    ar: ['الميزانية الافتراضية ١٠٠٠ د.ك والمضيف يغيرها. العملة مؤقتة.', 'أسعار المناطق والأراضي والأدوار والستايل والتجهيزات تجريبية.', 'أسعار المزايا موحّدة مؤقتًا (٥٠)، ومبالغها (زيادة/نقص ١٠٠، عربون ٥٠، إيجار ٣٠ × جولتين) مؤقتة.', 'أقصى عدد عقارات بمرحلة التجهيز ٣.', 'كل العقارات المملوكة معروضة بالسوق بسعر يحدده صاحبها.', 'التفاوض بالكلام، والمشتري يسجّل السعر المتفق عليه والبايع يقبل أو يرفض.', 'الصفقات تكتمل بنهاية وقت الصفقات.', 'المتحدثين عشوائي بدون تكرار لين الكل يعرض. النهاية بعد عدد الجولات.', 'خطف الصفقة: تعويض المشتري الأول غير محدد؛ مؤقتًا يرجع له مبلغه من البايع.', 'العربون: ينحسب من السعر إذا اشترى، ويروح للبايع إذا ما اشترى (مؤقت).', 'الإيجار: الأجرة تنخصم بداية كل جولة للمالك. فايدته باللعب غير محددة.', '«أحمي نفسك» تحميك طول الجولة اللي تفعّلها فيها (مؤقت).', '«إضافات البيت»: تدفع سعر التجهيز فوق سعر الميزة (مؤقت).', 'التعادل في بند: نفس نقاط المركز. وإذا اللاعبين أقل من ٥ المراكز الموجودة بس تاخذ نقاط.', 'إذا خلص الوقت ما تنتقل اللعبة تلقائيًا؛ المضيف يضغط «إنهاء».'],
-    en: ['Default budget 1000 KD; the host can change it. Currency is temporary.', 'Area, land, floor, style and fitting prices are trial values.', 'Perk prices are a flat temporary 50; amounts (boost/cut 100, deposit 50, rent 30 × 2) are temporary.', 'Max 3 properties during setup.', 'Every owned property is listed at a price its owner sets.', 'Negotiate out loud; the buyer records the agreed price and the seller accepts or rejects.', 'Deals complete when the deals time ends.', 'Presenters random, no repeats until all have pitched. The game ends after the set rounds.', 'Deal hijack: first buyer compensation undecided; for now the seller refunds them.', 'Deposit counts toward the price if bought; goes to the seller if not (temporary).', 'Rent is paid to the owner at the start of each round. What renting gives you is undecided.', '“Protect yourself” covers you for the round you activate it (temporary).', '“Home add-ons”: you pay the fitting price on top of the perk price (temporary).', 'Category ties share the rank points; with fewer than 5 players only existing ranks score.', 'When time runs out nothing moves on by itself; the host presses “End”.']
+    ar: ['الميزانية الافتراضية ١٠٠٠ د.ك والمضيف يغيرها. العملة مؤقتة.', 'أسعار المناطق والأراضي والأدوار والسرداب والستايل والألوان والتجهيزات تجريبية. الأبيض مجاني.', 'أسعار المزايا موحّدة مؤقتًا (٥٠)، ومبالغها (زيادة/نقص ١٠٠، عربون ٥٠، إيجار ٣٠ × جولتين) مؤقتة.', 'أقصى عدد عقارات بمرحلة التجهيز ٣.', 'كل العقارات المملوكة معروضة بالسوق بسعر يحدده صاحبها.', 'التفاوض بالكلام، والمشتري يسجّل السعر المتفق عليه والبايع يقبل أو يرفض.', 'الصفقات تكتمل بنهاية وقت الصفقات.', 'المتحدثين عشوائي بدون تكرار لين الكل يعرض. النهاية بعد عدد الجولات.', 'خطف الصفقة: تعويض المشتري الأول غير محدد؛ مؤقتًا يرجع له مبلغه من البايع.', 'العربون: ينحسب من السعر إذا اشترى، ويروح للبايع إذا ما اشترى (مؤقت).', 'الإيجار: الأجرة تنخصم بداية كل جولة للمالك. فايدته باللعب غير محددة.', '«أحمي نفسك» تحميك طول الجولة اللي تفعّلها فيها (مؤقت).', 'التعادل في بند: نفس نقاط المركز. وإذا اللاعبين أقل من ٥ المراكز الموجودة بس تاخذ نقاط.', 'إذا خلص الوقت ما تنتقل اللعبة تلقائيًا؛ المضيف يضغط «إنهاء».'],
+    en: ['Default budget 1000 KD; the host can change it. Currency is temporary.', 'Area, land, floor, basement, style, colour and fitting prices are trial values. White is free.', 'Perk prices are a flat temporary 50; amounts (boost/cut 100, deposit 50, rent 30 × 2) are temporary.', 'Max 3 properties during setup.', 'Every owned property is listed at a price its owner sets.', 'Negotiate out loud; the buyer records the agreed price and the seller accepts or rejects.', 'Deals complete when the deals time ends.', 'Presenters random, no repeats until all have pitched. The game ends after the set rounds.', 'Deal hijack: first buyer compensation undecided; for now the seller refunds them.', 'Deposit counts toward the price if bought; goes to the seller if not (temporary).', 'Rent is paid to the owner at the start of each round. What renting gives you is undecided.', '“Protect yourself” covers you for the round you activate it (temporary).', 'Category ties share the rank points; with fewer than 5 players only existing ranks score.', 'When time runs out nothing moves on by itself; the host presses “End”.']
   }
 };
 
@@ -984,7 +997,7 @@ ACT.setupEnd = H(() => phaseTo(() => {
     const m = inp(p.id), ok = m.g === G.gameNo;
     G.perks[p.id] = ok ? (m.perks || []).slice(0, CONFIG.maxPerks) : []; G.used[p.id] = [];
     let b = G.settings.budget - G.perks[p.id].length * CONFIG.perkPrice;
-    (ok ? m.props || [] : []).slice(0, CONFIG.maxPropsAtStart).forEach(sp => { const v = specValue(sp); if (b >= v) { b -= v; G.props.push({ id: ++n, owner: p.id, area: sp.area, land: sp.land, floors: sp.floors, style: sp.style, extras: (sp.extras || []).slice(), cost: v, asking: sp.asking || v }); } });
+    (ok ? m.props || [] : []).slice(0, CONFIG.maxPropsAtStart).forEach(sp => { const v = specValue(sp); if (b >= v) { b -= v; G.props.push({ id: ++n, owner: p.id, area: sp.area, land: sp.land, floors: sp.floors, style: sp.style, basement: !!sp.basement, color: sp.color || 'white', extras: (sp.extras || []).slice(), cost: v, asking: sp.asking || v }); } });
     G.budget[p.id] = b; G.profit[p.id] = 0; G.dealsN[p.id] = 0; G.votes[p.id] = 0;
   });
   G.nextProp = n + 1; startRound(1);
@@ -1061,8 +1074,9 @@ ACT.togPerk = d => {
   else m.perks.push(d.id);
   saveMe();
 };
-const draft = () => (U.pd = U.pd || { area: CONFIG.areas[0].id, land: CONFIG.lands[0].id, floors: 1, style: CONFIG.styles[0].id, extras: [] });
+const draft = () => (U.pd = U.pd || { area: CONFIG.areas[0].id, land: CONFIG.lands[0].id, floors: 1, style: CONFIG.styles[0].id, basement: false, color: 'white', extras: [] });
 ACT.setDraft = d => { const x = draft(); if (d.k === 'extras') { const i = x.extras.indexOf(d.v); i >= 0 ? x.extras.splice(i, 1) : x.extras.push(d.v); } else x[d.k] = d.v; };
+ACT.basement = d => { draft().basement = d.v === '1'; };
 ACT.floors = d => { const x = draft(); x.floors = Math.min(CONFIG.maxFloors, Math.max(1, x.floors + (+d.v))); };
 ACT.buyProp = () => {
   const m = mine(), x = draft(), v = specValue(x);
@@ -1089,7 +1103,9 @@ function setupView() {
       <div class="card"><div class="preview">${houseSVG(x)}</div>
       <h3>📍 ${L('المنطقة', 'Area')}</h3>${chipRow(CONFIG.areas, 'area')}<h3>📐 ${L('حجم الأرض', 'Land size')}</h3>${chipRow(CONFIG.lands, 'land')}
       <div class="row"><span>🏢 ${L('عدد الأدوار', 'Floors')} <small>(${money(CONFIG.floorPrice)})</small></span><div class="stepper"><button data-act="floors" data-v="1">+</button><span class="v">${x.floors}</span><button data-act="floors" data-v="-1">−</button></div></div>
-      <h3>🎨 ${L('الستايل', 'Style')}</h3>${chipRow(CONFIG.styles, 'style')}<h3>✨ ${L('تجهيزات إضافية', 'Extra fittings')}</h3>${chipRow(CONFIG.extras, 'extras')}
+      <h3>⬇️ ${L('السرداب', 'Basement')}</h3><div class="chips"><button class="chip ${x.basement ? '' : 'on'}" data-act="basement" data-v="0">${L('بدون', 'None')} <small>${money(0)}</small></button><button class="chip ${x.basement ? 'on' : ''}" data-act="basement" data-v="1">${L('مع سرداب', 'With basement')} <small>${money(CONFIG.basementPrice)}</small></button></div>
+      <h3>🏛️ ${L('الستايل', 'Style')}</h3>${chipRow(CONFIG.styles, 'style')}
+      <h3>🎨 ${L('لون البيت', 'House colour')}</h3><div class="chips">${CONFIG.colors.map(c => `<button class="chip ${x.color === c.id ? 'on' : ''}" data-act="setDraft" data-k="color" data-v="${c.id}"><span class="sw" style="background:${c.hex}"></span>${N(c.name)} <small>${c.price ? money(c.price) : L('مجاني', 'Free')}</small></button>`).join('')}</div><h3>✨ ${L('تجهيزات إضافية', 'Extra fittings')}</h3>${chipRow(CONFIG.extras, 'extras')}
       <div class="total">${L('قيمة العقار', 'Property value')}: <b>${money(specValue(x))}</b></div><button class="btn" data-act="buyProp">${L('اشترِ العقار', 'Buy property')}</button></div>
       ${m.props.map(p => `<div class="prop"><div class="pv">${houseSVG(p)}</div><div class="pi2"><b>${propTitle(p)}</b><small>${propSpecs(p)}</small><small>${L('القيمة', 'Value')}: ${money(specValue(p))}</small></div>
         <div class="askbox"><small>${L('سعر العرض', 'Asking')}</small><div class="stepper sm"><button data-act="setupAsk" data-key="${p.key}" data-v="1">+</button><span class="v">${money(p.asking)}</span><button data-act="setupAsk" data-key="${p.key}" data-v="-1">−</button></div><button class="mini" data-act="delProp" data-key="${p.key}">${L('إلغاء', 'Remove')}</button></div></div>`).join('')}
@@ -1102,7 +1118,7 @@ function setupView() {
 function propRow(pr, mine_) {
   const h = G.holds.find(x => x.propId === pr.id), rn = G.rentals.find(x => x.propId === pr.id && x.left > 0);
   const b = [h ? `🧾 ${L('عليه عربون', 'Deposit')}: ${esc(P(h.holder).name)}` : '', rn ? `🔑 ${L('مستأجر', 'Rented')}: ${esc(P(rn.renter).name)}` : '', pendingOn(pr.id) ? `⏳ ${L('بيعة قيد الإتمام', 'Deal pending')}` : ''].filter(Boolean);
-  return `<div class="prop"><div class="pv">${houseSVG(pr)}</div><div class="pi2"><b>${propTitle(pr)}</b><small>${propSpecs(pr)}</small><small>${L('القيمة', 'Value')}: ${money(specValue(pr))}${mine_ ? '' : ' • ' + esc(office(pr.owner))}</small>${b.length ? `<div class="pbadges">${b.map(x => `<span>${x}</span>`).join('')}</div>` : ''}</div>
+  return `<div class="prop"><div class="pv">${houseSVG(pr)}</div><div class="pi2"><b>${propTitle(pr)}</b><small>${propSpecs(pr)}</small><small>${mine_ ? `${L('القيمة الفعلية (تشوفها انت بس)', 'Actual value (only you see it)')}: ${money(specValue(pr))} • ${L('سعر العرض', 'Asking')}: ${money(pr.asking)}` : `${L('السعر المطلوب', 'Asking price')}: ${money(pr.asking)} • ${esc(office(pr.owner))}`}</small>${b.length ? `<div class="pbadges">${b.map(x => `<span>${x}</span>`).join('')}</div>` : ''}</div>
   ${mine_ ? `<div class="askbox"><small>${L('سعر العرض', 'Asking')}</small><div class="stepper sm"><button data-act="ask" data-id="${pr.id}" data-v="1">+</button><span class="v">${money(pr.asking)}</span><button data-act="ask" data-id="${pr.id}" data-v="-1">−</button></div></div>` : `<div class="askbox"><small>${L('السعر', 'Price')}</small><b>${money(pr.asking)}</b></div>`}</div>`;
 }
 ACT.ask = d => { const pr = byId(G.props, +d.id); sendReq({ type: 'ask', propId: pr.id, price: Math.max(CONFIG.priceStep, pr.asking + (+d.v) * CONFIG.priceStep), g: G.gameNo }); };
@@ -1155,7 +1171,7 @@ function pitchView() {
   <div class="speakers">${G.presenters.map((x, i) => `<span class="spk ${i === G.pIdx ? 'now' : i < G.pIdx ? 'done' : ''}">${esc(P(x.id).name)}</span>`).join('')}</div>
   <div class="stage"><div class="who">${L('الحين يعرض', 'Now pitching')}<b>${esc(office(cur.id))}${mine_ ? L(' (أنت)', ' (you)') : ''}</b></div>
   ${mine_ && owned(ME_ID).length > 1 ? `<div class="card"><h3>${L('اختر العقار اللي بتعرضه', 'Pick the property to pitch')}</h3><div class="chips">${owned(ME_ID).map(x => `<button class="chip ${cur.prop === x.id ? 'on' : ''}" data-act="pitchProp" data-id="${x.id}">${propTitle(x)}</button>`).join('')}</div></div>` : ''}
-  ${pr ? `<div class="card big"><div class="preview">${houseSVG(pr)}</div><div class="ptitle">${propTitle(pr)}</div><div class="sub">${propSpecs(pr)}</div><div class="total">${L('السعر المطلوب', 'Asking price')}: <b>${money(pr.asking)}</b> <small>(${L('القيمة', 'value')} ${money(specValue(pr))})</small></div></div>` : ''}
+  ${pr ? `<div class="card big"><div class="preview">${houseSVG(pr)}</div><div class="ptitle">${propTitle(pr)}</div><div class="sub">${propSpecs(pr)}</div><div class="total">${L('السعر المطلوب', 'Asking price')}: <b>${money(pr.asking)}</b>${pr.owner === ME_ID ? ` <small>(${L('القيمة الفعلية', 'actual value')} ${money(specValue(pr))} · ${L('تشوفها انت بس', 'only you see this')})</small>` : ''}</div></div>` : ''}
   ${G.negotiator[cur.id] === G.round ? `<div class="note">🧑‍💼 ${L('معه مفاوض يساعده بهالعرض', 'A negotiator is helping with this pitch')}</div>` : ''}</div>
   ${myBar()}${perksPanel()}${endBtn(nxt, 'pitchNext')}${waitHost()}`;
 }
