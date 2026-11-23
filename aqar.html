@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>أقنعني! | العقار</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800;900&family=Readex+Pro:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --p:#1E8A4C;      /* لون العقار: أخضر */
+  --p2:#14653A;
+  --pl:#EAF6EF;
+  --red:#DE0921;    /* لون اسم اللعبة في صفحة المقدمة (نفس باقي ألعاب أقنعني) */
+  --blue:#0554A4;
+  --ink:#12203A; --mut:#5E6B80; --line:#E1E6EE;
+  --gold:#D4A017; --silver:#A7A9AE; --bronze:#B87333;
+  --font-d:'Alexandria','Readex Pro',Tahoma,sans-serif;
+  --font:'Readex Pro','Alexandria','Segoe UI',Tahoma,system-ui,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);line-height:1.65}
+h2,h3,.btn,.gname,.tval,.nm,.stepper .v,.sname{font-family:var(--font-d)}
+#app{max-width:620px;margin:0 auto;padding:10px 16px 120px}
+#app.wide{max-width:980px}
+button{font-family:inherit;color:inherit}
+input,textarea{font-family:inherit;font-size:16px}
+h2{font-size:1.6rem;margin:14px 0 4px;font-weight:700;line-height:1.3}
+.sub{color:var(--mut);margin:0 0 10px;line-height:1.7;font-size:15px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px}
+.backbtn{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:0 14px;border-radius:12px;border:1.5px solid #E1E5EC;background:#fff;color:#111;font:700 .95rem/1 var(--font-d);cursor:pointer;text-decoration:none;white-space:nowrap}
+.backbtn:focus-visible{outline:3px solid #FBC611;outline-offset:2px}
+.aqfix{position:absolute;top:max(12px,env(safe-area-inset-top));inset-inline-start:12px;z-index:5}
+.tag{font-size:13px;color:var(--p2);font-weight:800;background:var(--pl);padding:6px 12px;border-radius:999px}
+.btn{display:block;width:100%;min-height:62px;border:1px solid var(--p);border-radius:14px;padding:10px 22px;font-size:1.12rem;font-weight:700;background:var(--p);color:#fff;cursor:pointer;margin-top:12px;box-shadow:0 6px 16px rgba(18,32,58,.12);transition:transform .08s}
+.btn:active{transform:scale(.985)}
+.btn.ghost{background:#fff;color:var(--p);border:1.5px solid var(--p);box-shadow:none}
+.btn.end{background:var(--ink);border-color:var(--ink)}
+.btn.end.pulse{animation:pulse 1s infinite}
+@keyframes pulse{50%{transform:scale(1.02);background:var(--red)}}
+.btn:disabled{opacity:.4;cursor:default}
+.host-note{display:block;font-size:11px;font-weight:700;opacity:.7;margin-top:2px}
+.card{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:12px 0;background:#fff;box-shadow:0 2px 10px rgba(18,32,58,.05)}
+.card h3{margin:0 0 8px;font-size:17px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.stepper{display:flex;align-items:center;gap:6px}
+.stepper button{width:38px;height:38px;border-radius:12px;border:0;background:var(--pl);color:var(--p);font-size:22px;font-weight:900;cursor:pointer}
+.stepper .v{min-width:58px;text-align:center;font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:2px solid var(--line);background:#fff;border-radius:14px;padding:8px 12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:15px}
+.chip.on{border-color:var(--p);background:var(--pl);color:var(--p2)}
+.chip small{color:var(--mut);font-weight:600}
+.swatches{display:flex;flex-wrap:wrap;gap:10px}
+.sw{width:44px;height:44px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #d9d3e2;cursor:pointer;position:relative;padding:0}
+.sw.on{box-shadow:0 0 0 3px var(--p)}
+.sw.on::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-weight:900;text-shadow:0 0 3px #000}
+.swl{font-size:11px;color:var(--mut);text-align:center;margin-top:3px}
+.swwrap{display:flex;flex-direction:column;align-items:center;width:52px}
+.badge{display:inline-block;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px;background:#FFF3D1;color:#875c00;vertical-align:middle}
+.assume{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#FFF3D1;color:#875c00;margin-inline-start:4px}
+.timer{position:sticky;top:0;z-index:6;background:rgba(255,255,255,.96);backdrop-filter:blur(6px);padding:8px 0 10px}
+.trow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.tlabel{font-weight:800;color:var(--mut);font-size:14px}
+.tval{font-weight:900;font-size:22px;color:var(--p);font-variant-numeric:tabular-nums}
+.tbar{height:8px;background:var(--pl);border-radius:99px;overflow:hidden}
+.tbar i{display:block;height:100%;background:var(--p);transition:width 1s linear;width:100%}
+.timeup .tval{color:var(--red)} .timeup .tbar i{background:var(--red)}
+.moneybar{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}
+.money{background:var(--pl);border-radius:14px;padding:8px 12px;font-weight:800;font-size:14px;color:var(--p2)}
+.money.alt{background:#EEF5FF;color:var(--blue)}
+/* المقدمة */
+.intro{text-align:center;min-height:calc(100svh - 40px);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.intro .logo svg{width:min(56vw,220px);height:auto;display:block}
+.intro .aqlogo *{animation:none!important}
+.gname{font-size:clamp(2.2rem,10vw,2.9rem);font-weight:800;color:var(--red);margin:6px 0 0}
+.lead{max-width:34ch;color:var(--mut);font-size:1rem;line-height:1.9;margin:6px auto 0}
+.intro .btn{margin-top:22px;max-width:320px;min-height:64px;font-size:1.3rem;font-weight:800;border-radius:99px}
+.proto{margin-top:14px;font-size:12px;color:var(--mut)}
+/* المزايا */
+.perks{display:grid;gap:10px}
+@media(min-width:720px){.perks{grid-template-columns:1fr 1fr}}
+.perk{display:flex;align-items:center;gap:12px;text-align:start;border:2px solid var(--line);background:#fff;border-radius:18px;padding:12px;cursor:pointer}
+.perk.on{border-color:var(--p);background:var(--pl)}
+.perk .pi{font-size:26px}
+.perk .pt{flex:1;display:flex;flex-direction:column;gap:2px}
+.perk .pt small{color:var(--mut)}
+.perk .pp{font-weight:800;font-size:14px;color:var(--p2);display:flex;flex-direction:column;align-items:flex-end}
+.perk .pp small{font-size:10px;color:#875c00}
+/* المتجر */
+.store{border-radius:8px;border:7px solid;padding:10px;display:flex;flex-direction:column;align-items:center;aspect-ratio:1/1;cursor:pointer;position:relative;overflow:hidden}
+.store .sname{font-weight:900;font-size:15px;text-align:center;line-height:1.3}
+.store .sfeat{flex:1;display:flex;align-items:center;justify-content:center;width:100%;min-height:0}
+.store .sfeat svg{height:100%;max-height:140px;width:auto}
+.store .sowner{font-size:12px;opacity:.85;font-weight:700}
+.store .sbadges{position:absolute;top:6px;inset-inline-start:6px;font-size:13px}
+.storebig{max-width:260px;margin:0 auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+/* التصاميم */
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:10px}
+.dcard{border:2px solid var(--line);background:#fff;border-radius:18px;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.dcard.on{border-color:var(--p);background:var(--pl)}
+.dcard svg{width:100%;height:120px}
+.dcard b{font-size:14px} .dcard small{color:var(--mut);font-size:12px}
+.preview{display:flex;justify-content:center;background:linear-gradient(180deg,#faf7fd,#f2ebf9);border-radius:22px;padding:10px;margin:8px 0}
+.preview svg{height:230px;width:auto}
+.field{width:100%;border:1.5px solid var(--line);border-radius:14px;padding:12px;background:#fff}
+.field:focus{outline:2px solid var(--p);border-color:transparent}
+.counter{font-size:12px;color:var(--mut);text-align:end;margin-top:4px}
+.warn{background:#FFF0F1;color:#9b0616;border-radius:14px;padding:12px;font-weight:700;font-size:14px;margin:10px 0}
+/* التحدث */
+.speakers{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.spk{padding:6px 12px;border-radius:999px;background:#f3f1f5;font-weight:800;font-size:14px;color:var(--mut)}
+.spk.now{background:var(--p);color:#fff}
+.spk.done{text-decoration:line-through;opacity:.6}
+.stage{text-align:center}
+.stage .who{font-size:15px;color:var(--mut);font-weight:700}
+.stage .who b{color:var(--ink);font-size:22px;display:block}
+.desc{background:#faf8fc;border-radius:16px;padding:12px;line-height:1.8;font-size:15px;margin-top:10px}
+/* النتائج */
+.cat{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.cat:last-child{border:0}
+.cat .ci{font-size:26px;width:40px;text-align:center}
+.cat .cn{flex:1} .cat .cn b{display:block} .cat .cn small{color:var(--mut)}
+.cat .cp{font-weight:900;color:var(--p)}
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:10px;margin:20px 0 8px}
+.pod{flex:1;max-width:120px;display:grid;justify-items:center;gap:4px;text-align:center;min-width:0}
+.pod .md{font-size:2rem;line-height:1}
+.pod .pn{font-weight:700;font-size:.95rem;overflow-wrap:anywhere}
+.pod .ps{font-size:.85rem;color:#6B7489}
+.pod .pb{width:100%;border-radius:12px 12px 0 0;display:grid;place-items:center;font:800 1.5rem/1 system-ui,sans-serif;color:#fff}
+.pod.g .pb{height:110px;background:linear-gradient(#F5C518,#D9A400)} .pod.s .pb{height:80px;background:linear-gradient(#CDD2DA,#9AA3AF)} .pod.b .pb{height:58px;background:linear-gradient(#DDA06B,#B0703C)}
+.rest .row b{color:var(--p)}
+/* عام */
+.fab{position:fixed;bottom:16px;inset-inline-start:16px;z-index:8;border:0;border-radius:999px;padding:11px 16px;background:#FFF3D1;color:#6d4a00;font-weight:800;box-shadow:0 4px 18px rgba(0,0,0,.12);cursor:pointer;font-size:14px}
+.modal{position:fixed;inset:0;background:rgba(25,10,40,.45);display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.sheet{background:#fff;width:100%;max-width:640px;max-height:90vh;overflow:auto;border-radius:24px 24px 0 0;padding:18px 18px 28px}
+@media(min-width:720px){.modal{align-items:center}.sheet{border-radius:24px}}
+.sheet h3{margin:4px 0 10px;font-size:20px}
+.sheet ol{padding-inline-start:20px;line-height:1.9;font-size:15px;margin:0}
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-weight:700;font-size:14px;z-index:30;max-width:90vw;text-align:center}
+.item{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:16px;padding:8px;margin:8px 0}
+.item svg{width:70px;height:96px}
+.item .in{flex:1}
+.item .in small{color:var(--mut);display:block}
+.item .buy{border:0;border-radius:12px;padding:10px 14px;font-weight:800;background:var(--p);color:#fff;cursor:pointer}
+.item .buy:disabled{background:#ddd;color:#777}
+.old{text-decoration:line-through;color:var(--mut);font-size:12px;margin-inline-start:4px}
+
+html[dir=ltr] .stepper{flex-direction:row-reverse}
+.money.link{border:0;cursor:pointer;font:inherit;font-weight:800}
+.house{width:100%;height:auto;display:block}
+.preview .house{height:170px;width:auto}
+.prop{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:16px;padding:8px;margin:8px 0 4px;background:#fff}
+.prop .pv{width:88px;flex:none;background:#F4FAF6;border-radius:12px;padding:4px}
+.prop .pi2{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.prop .pi2 b{font-family:var(--font-d);font-size:.98rem}
+.prop .pi2 small{color:var(--mut);font-size:.82rem}
+.askbox{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex:none}
+.askbox small{color:var(--mut);font-size:.75rem}
+.stepper.sm button{width:30px;height:30px;font-size:18px;border-radius:9px}
+.stepper.sm .v{min-width:64px;font-size:.88rem}
+.pbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
+.pbadges span{font-size:.72rem;font-weight:700;background:#FFF3D1;color:#875c00;border-radius:99px;padding:2px 8px}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.mini{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 11px;font:700 .85rem var(--font);cursor:pointer;color:var(--ink)}
+.mini.ok{background:var(--p);border-color:var(--p);color:#fff}
+.mini:disabled{opacity:.4;cursor:default}
+.deal{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:14px;padding:8px;margin:8px 0}
+.deal.mine{border-color:var(--p);background:var(--pl)}
+.deal .dv{width:64px;flex:none}
+.deal .di{flex:1;min-width:0;display:flex;flex-direction:column}
+.deal .di small{color:var(--mut)}
+.deal .da{display:flex;flex-direction:column;gap:6px;flex:none}
+.shield{font-size:.8rem;font-weight:800;color:#0554A4}
+.note{background:#F4FAF6;border:1px solid #D3EBDD;border-radius:12px;padding:10px 12px;margin:8px 0;font-size:.92rem;line-height:1.7}
+.note .mini{margin-inline-start:6px}
+.empty{color:var(--mut);font-size:.92rem;padding:6px 0}
+.total{margin:12px 0 0;font-size:1.05rem}
+.total b{color:var(--p);font-family:var(--font-d);font-size:1.2rem}
+.perkrow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.perkrow:last-child{border:0}
+.perkrow .pi{font-size:24px}
+.perkrow .pt{flex:1;display:flex;flex-direction:column}
+.perkrow .pt small{color:var(--mut);font-size:.82rem}
+.perkrow.used{opacity:.5}
+.usedtag{font-size:.8rem;font-weight:800;color:var(--mut)}
+.where{font-size:.75rem;color:var(--mut);max-width:110px;text-align:end}
+.votebtn{display:block;width:100%;text-align:start;border:2px solid var(--line);background:#fff;border-radius:16px;padding:16px;margin:8px 0;font:700 1.05rem var(--font-d);cursor:pointer}
+.votebtn.on{border-color:var(--p);background:var(--pl);color:var(--p2)}
+.orow{display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:.92rem}
+.lbl{display:block;font-weight:700;margin:10px 0 6px}
+select.field{appearance:auto}
+.ptitle{font-family:var(--font-d);font-weight:800;font-size:1.25rem}
+.card.big{text-align:center}
+.preview{background:linear-gradient(180deg,#F6FBF8,#E9F5EE)!important}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="modalRoot"></div>
+<button class="fab" onclick="openAssumptions()">📝 الافتراضات</button>
+<style>#langsw{position:fixed;top:max(10px,env(safe-area-inset-top));left:12px;z-index:60;background:#fff;border:1.5px solid #D5DBE5;border-radius:99px;padding:5px 14px;font:700 .9rem/1.4 "Readex Pro","Alexandria",system-ui,sans-serif;color:#12203A;text-decoration:none;box-shadow:0 3px 10px rgba(18,32,58,.1)}#langsw[hidden]{display:none}</style>
+<a id="langsw" href="aqar-en.html" lang="en" onclick="try{localStorage.setItem('aqnieni.lang','en')}catch(x){}">English</a>
+<script>
+const LANG = 'ar';
+const HUB = 'index.html';
+const LOGO = `<svg class="aqlogo" viewBox="0 0 920 790" role="img" aria-label="أقنعني"><defs><clipPath id="aqbub"><path d="M483.2,99.8 474.8,91.5 464.8,83.5 452.0,75.0 432.5,65.2 415.5,59.2 398.5,55.0 395.2,55.0 386.5,53.0 380.2,53.0 377.5,52.0 365.2,52.0 362.5,51.0 326.2,51.0 323.5,52.0 309.2,52.0 306.5,53.0 299.2,53.0 296.5,54.0 292.2,54.0 289.5,55.0 286.2,55.0 264.2,60.2 247.2,66.2 240.5,69.8 238.2,70.2 234.0,73.0 225.8,77.0 210.0,87.5 197.8,97.5 184.5,110.8 172.5,126.0 162.0,142.8 154.2,159.2 149.2,173.2 145.0,191.2 145.0,194.5 144.0,197.2 144.0,203.5 143.0,206.2 143.0,227.5 144.0,230.2 144.0,235.5 145.0,238.2 146.0,247.5 151.2,266.5 155.2,276.5 165.0,295.0 176.5,310.8 184.5,318.8 187.0,322.2 186.8,326.5 179.2,348.2 178.8,351.5 163.2,399.2 163.0,405.5 163.5,406.8 166.2,408.8 169.5,408.8 173.8,407.2 205.8,385.2 220.2,366.0 228.5,356.2 230.5,354.8 238.5,354.8 241.2,355.8 246.5,355.8 249.2,356.8 255.5,356.8 258.2,357.8 264.5,357.8 267.2,358.8 272.5,358.8 275.2,359.8 281.5,359.8 284.2,360.8 289.5,360.8 292.2,361.8 311.5,361.8 314.2,360.8 325.5,360.8 328.2,359.8 339.5,358.8 362.5,353.5 377.5,348.5 392.5,342.5 410.8,333.5 411.2,332.8 410.8,330.5 410.8,316.5 411.2,315.5 412.8,314.2 423.8,309.2 436.8,306.2 443.2,298.8 449.2,293.0 454.2,286.8 460.2,281.0 465.2,274.8 472.2,268.0 477.2,261.8 483.2,256.0 488.2,249.8 495.2,243.0 501.8,235.2 504.0,233.2 507.2,232.0 513.2,231.8 514.8,230.8 515.8,228.5 516.8,222.2 518.8,215.5 518.8,212.2 519.8,209.5 519.8,178.2 518.8,175.5 518.8,170.2 514.5,153.2 507.5,135.2 501.8,124.8 494.2,113.0Z"/><path d="M518.0,165.5 414.5,295.0 411.5,299.8 411.0,301.2 411.0,333.5 412.0,336.2 413.0,344.5 419.2,363.5 425.0,375.0 430.5,383.8 439.5,395.0 448.8,404.2 460.0,413.2 469.8,419.8 485.2,427.5 498.2,432.5 520.2,437.8 523.5,437.8 526.2,438.8 532.5,438.8 535.2,439.8 577.5,439.8 580.2,438.8 591.5,438.8 594.2,437.8 598.5,437.8 601.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 634.5,433.8 637.2,432.8 641.5,432.8 644.2,431.8 652.2,431.0 665.0,438.8 686.8,453.8 726.8,479.8 735.2,483.8 739.8,483.2 741.5,481.2 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 732.8,430.5 732.8,428.2 730.8,421.5 730.8,419.2 726.8,404.5 726.8,402.5 728.2,400.5 744.0,388.2 755.2,377.0 765.2,364.8 773.8,352.0 782.5,334.5 784.0,329.2 785.5,326.5 790.8,307.5 791.8,299.2 792.8,296.5 792.8,268.2 791.8,265.5 791.8,261.2 790.8,258.5 790.8,255.2 788.5,246.2 783.5,231.2 774.8,213.8 768.2,204.0 759.2,192.8 749.0,182.5 737.8,173.5 725.0,165.0 714.5,159.2 712.2,158.8 702.5,154.2 683.5,148.2 675.2,147.0 672.5,146.0 669.2,146.0 666.5,145.0 661.2,145.0 658.5,144.0 650.2,144.0 647.5,143.0 609.2,143.0 606.5,144.0 598.2,144.0 595.5,145.0 589.2,145.0 586.5,146.0 581.2,146.0 578.5,147.0 575.2,147.0 572.5,148.0 565.2,149.0 548.2,153.2 528.2,160.2Z"/><path d="M445,185 L600,168 L600,300 L445,318Z"/></clipPath></defs><g class="aq-red"><path fill="#DE0921" d="M483.2,99.8 474.8,91.5 464.8,83.5 452.0,75.0 432.5,65.2 415.5,59.2 398.5,55.0 395.2,55.0 386.5,53.0 380.2,53.0 377.5,52.0 365.2,52.0 362.5,51.0 326.2,51.0 323.5,52.0 309.2,52.0 306.5,53.0 299.2,53.0 296.5,54.0 292.2,54.0 289.5,55.0 286.2,55.0 264.2,60.2 247.2,66.2 240.5,69.8 238.2,70.2 234.0,73.0 225.8,77.0 210.0,87.5 197.8,97.5 184.5,110.8 172.5,126.0 162.0,142.8 154.2,159.2 149.2,173.2 145.0,191.2 145.0,194.5 144.0,197.2 144.0,203.5 143.0,206.2 143.0,227.5 144.0,230.2 144.0,235.5 145.0,238.2 146.0,247.5 151.2,266.5 155.2,276.5 165.0,295.0 176.5,310.8 184.5,318.8 187.0,322.2 186.8,326.5 179.2,348.2 178.8,351.5 163.2,399.2 163.0,405.5 163.5,406.8 166.2,408.8 169.5,408.8 173.8,407.2 205.8,385.2 220.2,366.0 228.5,356.2 230.5,354.8 238.5,354.8 241.2,355.8 246.5,355.8 249.2,356.8 255.5,356.8 258.2,357.8 264.5,357.8 267.2,358.8 272.5,358.8 275.2,359.8 281.5,359.8 284.2,360.8 289.5,360.8 292.2,361.8 311.5,361.8 314.2,360.8 325.5,360.8 328.2,359.8 339.5,358.8 362.5,353.5 377.5,348.5 392.5,342.5 410.8,333.5 411.2,332.8 410.8,330.5 410.8,316.5 411.2,315.5 412.8,314.2 423.8,309.2 436.8,306.2 443.2,298.8 449.2,293.0 454.2,286.8 460.2,281.0 465.2,274.8 472.2,268.0 477.2,261.8 483.2,256.0 488.2,249.8 495.2,243.0 501.8,235.2 504.0,233.2 507.2,232.0 513.2,231.8 514.8,230.8 515.8,228.5 516.8,222.2 518.8,215.5 518.8,212.2 519.8,209.5 519.8,178.2 518.8,175.5 518.8,170.2 514.5,153.2 507.5,135.2 501.8,124.8 494.2,113.0Z"/><circle cx="260.5" cy="172.7" r="22.7" fill="#fff"/><circle cx="330.0" cy="172.7" r="22.6" fill="#fff"/><circle cx="399.4" cy="172.7" r="22.5" fill="#fff"/></g><g class="aq-blue"><path fill="#0554A4" d="M518.0,165.5 414.5,295.0 411.5,299.8 411.0,301.2 411.0,333.5 412.0,336.2 413.0,344.5 419.2,363.5 425.0,375.0 430.5,383.8 439.5,395.0 448.8,404.2 460.0,413.2 469.8,419.8 485.2,427.5 498.2,432.5 520.2,437.8 523.5,437.8 526.2,438.8 532.5,438.8 535.2,439.8 577.5,439.8 580.2,438.8 591.5,438.8 594.2,437.8 598.5,437.8 601.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 634.5,433.8 637.2,432.8 641.5,432.8 644.2,431.8 652.2,431.0 665.0,438.8 686.8,453.8 726.8,479.8 735.2,483.8 739.8,483.2 741.5,481.2 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 732.8,430.5 732.8,428.2 730.8,421.5 730.8,419.2 726.8,404.5 726.8,402.5 728.2,400.5 744.0,388.2 755.2,377.0 765.2,364.8 773.8,352.0 782.5,334.5 784.0,329.2 785.5,326.5 790.8,307.5 791.8,299.2 792.8,296.5 792.8,268.2 791.8,265.5 791.8,261.2 790.8,258.5 790.8,255.2 788.5,246.2 783.5,231.2 774.8,213.8 768.2,204.0 759.2,192.8 749.0,182.5 737.8,173.5 725.0,165.0 714.5,159.2 712.2,158.8 702.5,154.2 683.5,148.2 675.2,147.0 672.5,146.0 669.2,146.0 666.5,145.0 661.2,145.0 658.5,144.0 650.2,144.0 647.5,143.0 609.2,143.0 606.5,144.0 598.2,144.0 595.5,145.0 589.2,145.0 586.5,146.0 581.2,146.0 578.5,147.0 575.2,147.0 572.5,148.0 565.2,149.0 548.2,153.2 528.2,160.2Z"/><circle cx="552.7" cy="332.3" r="22.5" fill="#fff"/><circle cx="621.1" cy="332.2" r="22.4" fill="#fff"/><circle cx="689.7" cy="332.2" r="22.4" fill="#fff"/></g><g clip-path="url(#aqbub)"><g class="aq-arrow"><path fill="#fff" d="M583.5,227.5 580.2,223.2 572.2,223.0 563.5,225.0 559.2,225.0 556.5,226.0 552.2,226.0 549.5,227.0 545.2,227.0 542.5,228.0 538.2,228.0 535.5,229.0 531.2,229.0 528.5,230.0 524.2,230.0 521.5,231.0 516.2,231.0 513.5,232.0 509.2,232.0 506.5,233.0 502.2,233.0 499.5,234.0 493.2,234.0 490.5,235.0 486.2,235.0 483.5,236.0 479.2,236.0 476.5,237.0 472.2,237.0 469.5,238.0 465.2,238.0 462.5,239.0 458.2,239.0 455.5,240.0 452.2,240.0 449.5,241.0 446.2,241.0 443.5,242.0 434.2,243.0 431.5,244.0 409.2,248.0 372.2,257.2 351.2,264.2 336.2,270.2 316.8,280.0 295.0,293.5 279.0,305.5 261.8,320.5 237.5,346.0 221.5,365.0 217.5,370.8 210.5,379.0 207.5,383.8 203.8,386.8 203.0,388.2 203.2,394.8 204.8,395.8 207.5,395.5 296.8,365.0 298.2,364.0 298.2,362.8 297.0,362.0 292.8,361.5 292.5,359.8 299.0,353.2 312.0,343.2 330.8,330.8 337.8,326.8 361.2,315.0 384.2,306.0 402.2,300.0 427.5,293.5 431.2,292.0 440.2,289.8 442.5,289.8 447.2,288.0 450.5,287.8 465.2,283.8 467.5,283.8 580.5,255.8 582.2,254.0 583.8,250.5 583.8,248.2 584.8,245.5 584.8,241.2 585.8,238.5 585.8,235.2Z"/></g></g><g class="aq-arrow"><path fill="#FBC611" d="M602.2,179.0 598.5,181.0 597.0,185.5 605.2,209.5 606.8,212.2 607.0,215.2 604.5,217.0 593.2,219.0 590.5,220.0 588.2,220.0 585.5,221.0 583.2,221.0 581.2,222.2 581.2,223.5 583.8,227.5 586.0,235.2 586.0,238.5 585.0,241.2 585.0,245.5 583.0,253.8 583.5,254.5 588.5,253.8 612.2,246.0 617.2,245.5 618.0,246.8 619.0,255.5 621.0,262.2 621.0,265.5 622.0,268.2 623.2,276.2 626.0,279.2 629.5,279.8 632.8,278.2 649.2,259.0 687.2,216.8 690.2,212.0 690.5,208.5 686.8,204.5 674.2,200.8 664.5,197.2 661.2,196.8 651.5,193.2 648.2,192.8 619.5,183.2 616.2,182.8 604.5,179.0Z"/></g><path class="aq-sp aq-sp0" fill="#FBC611" d="M581.0,63.5 576.0,68.8 573.0,76.2 573.2,80.5 575.5,85.8 588.5,98.8 593.5,105.0 617.0,128.2 621.2,130.8 628.5,130.8 632.8,128.2 634.8,126.0 636.8,120.5 636.8,115.2 635.8,112.8 601.2,66.0 596.0,62.0 593.5,61.0 587.2,61.0Z"/><path class="aq-sp aq-sp1" fill="#FBC611" d="M687.5,4.0 680.2,4.0 674.0,6.5 669.8,10.2 667.0,13.8 665.0,20.2 665.0,38.5 664.0,41.2 664.0,72.5 663.0,75.2 663.0,93.5 664.2,97.5 666.5,101.8 668.8,103.8 675.2,106.8 681.5,106.8 685.2,105.5 688.8,103.2 691.2,100.8 693.8,95.5 694.8,91.5 694.8,87.2 695.8,84.5 695.8,78.2 696.8,75.5 696.8,70.2 697.8,67.5 697.8,61.2 698.8,58.5 698.8,52.2 699.8,49.5 699.8,42.2 700.8,39.5 700.8,33.2 701.8,30.5 701.8,17.2 700.2,13.0 696.0,8.5 693.0,6.0Z"/><path class="aq-sp aq-sp2" fill="#FBC611" d="M796.2,76.0 790.8,70.5 785.5,68.0 775.2,68.0 769.0,71.5 722.5,114.0 719.0,121.2 719.2,127.5 722.5,133.8 727.2,136.5 731.2,137.8 738.2,136.5 791.8,99.2 796.8,94.0 798.8,88.5 798.8,82.2Z"/><g class="aq-word"><path fill="#0554A4" fill-rule="evenodd" d="M134.2,744.0 127.0,746.5 124.0,748.5 120.5,752.0 117.2,759.2 116.0,766.5 119.0,776.0 125.0,782.2 129.2,784.5 133.2,785.8 142.5,785.8 150.0,782.8 156.2,776.8 158.5,773.2 159.8,769.5 159.8,760.2 156.2,753.0 150.0,747.0 142.5,744.0ZM80.2,744.0 76.2,745.2 70.8,748.0 67.5,751.0 63.5,757.8 62.0,763.2 62.0,767.5 65.0,776.0 71.0,782.2 75.2,784.5 79.2,785.8 88.5,785.8 96.0,782.8 101.8,777.5 105.8,769.5 105.8,761.2 102.8,753.8 96.8,747.5 92.5,745.2 88.5,744.0ZM820.8,633.2 819.8,630.5 819.8,626.2 815.5,612.2 811.8,604.8 809.2,601.0 801.0,592.5 792.0,586.0 784.5,582.2 772.5,578.2 769.2,578.0 766.5,577.0 760.2,577.0 757.5,576.0 747.2,576.0 744.5,577.0 738.2,577.0 735.5,578.0 732.2,578.0 722.2,581.2 715.5,584.2 706.0,590.5 696.5,600.0 692.0,606.8 689.2,612.2 686.0,624.2 686.0,629.5 685.0,632.2 685.0,636.5 686.0,639.2 686.0,643.5 688.2,651.5 691.0,657.0 695.8,664.0 694.2,665.0 658.2,665.0 655.5,664.0 652.2,664.0 646.0,661.5 643.8,659.0 641.8,654.5 641.5,592.5 639.5,591.0 635.2,591.0 632.5,590.0 610.2,590.0 600.8,593.0 599.0,594.8 598.0,597.2 598.0,654.5 595.5,659.8 593.8,661.5 590.0,663.5 584.2,664.0 581.5,665.0 538.2,665.0 532.8,663.8 532.0,662.5 541.2,652.8 544.8,648.0 549.5,638.5 551.8,630.5 551.8,613.2 548.5,602.2 545.2,597.0 539.0,590.5 533.0,586.0 525.5,582.2 513.5,578.2 503.5,576.0 500.2,576.0 497.5,575.0 490.2,575.0 487.5,574.0 467.2,574.0 464.5,575.0 457.2,575.0 454.5,576.0 450.2,576.0 447.5,577.0 440.2,578.0 431.2,580.2 419.2,584.2 412.8,587.0 409.0,589.5 406.5,593.0 404.0,601.2 404.0,623.5 406.0,631.5 407.0,632.8 413.8,637.2 424.5,647.8 436.2,661.8 436.2,663.2 435.0,664.0 432.2,664.0 429.5,665.0 378.2,665.0 375.5,664.0 370.2,663.8 364.0,660.5 362.0,657.5 360.8,653.5 360.5,592.0 359.0,591.0 355.2,591.0 352.5,590.0 339.8,589.5 338.5,590.0 330.2,590.0 325.2,591.2 320.8,593.0 318.2,595.5 318.0,653.5 315.5,659.8 311.5,662.8 307.5,664.0 303.2,664.0 300.5,665.0 275.2,665.0 269.8,663.5 266.0,661.5 263.2,657.8 261.8,653.5 261.8,647.2 260.8,644.5 260.8,633.2 261.8,630.5 261.8,595.2 260.8,590.8 258.5,589.2 249.5,586.2 226.5,581.0 222.2,581.0 219.5,580.0 212.2,580.0 209.5,579.0 199.2,579.0 196.5,580.0 190.2,580.0 180.2,582.2 171.2,585.2 165.8,588.0 156.8,594.5 148.5,603.0 146.0,606.8 141.2,616.2 139.0,623.2 139.0,625.5 138.0,628.2 138.0,646.5 141.2,658.5 149.0,674.2 149.0,681.5 146.5,686.8 143.8,689.5 138.5,692.8 127.5,696.0 124.2,696.0 121.5,697.0 100.2,697.0 97.5,696.0 93.2,695.8 84.2,692.8 78.0,689.5 70.2,682.8 65.0,674.5 61.8,663.5 61.8,642.2 62.8,639.5 64.0,631.2 67.8,619.5 67.8,617.8 66.8,616.2 62.5,615.0 59.2,615.0 56.5,614.0 36.2,614.0 28.2,616.2 22.8,619.0 19.8,621.5 14.0,628.8 10.2,638.2 10.0,641.5 9.0,644.2 9.0,649.5 8.0,652.2 8.0,667.5 9.0,670.2 9.0,674.5 11.2,684.5 15.2,695.5 20.0,704.0 23.5,708.8 32.8,718.2 44.8,726.8 55.2,731.5 67.2,735.5 76.2,737.8 79.5,737.8 82.2,738.8 86.5,738.8 89.2,739.8 129.5,739.8 132.2,738.8 137.5,738.8 140.2,737.8 142.5,737.8 151.5,735.5 167.0,729.8 178.8,722.2 185.2,716.0 191.8,707.0 195.8,697.5 198.8,684.5 198.8,673.2 196.8,664.2 190.8,651.8 185.8,642.5 185.8,636.2 187.8,631.8 191.0,628.2 194.8,626.2 200.2,624.8 209.5,624.8 211.8,625.8 213.0,627.5 213.0,667.5 214.0,670.2 214.0,674.5 217.2,685.5 220.0,691.0 224.5,697.0 231.0,703.2 234.8,705.8 242.2,709.5 253.2,712.8 256.5,712.8 259.2,713.8 306.5,713.8 309.2,712.8 312.5,712.8 324.5,709.5 334.0,704.8 338.5,701.0 340.8,701.2 346.8,705.8 354.2,709.5 365.2,712.8 369.5,712.8 372.2,713.8 431.5,713.8 434.2,712.8 439.5,712.8 442.2,711.8 445.5,711.8 448.2,710.8 455.5,709.8 472.5,704.5 476.2,702.8 479.0,703.2 486.2,706.5 496.2,709.8 498.5,709.8 506.2,711.8 509.5,711.8 512.2,712.8 518.5,712.8 521.2,713.8 587.5,713.8 590.2,712.8 593.5,712.8 607.5,708.5 620.2,700.5 621.2,700.8 625.0,704.2 632.2,708.5 646.2,712.8 649.5,712.8 652.2,713.8 779.5,713.8 791.5,710.5 800.8,705.2 810.2,695.8 813.8,690.0 818.5,677.5 818.8,674.2 819.8,671.5 819.8,667.2 820.8,664.5ZM738.8,620.8 745.2,618.0 753.2,617.0 761.5,619.0 766.8,622.2 768.5,624.0 770.5,627.0 772.5,631.8 774.0,638.2 774.0,654.5 772.5,659.8 769.8,662.5 760.5,665.0 755.2,665.0 752.5,664.0 749.2,664.0 745.2,662.8 739.8,660.0 734.2,654.8 731.2,649.0 729.8,643.5 729.8,635.2 732.2,628.0 734.2,625.0ZM452.0,619.8 454.2,618.8 456.5,618.8 464.2,616.8 472.5,616.8 475.2,615.8 481.5,615.8 484.2,616.8 489.5,616.8 492.2,617.8 494.5,617.8 500.8,620.2 505.5,625.0 507.0,629.5 504.5,636.8 499.5,643.8 495.8,647.5 488.0,653.0 483.0,655.5 480.5,655.8 478.2,653.8 459.2,630.0 451.5,622.0 451.2,620.8ZM616.2,526.0 613.5,527.0 610.2,527.2 605.8,529.0 602.0,531.5 598.5,535.0 595.2,541.2 594.0,546.2 594.0,550.5 595.5,556.0 597.0,559.0 603.0,565.2 610.2,568.5 620.5,569.8 623.2,568.8 626.5,568.5 633.0,565.8 639.2,559.8 641.5,555.5 642.8,551.5 642.8,544.2 639.8,536.8 633.8,530.5 626.5,527.2 623.2,527.0 620.5,526.0ZM336.2,526.0 327.2,528.2 319.5,533.0 316.0,537.8 314.2,542.2 314.0,552.5 316.0,558.0 321.0,564.2 324.5,566.5 330.2,568.5 333.5,568.8 336.2,569.8 339.5,569.8 342.2,568.8 345.5,568.8 351.2,566.5 356.2,562.8 359.8,558.0 361.5,553.5 361.8,543.2 359.8,537.8 354.8,531.5 345.5,527.2 342.2,527.0 339.5,526.0ZM774.2,523.0 770.2,524.2 763.0,528.5 759.5,533.0 757.0,539.2 757.0,548.5 758.2,552.5 761.5,557.8 766.8,561.8 773.2,564.8 783.5,564.8 791.0,561.8 797.2,555.8 799.5,551.5 800.8,547.5 800.8,541.2 798.8,534.8 796.2,531.0 792.8,527.5 787.5,524.2 783.5,523.0ZM720.2,523.0 716.2,524.2 711.2,527.0 705.0,533.8 703.0,539.2 703.0,549.5 706.5,556.8 711.8,561.8 719.2,564.8 729.5,564.8 737.0,561.8 742.8,556.0 745.2,551.0 746.8,544.5 745.8,538.2 742.2,531.0 738.8,527.5 735.0,525.0 728.5,523.0ZM653.2,430.8 655.2,432.8 726.8,479.8 735.2,483.8 738.5,483.8 741.2,481.8 742.8,477.5 742.8,475.2 741.8,472.5 738.8,455.2 736.8,448.5 736.8,446.2 734.8,439.5 734.8,437.2 733.2,431.8 731.2,430.0 654.8,430.0ZM496.5,430.5 497.2,431.5 503.2,433.5 516.2,436.8 519.5,436.8 522.2,437.8 526.5,437.8 529.2,438.8 537.5,438.8 540.2,439.8 569.5,439.8 572.2,438.8 585.5,438.8 588.2,437.8 597.5,437.8 600.2,436.8 608.5,436.8 611.2,435.8 617.5,435.8 620.2,434.8 627.5,434.8 630.2,433.8 641.5,432.8 643.8,431.8 649.2,431.0 648.8,430.2 499.0,430.0Z"/><path fill="#DE0921" fill-rule="evenodd" d="M896.5,524.0 892.2,524.0 889.5,523.0 873.2,523.0 865.2,525.2 859.0,528.5 855.5,532.0 854.2,534.2 852.0,542.2 852.0,711.5 854.2,713.8 861.5,713.8 864.2,714.8 875.5,714.8 878.2,713.8 881.5,713.8 888.5,711.5 890.8,710.2 896.2,704.8 899.8,697.5 899.8,526.5 898.8,525.0ZM904.8,446.0 897.5,444.0 878.2,444.0 869.2,446.0 863.2,448.2 855.0,453.5 852.5,456.0 848.5,462.0 846.0,469.2 846.0,478.5 850.0,489.0 846.5,490.8 841.2,491.0 838.8,492.0 837.0,493.8 836.0,496.2 836.0,507.5 837.5,511.8 840.2,513.8 847.5,513.8 850.2,512.8 855.5,512.8 858.2,511.8 863.5,511.8 866.2,510.8 871.5,510.8 874.2,509.8 880.5,509.8 883.2,508.8 888.5,508.8 891.2,507.8 897.5,507.8 900.2,506.8 904.5,506.8 910.2,505.5 911.8,503.5 911.8,493.2 910.2,487.8 908.8,485.5 905.5,484.0 903.2,484.0 900.5,485.0 893.2,485.0 890.5,486.0 879.0,486.2 875.0,484.5 872.8,482.0 871.8,479.5 872.2,472.8 875.8,468.8 878.8,467.2 884.2,465.8 891.5,465.8 894.2,466.8 896.5,466.8 899.8,465.2 902.2,462.8 903.8,459.5 905.8,450.5 905.8,447.5Z"/></g></svg>`;
+/* =====================================================================
+   أقنعني – العقار | Aqnieni – Alaqar  (نموذج أولي على جهاز واحد)
+   ⚙️ كل الأرقام والأسعار هنا قيم تجريبية مؤقتة — غير متفق عليها.
+   عدّل من CONFIG فقط.
+   ===================================================================== */
+const L = (ar, en) => LANG === 'ar' ? ar : en;
+const N = o => (o && typeof o === 'object') ? (o[LANG] ?? o.ar) : o;
+
+const CONFIG = {
+  gameName: {ar:'العقار', en:'Alaqar'},          // الاسم سهل التغيير
+  currency: {ar:'د.ك', en:'KD'},                 // افتراض
+  budget: {def:1000, min:100, max:10000, step:100},  // الميزانية: المضيف يحددها قبل البداية
+  maxPerks: 3,                                   // متفق عليه: ٣ مزايا كحد أقصى
+  maxPropsAtStart: 3,                            // افتراض: أقصى عدد عقارات بمرحلة التجهيز
+  priceStep: 10,                                 // خطوة أزرار السعر
+  // أسعار المزايا ومبالغها — كلها مؤقتة
+  perkPrice: 50,
+  budgetUpAmount: 100,
+  budgetDownAmount: 100,
+  depositAmount: 50,
+  rentPerRound: 30,
+  rentRounds: 2,
+  // النقاط: متفق عليه 5/4/3/2/1 لكل بند
+  rankPoints: [5,4,3,2,1],
+  tieRule: 'shared',                             // افتراض: المتعادلين ياخذون نفس نقاط المركز
+  timer: {min:30, max:300, step:30},
+  limits: {players:[3,25], rounds:[1,10], presenters:[1,5]},
+  defaults: {players:5, budget:1000, setupTime:180, rounds:3, presenters:2, pitchTime:60, dealTime:120, voteTime:60},
+  // مواصفات العقار — الأسعار تجريبية
+  areas: [
+    {id:'coast',  name:{ar:'منطقة ساحلية', en:'Coastal'},     price:200},
+    {id:'city',   name:{ar:'وسط المدينة', en:'Downtown'},      price:180},
+    {id:'res',    name:{ar:'سكنية هادئة', en:'Quiet residential'}, price:140},
+    {id:'sub',    name:{ar:'الضواحي', en:'Suburbs'},           price:100}
+  ],
+  lands: [
+    {id:'l400',  name:{ar:'400 م²', en:'400 m²'},  price:80},
+    {id:'l600',  name:{ar:'600 م²', en:'600 m²'},  price:120},
+    {id:'l800',  name:{ar:'800 م²', en:'800 m²'},  price:160},
+    {id:'l1000', name:{ar:'1000 م²', en:'1000 m²'}, price:200}
+  ],
+  floorPrice: 60, maxFloors: 4,
+  styles: [
+    {id:'modern',  name:{ar:'مودرن', en:'Modern'},       price:60},
+    {id:'classic', name:{ar:'كلاسيك', en:'Classic'},     price:40},
+    {id:'heritage',name:{ar:'تراثي', en:'Heritage'},     price:50},
+    {id:'minimal', name:{ar:'مينيمال', en:'Minimal'},    price:30}
+  ],
+  extras: [
+    {id:'pool',    icon:'🏊', name:{ar:'مسبح', en:'Pool'},       price:50},
+    {id:'garden',  icon:'🌳', name:{ar:'حديقة', en:'Garden'},    price:30},
+    {id:'elevator',icon:'🛗', name:{ar:'مصعد', en:'Elevator'},   price:40},
+    {id:'parking', icon:'🚗', name:{ar:'مواقف', en:'Parking'},   price:20}
+  ],
+  botAcceptRatio: 0.9   // سلوك اللاعبين الوهميين فقط (للتجربة)، مو قاعدة لعب
+};
+
+const CATS = [
+  {id:'wealth', icon:'💰', name:{ar:'الثروة النهائية',en:'Final wealth'}, hint:{ar:'الميزانية + قيمة العقارات والتجهيزات',en:'Budget + value of properties & fittings'}, money:true, metric:p=>wealth(p)},
+  {id:'profit', icon:'📈', name:{ar:'أرباح البيع',en:'Sales profit'}, hint:{ar:'سعر البيع ناقص سعر الشراء والتجهيزات',en:'Sale price minus purchase & fittings cost'}, money:true, metric:p=>p.profit},
+  {id:'owned',  icon:'🏠', name:{ar:'العقارات المملوكة',en:'Properties owned'}, hint:{ar:'عددها بنهاية اللعبة',en:'Count at the end'}, metric:p=>owned(p).length},
+  {id:'deals',  icon:'🤝', name:{ar:'الصفقات المكتملة',en:'Completed deals'}, hint:{ar:'شراء + بيع',en:'Buys + sales'}, metric:p=>p.deals},
+  {id:'pitch',  icon:'🎤', name:{ar:'أفضل إقناع',en:'Best pitch'}, hint:{ar:'بالتصويت، وما أحد يصوت لنفسه',en:'By vote, no self-votes'}, metric:p=>p.votes}
+];
+
+const PERKS = [
+  {id:'budgetUp',   icon:'➕', name:{ar:'زيادة الميزانية',en:'Budget boost'},    effect:()=>L(`تزيد ميزانيتك ${money(CONFIG.budgetUpAmount)}.`,`Adds ${money(CONFIG.budgetUpAmount)} to your budget.`)},
+  {id:'budgetDown', icon:'➖', name:{ar:'نقص الميزانية',en:'Budget cut'},       effect:()=>L(`تختار مكتب ثاني وتنقص ميزانيته ${money(CONFIG.budgetDownAmount)}.`,`Pick another office and cut its budget by ${money(CONFIG.budgetDownAmount)}.`)},
+  {id:'negotiator', icon:'🧑‍💼', name:{ar:'المفاوض',en:'Negotiator'},          effect:()=>L('تستعين بمفاوض يساعدك بالإقناع وقت عرضك، بس ما يشتري العقار.','A negotiator helps you pitch, but can’t buy the property.')},
+  {id:'rent',       icon:'🔑', name:{ar:'الإيجار',en:'Rent'},                  effect:()=>L(`تستأجر عقار ${CONFIG.rentRounds} جولات وتدفع ${money(CONFIG.rentPerRound)} كل جولة. تفاوض صاحبه قبل؛ ممكن يرفض بعد ما تستخدمها وتروح عليك.`,`Rent a property for ${CONFIG.rentRounds} rounds at ${money(CONFIG.rentPerRound)} per round. Negotiate first; the owner can still refuse after you use it and you lose the perk.`)},
+  {id:'deposit',    icon:'🧾', name:{ar:'العربون',en:'Deposit'},              effect:()=>L(`تدفع عربون ${money(CONFIG.depositAmount)} وتأجل بيع العقار جولة. بالجولة الجاية تشتريه أو تخسر العربون.`,`Pay a ${money(CONFIG.depositAmount)} deposit to hold a property one round. Next round you buy it or lose the deposit.`)},
+  {id:'outbid',     icon:'⬆️', name:{ar:'المزايدة',en:'Outbid'},              effect:()=>L('قبل ما تكتمل البيعة ترفع السعر وتاخذها، ولاعب ثاني يقدر يزيد عليك.','Before a deal completes, raise the price and take it — another player can raise again.')},
+  {id:'hijack',     icon:'🦅', name:{ar:'خطف الصفقة',en:'Deal hijack'},       effect:()=>L('بعد ما تكتمل البيعة تنقل العقار لك بعرض أعلى.','After a deal completes, take the property with a higher offer.')},
+  {id:'glitch',     icon:'⚠️', name:{ar:'خلل بالإجراءات',en:'Paperwork glitch'}, effect:()=>L('تلغي بيعة قبل ما تكتمل، ويرجع العقار لصاحبه.','Cancel a deal before it completes; the property returns to its owner.')},
+  {id:'violation',  icon:'⛔', name:{ar:'مخالفة نظم',en:'Regulation breach'},   effect:()=>L('قبل بداية الجولة توقف مكتب تختاره عن اللعب طول الجولة.','Before a round starts, suspend an office of your choice for the whole round.')},
+  {id:'protect',    icon:'🛡️', name:{ar:'أحمي نفسك',en:'Protect yourself'},    effect:()=>L('تحميك من المزايدة وخطف الصفقة.','Protects you from Outbid and Deal hijack.')},
+  {id:'addons',     icon:'🏗️', name:{ar:'إضافات البيت',en:'Home add-ons'},    effect:()=>L('تضيف تجهيزات لعقارك (مسبح، حديقة…) وتزيد قيمته.','Add fittings to your property (pool, garden…) to raise its value.')}
+];
+
+const BOT_NAMES = {
+  ar:['نورة','فهد','مريم','يوسف','سارة','خالد','دانة','عبدالله','ريم','بدر','هيا','ناصر','لولوة','حمد','شهد','سعود','العنود','مشاري','جود','طلال','غلا','راشد','منيرة','سلمان'],
+  en:['Noura','Fahad','Maryam','Yousef','Sara','Khaled','Dana','Abdullah','Reem','Bader','Haya','Nasser','Lulwa','Hamad','Shahad','Saud','Alanoud','Meshari','Joud','Talal','Ghala','Rashed','Munira','Salman']
+};
+
+const ASSUMPTIONS = {ar:[
+  'الاسم «العقار» واللون الأخضر من هوية السلسلة؛ الاسم يتغير من CONFIG.',
+  'الميزانية الافتراضية ١٠٠٠ د.ك والمضيف يغيرها قبل البداية. العملة مؤقتة.',
+  'أسعار المناطق والأراضي والأدوار والستايل والتجهيزات كلها قيم تجريبية في CONFIG.',
+  'أسعار المزايا موحّدة مؤقتًا (٥٠)، ومبالغها (زيادة/نقص ١٠٠، عربون ٥٠، إيجار ٣٠ × جولتين) مؤقتة.',
+  'أقصى عدد عقارات بمرحلة التجهيز ٣.',
+  'كل العقارات المملوكة معروضة بالسوق بسعر يحدده صاحبها.',
+  'التفاوض يصير بالكلام، والبرنامج يسجّل السعر المتفق عليه. اللاعبين الوهميين يقبلون إذا العرض ٩٠٪ من السعر أو أكثر (للتجربة فقط).',
+  'الصفقات تكتمل بنهاية وقت الصفقات.',
+  'ترتيب العروض: البرنامج يختار المتحدثين عشوائيًا بدون تكرار لين الكل يعرض.',
+  'نهاية اللعبة: بعد عدد الجولات اللي يحدده المضيف.',
+  'خطف الصفقة: تعويض المشتري الأول غير محدد. مؤقتًا يرجع له مبلغه من البايع.',
+  'العربون: إذا اشترى ينحسب من السعر، وإذا ما اشترى يروح للبايع (مؤقت).',
+  'الإيجار: الأجرة تنخصم بداية كل جولة وتروح للمالك. فايدة الاستئجار باللعب غير محددة.',
+  '«أحمي نفسك» تتفعل وتحميك طول الجولة اللي تفعّلها فيها (مؤقت).',
+  '«إضافات البيت»: تدفع سعر التجهيز من ميزانيتك فوق سعر الميزة (مؤقت).',
+  'التعادل في أي بند: المتعادلين ياخذون نفس نقاط المركز. وإذا اللاعبين أقل من ٥، المراكز الموجودة بس تاخذ نقاط.',
+  'اللاعبين الوهميين ما يستخدمون مزايا، بس يسوون صفقات ويزايدون أحيانًا.',
+  'النموذج على جهاز واحد: أنت المضيف ولاعب، والباقين وهميين. اللعب المتزامن بين الأجهزة يجي بالنسخة الأونلاين.'
+],en:[
+  'The name “Alaqar” and green colour follow the series identity; the name is editable in CONFIG.',
+  'Default budget is 1000 KD; the host can change it before starting. Currency is temporary.',
+  'Area, land, floor, style and fitting prices are all trial values in CONFIG.',
+  'Perk prices are a flat temporary 50; amounts (boost/cut 100, deposit 50, rent 30 × 2 rounds) are temporary.',
+  'Max properties during setup: 3.',
+  'Every owned property is listed in the market at a price its owner sets.',
+  'Negotiation happens out loud; the app records the agreed price. Mock players accept offers of 90% of the price or more (testing only).',
+  'Deals complete when the deals time ends.',
+  'Pitch order: speakers are picked at random, no repeats until everyone has pitched.',
+  'Game end: after the number of rounds the host sets.',
+  'Deal hijack: compensation for the first buyer is undecided. For now the seller refunds them.',
+  'Deposit: counts toward the price if you buy; goes to the seller if you don’t (temporary).',
+  'Rent: paid to the owner at the start of each round. What renting gives you in play is undecided.',
+  '“Protect yourself” is activated and covers you for that whole round (temporary).',
+  '“Home add-ons”: you pay the fitting price from your budget on top of the perk price (temporary).',
+  'Ties in a category: tied players get the same rank points. With fewer than 5 players, only the existing ranks score.',
+  'Mock players don’t use perks; they only make deals and sometimes outbid.',
+  'Single-device prototype: you are host and player; the rest are mock. Multi-device play comes with the online version.'
+]};
+
+/* ============================ أدوات ============================ */
+const $ = id => document.getElementById(id);
+const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; };
+const esc = s => String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = v => `${Math.round(v)} ${N(CONFIG.currency)}`;
+const fmt = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+const byId = (arr,id) => arr.find(x=>x.id===id);
+const roundTo = v => Math.max(CONFIG.priceStep, Math.round(v/CONFIG.priceStep)*CONFIG.priceStep);
+function toast(msg){ const t=document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),2600); }
+
+/* ============================ العقار ============================ */
+function specValue(sp){
+  let v = (byId(CONFIG.areas,sp.area)||{price:0}).price + (byId(CONFIG.lands,sp.land)||{price:0}).price
+        + sp.floors*CONFIG.floorPrice + (byId(CONFIG.styles,sp.style)||{price:0}).price;
+  sp.extras.forEach(e=>{ v += (byId(CONFIG.extras,e)||{price:0}).price; });
+  return v;
+}
+const value = pr => specValue(pr);
+const owned = p => S.props.filter(x=>x.owner===p.id);
+const wealth = p => p.budget + owned(p).reduce((a,x)=>a+value(x),0);
+const pname = id => S.players[id].name;
+const office = id => L('مكتب ','') + S.players[id].name + L('','’s office');
+function propTitle(pr){ return `${N(byId(CONFIG.areas,pr.area).name)} • ${N(byId(CONFIG.lands,pr.land).name)}`; }
+function propSpecs(pr){
+  return `${pr.floors} ${L(pr.floors===1?'دور':'أدوار', pr.floors===1?'floor':'floors')} • ${N(byId(CONFIG.styles,pr.style).name)}${pr.extras.length?' • '+pr.extras.map(e=>byId(CONFIG.extras,e).icon).join(' '):''}`;
+}
+
+// رسمة بيت بسيطة حسب المواصفات
+function houseSVG(sp){
+  const STY = {modern:{wall:'#E9EDF1',roof:'flat',win:'#2B3A4A'}, classic:{wall:'#EAD9B8',roof:'pitch',win:'#5B4A2E'},
+               heritage:{wall:'#D8B98A',roof:'crenel',win:'#6B4E2A'}, minimal:{wall:'#FAFAFA',roof:'flat',win:'#9AA5B1'}};
+  const st = STY[sp.style] || STY.modern;
+  const f = Math.max(1, Math.min(CONFIG.maxFloors, sp.floors||1));
+  const fh = 18, w = 70, x = 45, base = 112, top = base - f*fh;
+  let s = `<rect x="0" y="${base}" width="160" height="8" fill="#CFE6D6"/>`;
+  s += `<rect x="${x}" y="${top}" width="${w}" height="${f*fh}" fill="${st.wall}" stroke="#12203A" stroke-width="1.6"/>`;
+  for(let i=0;i<f;i++){ const y=top+i*fh+5; s += `<rect x="${x+9}" y="${y}" width="11" height="9" fill="${st.win}"/><rect x="${x+w-20}" y="${y}" width="11" height="9" fill="${st.win}"/>`; if(i<f-1) s+=`<rect x="${x+w/2-5}" y="${y}" width="10" height="9" fill="${st.win}"/>`; }
+  s += `<rect x="${x+w/2-6}" y="${base-14}" width="12" height="14" fill="#1E8A4C"/>`;
+  if(st.roof==='pitch') s += `<path d="M${x-6} ${top} L${x+w/2} ${top-20} L${x+w+6} ${top} Z" fill="#B5543A" stroke="#12203A" stroke-width="1.6" stroke-linejoin="round"/>`;
+  else if(st.roof==='crenel'){ for(let i=0;i<5;i++) s += `<rect x="${x+2+i*14}" y="${top-6}" width="8" height="6" fill="${st.wall}" stroke="#12203A" stroke-width="1.4"/>`; }
+  else s += `<rect x="${x-4}" y="${top-4}" width="${w+8}" height="4" fill="#12203A"/>`;
+  if(sp.extras.includes('garden')) s += `<circle cx="22" cy="${base-10}" r="10" fill="#3FA65F"/><rect x="20.5" y="${base-4}" width="3" height="5" fill="#7A5230"/><circle cx="34" cy="${base-6}" r="6" fill="#56B873"/>`;
+  if(sp.extras.includes('pool')) s += `<rect x="122" y="${base-5}" width="32" height="7" rx="3" fill="#5BC0EB" stroke="#2F8FC0"/>`;
+  if(sp.extras.includes('elevator')) s += `<rect x="${x+w-4}" y="${top}" width="6" height="${f*fh}" fill="#C9D2DC" stroke="#12203A" stroke-width="1"/>`;
+  if(sp.extras.includes('parking')) s += `<rect x="124" y="${base-20}" width="24" height="11" rx="3" fill="#E4572E"/><circle cx="130" cy="${base-8}" r="2.5" fill="#12203A"/><circle cx="142" cy="${base-8}" r="2.5" fill="#12203A"/>`;
+  return `<svg viewBox="0 0 160 122" class="house">${s}</svg>`;
+}
+
+/* ============================ الحالة ============================ */
+let S;
+function newState(keep){
+  S = { settings: keep || {...CONFIG.defaults, hostName:''},
+        players:[], props:[], deals:[], offers:[], holds:[], rentals:[],
+        screen:'intro', phase:null, history:[], round:0, spoken:[], presenters:[], pIdx:0, presentedIds:[],
+        suspended:{}, protectedRound:{}, negotiatorRound:null, draft:null, pitchChoice:null, voteChoice:null, modal:null, results:null, roundDone:[] };
+}
+function newPlayer(id,name,isBot){ return {id,name,isBot,budget:S.settings.budget,perks:[],used:[],profit:0,deals:0,votes:0,score:0}; }
+const me = () => S.players[0];
+let PROPID = 0;
+function newProp(owner, sp){ const pr = {id:++PROPID, owner, area:sp.area, land:sp.land, floors:sp.floors, style:sp.style, extras:[...sp.extras]}; pr.cost = value(pr); pr.asking = pr.cost; return pr; }
+const perkLeft = (p,id) => p.perks.includes(id) && !p.used.includes(id);
+const isSusp = id => S.suspended[id] === S.round;
+const isProt = id => S.protectedRound[id] === S.round;
+
+/* ============================ المؤقت ============================ */
+const T = {left:0,total:0,id:null};
+const PHASES = {
+  setup:{name:{ar:'تجهيز المكتب',en:'Office setup'}, key:'setupTime'},
+  pitch:{name:{ar:'العرض والإقناع',en:'Pitch'}, key:'pitchTime'},
+  deals:{name:{ar:'التفاوض والصفقات',en:'Negotiation & deals'}, key:'dealTime'},
+  vote:{name:{ar:'التصويت',en:'Voting'}, key:'voteTime'}
+};
+function startTimer(sec){ stopTimer(); T.total=sec; T.left=sec; T.id=setInterval(()=>{ T.left--; if(T.left<=0){T.left=0;stopTimer();} updTimer(); },1000); updTimer(); }
+function stopTimer(){ if(T.id){clearInterval(T.id);T.id=null;} }
+function startPhaseTimer(){ stopTimer(); if(S.phase) startTimer(S.settings[PHASES[S.phase].key]); }
+const timerHTML = () => `<div class="timer" id="timerBox"><div class="trow"><span class="tlabel">⏳ ${N(PHASES[S.phase].name)}</span><span class="tval" id="tval"></span></div><div class="tbar"><i id="tbar"></i></div></div>`;
+function updTimer(){
+  const v=$('tval'); if(!v) return;
+  v.textContent = T.left>0 ? fmt(T.left) : L('انتهى الوقت ⏰','Time’s up ⏰');
+  $('tbar').style.width = (T.total? T.left/T.total*100 : 0)+'%';
+  $('timerBox').classList.toggle('timeup', T.left<=0);
+  const eb=$('endBtn'); if(eb) eb.classList.toggle('pulse', T.left<=0);
+}
+const endBtn = (label, fn) => `<button class="btn end" id="endBtn" onclick="${fn}">${L('إنهاء','End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط','Host only')}</span></button>`;
+
+/* ============================ التنقل ============================ */
+function go(screen, phase){
+  S.history.push({screen:S.screen, phase:S.phase});
+  S.screen = screen;
+  if(phase!==undefined && phase!==S.phase){ S.phase=phase; startPhaseTimer(); }
+  render(); window.scrollTo(0,0);
+}
+function back(){
+  if(!S.history.length) return;
+  const prev = S.history[S.history.length-1];
+  const doBack = ()=>{ S.history.pop(); S.screen=prev.screen; S.modal=null; if(prev.phase!==S.phase){ S.phase=prev.phase; startPhaseTimer(); } render(); window.scrollTo(0,0); };
+  if(prev.screen!==S.screen && S.screen!=='setup' && S.screen!=='perks') askConfirm(L('ترجع الكل للمرحلة السابقة؟ (المضيف فقط)','Take everyone back to the previous stage? (host only)'), doBack);
+  else doBack();
+}
+const BACK = L('→ رجوع','← Back');
+function hdr(extra=''){ const show = S.history.length && S.screen!=='results'; return `<div class="top">${show?`<button class="backbtn" onclick="back()">${BACK}</button>`:'<span></span>'}${extra}</div>`; }
+function myBar(){
+  const p = me(), left = p.perks.filter(k=>!p.used.includes(k)).length;
+  return `<div class="moneybar"><span class="money">💰 ${L('ميزانيتك','Your budget')}: ${money(p.budget)}</span><span class="money alt">🏠 ${owned(p).length}</span><span class="money alt">✨ ${L('مزايا باقية','Perks left')}: ${left}</span><button class="money link" onclick="openOffices()">📊 ${L('المكاتب','Offices')}</button></div>`;
+}
+
+/* ============================ الشاشات ============================ */
+const SCREENS = {};
+
+SCREENS.intro = () => `
+<a class="backbtn aqfix" href="${HUB}">${BACK}</a>
+<div class="intro">
+  <div class="logo">${LOGO}</div>
+  <div class="gname">${N(CONFIG.gameName)}</div>
+  <p class="lead">${L('كل لاعب مكتب عقاري بميزانية محدودة.<br>تبني عقاراتك وتعرضها وتقنع الباقين يشترون منك.<br>فاوض، استخدم مزاياك، واجمع أعلى نقاط.','Each player is a real-estate office with a limited budget.<br>Build your properties, pitch them and convince others to buy.<br>Negotiate, use your perks and score the most points.')}</p>
+  <button class="btn" onclick="go('setup')">${L('فهمت','Got it')}</button>
+  <div class="proto">${L('نموذج أولي — بيانات وهمية','Prototype — mock data')}</div>
+</div>`;
+
+const STEP_META = {
+  players:   {label:{ar:'عدد اللاعبين',en:'Players'}, min:()=>CONFIG.limits.players[0], max:()=>CONFIG.limits.players[1], step:()=>1},
+  budget:    {label:{ar:'ميزانية كل مكتب',en:'Budget per office'}, min:()=>CONFIG.budget.min, max:()=>CONFIG.budget.max, step:()=>CONFIG.budget.step, money:true},
+  setupTime: {label:{ar:'وقت تجهيز المكتب (مزايا + عقارات)',en:'Office setup time (perks + properties)'}, time:true},
+  rounds:    {label:{ar:'عدد الجولات',en:'Rounds'}, min:()=>CONFIG.limits.rounds[0], max:()=>CONFIG.limits.rounds[1], step:()=>1},
+  presenters:{label:{ar:'عدد اللي يعرضون بالجولة',en:'Presenters per round'}, min:()=>CONFIG.limits.presenters[0], max:()=>Math.min(CONFIG.limits.presenters[1], S.settings.players), step:()=>1},
+  pitchTime: {label:{ar:'وقت العرض والإقناع (لكل لاعب)',en:'Pitch time (per player)'}, time:true},
+  dealTime:  {label:{ar:'وقت التفاوض والصفقات',en:'Negotiation & deals time'}, time:true},
+  voteTime:  {label:{ar:'وقت التصويت',en:'Voting time'}, time:true}
+};
+function bump(key,dir){
+  const m=STEP_META[key];
+  const min=m.time?CONFIG.timer.min:m.min(), max=m.time?CONFIG.timer.max:m.max(), step=m.time?CONFIG.timer.step:m.step();
+  S.settings[key]=Math.min(max,Math.max(min,S.settings[key]+dir*step));
+  if(key==='players') S.settings.presenters=Math.min(S.settings.presenters,S.settings.players);
+  render();
+}
+const stepRow = key => { const m=STEP_META[key], v=S.settings[key];
+  return `<div class="row"><span>${N(m.label)}</span><div class="stepper"><button onclick="bump('${key}',1)">+</button><span class="v">${m.time?fmt(v):m.money?money(v):v}</span><button onclick="bump('${key}',-1)">−</button></div></div>`; };
+
+SCREENS.setup = () => `
+${hdr(`<span class="tag">${L('إعدادات المضيف','Host settings')}</span>`)}
+<h2>${L('إعدادات اللعبة','Game settings')}</h2>
+<p class="sub">${L('المضيف يحدد كل شي. الأوقات من ٣٠ ثانية لين ٥ دقايق.','The host sets everything. Times go from 30 seconds to 5 minutes.')}</p>
+<div class="card"><h3>${L('اسمك','Your name')}</h3><input class="field" maxlength="20" placeholder="${L('اكتب اسمك','Type your name')}" value="${esc(S.settings.hostName)}" oninput="S.settings.hostName=this.value"></div>
+<div class="card"><h3>${L('اللاعبين والميزانية','Players & budget')}</h3>${stepRow('players')}${stepRow('budget')}
+  <div class="row"><span>${L('المضيف','Host')}</span><span class="chip on">${L('يلعب ويدير','Plays & runs')} <span class="assume">${L('وضع «مضيف فقط» بالنسخة الأونلاين','Host-only mode in the online version')}</span></span></div></div>
+<div class="card"><h3>${L('الجولات والعروض','Rounds & pitches')}</h3>${stepRow('rounds')}${stepRow('presenters')}
+  <div class="sub" style="margin-top:6px">${L('البرنامج يختار اللي يعرضون عشوائيًا كل جولة.','The game picks presenters at random each round.')}</div></div>
+<div class="card"><h3>${L('الأوقات','Times')}</h3>${stepRow('setupTime')}${stepRow('pitchTime')}${stepRow('dealTime')}${stepRow('voteTime')}</div>
+<div class="card"><h3>${L('النقاط','Scoring')} <span class="badge">${L('متفق عليه','agreed')}</span></h3>
+  <p class="sub">${L(`٥ بنود، والمراكز تاخذ ${CONFIG.rankPoints.join(' / ')} نقاط. أحدها تصويت على أفضل إقناع.`,`5 categories; ranks score ${CONFIG.rankPoints.join(' / ')} points. One is a vote for best pitch.`)}</p>
+  ${CATS.map(c=>`<div class="row"><span>${c.icon} ${N(c.name)}</span><small style="color:var(--mut)">${N(c.hint)}</small></div>`).join('')}
+</div>
+<button class="btn" onclick="startGame()">${L('ابدأ اللعب','Start')}</button>`;
+
+function startGame(){
+  const n=S.settings.players, names=shuffle(BOT_NAMES[LANG]).slice(0,n-1);
+  PROPID=0; S.props=[]; S.deals=[]; S.offers=[]; S.holds=[]; S.rentals=[]; S.round=0; S.spoken=[]; S.presentedIds=[]; S.suspended={}; S.protectedRound={}; S.results=null;
+  S.players=[newPlayer(0, S.settings.hostName.trim()||L('أنت','You'), false), ...names.map((nm,i)=>newPlayer(i+1,nm,true))];
+  S.players.slice(1).forEach(botSetup);
+  S.draft = {area:CONFIG.areas[0].id, land:CONFIG.lands[0].id, floors:1, style:CONFIG.styles[0].id, extras:[]};
+  go('perks','setup');
+}
+function botSetup(p){
+  shuffle(PERKS).slice(0, rand(1,CONFIG.maxPerks)).forEach(k=>{ if(p.budget>=CONFIG.perkPrice){ p.budget-=CONFIG.perkPrice; p.perks.push(k.id); } });
+  const count = rand(1, CONFIG.maxPropsAtStart);
+  for(let i=0;i<count;i++){
+    const sp = {area:pick(CONFIG.areas).id, land:pick(CONFIG.lands).id, floors:rand(1,CONFIG.maxFloors), style:pick(CONFIG.styles).id, extras:shuffle(CONFIG.extras).slice(0,rand(0,2)).map(e=>e.id)};
+    const v = specValue(sp);
+    if(p.budget >= v){ p.budget -= v; const pr=newProp(p.id,sp); pr.asking = roundTo(v*(1+rand(0,30)/100)); S.props.push(pr); }
+  }
+}
+
+/* ---------- المزايا (شراء) ---------- */
+function togglePerk(id){
+  const p=me(), i=p.perks.indexOf(id);
+  if(i>=0){ p.perks.splice(i,1); p.budget+=CONFIG.perkPrice; }
+  else if(p.perks.length>=CONFIG.maxPerks) toast(L(`تقدر تختار ${CONFIG.maxPerks} مزايا بس`,`You can pick only ${CONFIG.maxPerks} perks`));
+  else if(p.budget<CONFIG.perkPrice) toast(L('الميزانية ما تكفي','Not enough budget'));
+  else { p.budget-=CONFIG.perkPrice; p.perks.push(id); }
+  render();
+}
+SCREENS.perks = () => `
+${hdr(`<span class="tag">${L('الخطوة ١ من ٢','Step 1 of 2')}</span>`)}
+${timerHTML()}
+<h2>${L('المزايا','Perks')}</h2>
+<p class="sub">${L(`اختر لين ${CONFIG.maxPerks} مزايا. سعرها ينخصم من ميزانيتك، وكل ميزة تُستخدم مرة وحدة بأي جولة.`,`Pick up to ${CONFIG.maxPerks} perks. Their price comes off your budget; each is used once, in any round.`)} <span class="badge">${L('الأسعار مؤقتة','Temporary prices')}</span></p>
+${myBar()}
+<div class="perks">${PERKS.map(k=>{ const on=me().perks.includes(k.id); return `
+  <button class="perk ${on?'on':''}" onclick="togglePerk('${k.id}')"><span class="pi">${k.icon}</span>
+  <span class="pt"><b>${N(k.name)}</b><small>${k.effect()}</small></span>
+  <span class="pp">${on?'✓ '+L('مختارة','Picked'):money(CONFIG.perkPrice)}</span></button>`; }).join('')}</div>
+<button class="btn" onclick="go('build')">${L('التالي: العقارات ←','Next: Properties →')}</button>
+${endBtn(L('الذهاب للجولة ١','go to round 1'),'endSetup()')}`;
+
+/* ---------- بناء العقار ---------- */
+function setDraft(k,v){ if(k==='extras'){ const a=S.draft.extras, i=a.indexOf(v); i>=0?a.splice(i,1):a.push(v); } else S.draft[k]=v; render(); }
+function bumpFloors(d){ S.draft.floors=Math.min(CONFIG.maxFloors,Math.max(1,S.draft.floors+d)); render(); }
+function buyProp(){
+  const p=me(), v=specValue(S.draft);
+  if(owned(p).length>=CONFIG.maxPropsAtStart){ toast(L(`أقصى عدد ${CONFIG.maxPropsAtStart} عقارات بهالمرحلة`,`Max ${CONFIG.maxPropsAtStart} properties at this stage`)); return; }
+  if(p.budget<v){ toast(L('الميزانية ما تكفي','Not enough budget')); return; }
+  p.budget-=v; S.props.push(newProp(0,S.draft)); toast(L('انضاف العقار لمكتبك ✓','Property added to your office ✓')); render();
+}
+function sellBack(id){ const pr=byId(S.props,id); me().budget+=pr.cost; S.props=S.props.filter(x=>x.id!==id); render(); }
+function bumpAsk(id,d){ const pr=byId(S.props,id); pr.asking=Math.max(CONFIG.priceStep, pr.asking+d*CONFIG.priceStep); render(); }
+const chipRow = (list,key) => `<div class="chips">${list.map(o=>`<button class="chip ${(key==='extras'?S.draft.extras.includes(o.id):S.draft[key]===o.id)?'on':''}" onclick="setDraft('${key}','${o.id}')">${o.icon?o.icon+' ':''}${N(o.name)} <small>${money(o.price)}</small></button>`).join('')}</div>`;
+function propRow(pr, mine){
+  return `<div class="prop"><div class="pv">${houseSVG(pr)}</div><div class="pi2"><b>${propTitle(pr)}</b><small>${propSpecs(pr)}</small>
+    <small>${L('القيمة','Value')}: ${money(value(pr))}${mine?'':' • '+office(pr.owner)}</small>
+    ${badgesFor(pr)}</div>
+    ${mine?`<div class="askbox"><small>${L('سعر العرض','Asking')}</small><div class="stepper sm"><button onclick="bumpAsk(${pr.id},1)">+</button><span class="v">${money(pr.asking)}</span><button onclick="bumpAsk(${pr.id},-1)">−</button></div></div>`:`<div class="askbox"><small>${L('السعر','Price')}</small><b>${money(pr.asking)}</b></div>`}
+  </div>`;
+}
+function badgesFor(pr){
+  const b=[]; const h=S.holds.find(x=>x.propId===pr.id); const r=S.rentals.find(x=>x.propId===pr.id&&x.left>0);
+  if(h) b.push(`🧾 ${L('عليه عربون','Deposit held')}: ${pname(h.holder)}`);
+  if(r) b.push(`🔑 ${L('مستأجر','Rented by')}: ${pname(r.renter)}`);
+  if(S.deals.find(d=>d.propId===pr.id&&d.status==='pending')) b.push(`⏳ ${L('بيعة قيد الإتمام','Deal pending')}`);
+  return b.length?`<div class="pbadges">${b.map(x=>`<span>${x}</span>`).join('')}</div>`:'';
+}
+SCREENS.build = () => { const p=me(), v=specValue(S.draft); return `
+${hdr(`<span class="tag">${L('الخطوة ٢ من ٢','Step 2 of 2')}</span>`)}
+${timerHTML()}
+<h2>${L('عقاراتك','Your properties')}</h2>
+<p class="sub">${L('اختر مواصفات العقار، وقيمته تتغير حسبها. تقدر تشتري لين','Choose the specs; the value changes with them. You can buy up to')} ${CONFIG.maxPropsAtStart} ${L('عقارات.','properties.')} <span class="badge">${L('الأسعار تجريبية','Trial prices')}</span></p>
+${myBar()}
+<div class="card">
+  <div class="preview">${houseSVG(S.draft)}</div>
+  <h3>📍 ${L('المنطقة','Area')}</h3>${chipRow(CONFIG.areas,'area')}
+  <h3 style="margin-top:12px">📐 ${L('حجم الأرض','Land size')}</h3>${chipRow(CONFIG.lands,'land')}
+  <div class="row" style="margin-top:8px"><span>🏢 ${L('عدد الأدوار','Floors')} <small style="color:var(--mut)">(${money(CONFIG.floorPrice)} ${L('للدور','per floor')})</small></span><div class="stepper"><button onclick="bumpFloors(1)">+</button><span class="v">${S.draft.floors}</span><button onclick="bumpFloors(-1)">−</button></div></div>
+  <h3 style="margin-top:8px">🎨 ${L('الستايل','Style')}</h3>${chipRow(CONFIG.styles,'style')}
+  <h3 style="margin-top:12px">✨ ${L('تجهيزات إضافية','Extra fittings')}</h3>${chipRow(CONFIG.extras,'extras')}
+  <div class="total">${L('قيمة العقار','Property value')}: <b>${money(v)}</b></div>
+  <button class="btn" onclick="buyProp()">${L('اشترِ العقار','Buy property')}</button>
+</div>
+<h3>${L('مكتبك','Your office')} (${owned(p).length}/${CONFIG.maxPropsAtStart})</h3>
+${owned(p).length?owned(p).map(pr=>propRow(pr,true)+`<button class="mini" onclick="sellBack(${pr.id})">${L('إلغاء الشراء (استرجاع)','Undo purchase (refund)')}</button>`).join(''):`<div class="empty">${L('ما عندك عقارات للحين.','No properties yet.')}</div>`}
+${endBtn(L('الذهاب للجولة ١','go to round 1'),'endSetup()')}`; };
+
+function endSetup(){ startRound(1); }
+
+/* ---------- الجولة ---------- */
+function startRound(r){
+  S.round=r; S.offers=[]; S.roundDone=[];
+  // الإيجار: تنخصم الأجرة بداية كل جولة
+  S.rentals.forEach(x=>{ if(x.left>0 && x.startRound<r){ const rn=S.players[x.renter], ow=S.players[byId(S.props,x.propId)?.owner ?? x.owner]; const amt=Math.min(rn.budget,x.per); rn.budget-=amt; ow.budget+=amt; x.left--; } });
+  go('pre', null);
+}
+SCREENS.pre = () => { const susp = Object.keys(S.suspended).filter(id=>S.suspended[id]===S.round).map(Number); return `
+${hdr(`<span class="tag">${L('الجولة','Round')} ${S.round} / ${S.settings.rounds}</span>`)}
+<h2>${L('قبل بداية الجولة','Before the round')} ${S.round}</h2>
+<p class="sub">${L('هذا وقت «مخالفة نظم». وتقدر تستخدم مزايا ثانية مثل زيادة أو نقص الميزانية.','This is the time for “Regulation breach”. You can also use other perks like budget boost or cut.')}</p>
+${myBar()}
+${susp.length?`<div class="warn">⛔ ${L('موقوف هالجولة','Suspended this round')}: ${susp.map(office).join('، ')}</div>`:''}
+${S.rentals.filter(x=>x.left>=0&&x.renter===0).map(x=>`<div class="note">🔑 ${L('إيجارك','Your rent')}: ${propTitle(byId(S.props,x.propId))} — ${L('باقي','left')} ${x.left} ${L('جولات','rounds')}</div>`).join('')}
+${perksPanel('pre')}
+<button class="btn" onclick="startPitches()">${L('ابدأ العروض','Start pitches')} ←</button>`; };
+
+function startPitches(){
+  const eligible = S.players.filter(p=>!isSusp(p.id) && owned(p).length).map(p=>p.id);
+  const k = Math.min(S.settings.presenters, eligible.length);
+  let pool = eligible.filter(id=>!S.spoken.includes(id));
+  let picks = shuffle(pool).slice(0,k);
+  if(picks.length<k){ S.spoken=S.spoken.filter(id=>!eligible.includes(id)); picks=picks.concat(shuffle(eligible.filter(id=>!picks.includes(id))).slice(0,k-picks.length)); }
+  S.spoken.push(...picks);
+  S.presenters = picks.map(id=>({id, prop: id===0 ? null : pick(owned(S.players[id])).id}));
+  S.pIdx = 0; S.negotiatorRound = null;
+  if(!picks.length){ toast(L('ما أحد عنده عقار يعرضه — نروح للصفقات','Nobody has a property to pitch — going to deals')); startDeals(); return; }
+  picks.forEach(id=>{ if(!S.presentedIds.includes(id)) S.presentedIds.push(id); });
+  go('pitch','pitch');
+}
+function choosePitch(id){ S.presenters[S.pIdx].prop=id; render(); }
+function pitchNext(){
+  if(S.pIdx < S.presenters.length-1){ S.pIdx++; startTimer(S.settings.pitchTime); render(); window.scrollTo(0,0); return; }
+  startDeals();
+}
+SCREENS.pitch = () => {
+  const cur=S.presenters[S.pIdx], p=S.players[cur.id], mine=cur.id===0;
+  if(mine && !cur.prop && owned(p).length) cur.prop=owned(p)[0].id;
+  const pr = byId(S.props, cur.prop);
+  const nextLbl = S.pIdx<S.presenters.length-1 ? L('الذهاب لعرض ','go to ')+pname(S.presenters[S.pIdx+1].id)+L('','’s pitch') : L('الذهاب للصفقات','go to Deals');
+  return `
+${hdr(`<span class="tag">${L('الجولة','Round')} ${S.round} — ${L('العروض','Pitches')}</span>`)}
+${timerHTML()}
+<div class="speakers">${S.presenters.map((x,i)=>`<span class="spk ${i===S.pIdx?'now':i<S.pIdx?'done':''}">${esc(pname(x.id))}</span>`).join('')}</div>
+<div class="stage"><div class="who">${L('الحين يعرض','Now pitching')}<b>${esc(office(cur.id))}${mine?L(' (أنت)',' (you)'):''}</b></div>
+${mine && owned(p).length>1?`<div class="card"><h3>${L('اختر العقار اللي بتعرضه','Pick the property to pitch')}</h3><div class="chips">${owned(p).map(x=>`<button class="chip ${cur.prop===x.id?'on':''}" onclick="choosePitch(${x.id})">${propTitle(x)}</button>`).join('')}</div></div>`:''}
+${pr?`<div class="card big"><div class="preview">${houseSVG(pr)}</div><div class="ptitle">${propTitle(pr)}</div><div class="sub">${propSpecs(pr)}</div>
+  <div class="total">${L('السعر المطلوب','Asking price')}: <b>${money(pr.asking)}</b> <small style="color:var(--mut)">(${L('القيمة','value')} ${money(value(pr))})</small></div></div>`:''}
+${S.negotiatorRound===cur.id?`<div class="note">🧑‍💼 ${L('معه مفاوض يساعده بهالعرض','A negotiator is helping with this pitch')}</div>`:''}
+${mine && perkLeft(me(),'negotiator') && S.negotiatorRound!==0 ? `<button class="btn ghost" onclick="usePerk('negotiator')">🧑‍💼 ${L('استخدم ميزة المفاوض','Use the Negotiator perk')}</button>`:''}
+</div>
+${endBtn(nextLbl,'pitchNext()')}`;
+};
+
+/* ---------- الصفقات ---------- */
+function startDeals(){
+  // اللاعبين الوهميين: عروض وصفقات تجريبية
+  S.players.filter(b=>b.isBot && !isSusp(b.id)).forEach(b=>{
+    if(Math.random()<.55){
+      const opts = S.props.filter(pr=>pr.owner!==b.id && !isSusp(pr.owner) && !lockedProp(pr.id) && pr.asking<=b.budget);
+      if(!opts.length) return;
+      const pr=pick(opts);
+      if(pr.owner===0){ if(!S.offers.find(o=>o.propId===pr.id)) S.offers.push({id:Date.now()+Math.random(), propId:pr.id, buyer:b.id, price:roundTo(pr.asking*(0.85+Math.random()*0.2))}); }
+      else S.deals.push({id:Date.now()+Math.random(), propId:pr.id, seller:pr.owner, buyer:b.id, price:roundTo(pr.asking*(0.9+Math.random()*0.15)), status:'pending', round:S.round});
+    }
+  });
+  go('deals','deals');
+}
+const lockedProp = id => S.deals.some(d=>d.propId===id&&d.status==='pending') || S.holds.some(h=>h.propId===id && h.round>=S.round-1);
+function acceptOffer(oid){
+  const o=S.offers.find(x=>x.id===oid); if(!o) return;
+  S.deals.push({id:Date.now()+Math.random(), propId:o.propId, seller:0, buyer:o.buyer, price:o.price, status:'pending', round:S.round});
+  S.offers=S.offers.filter(x=>x.id!==oid); toast(L('قبلت العرض — البيعة قيد الإتمام','Offer accepted — deal pending')); render();
+}
+function rejectOffer(oid){ S.offers=S.offers.filter(x=>x.id!==oid); render(); }
+function openOffer(pid){
+  const pr=byId(S.props,pid);
+  S.modal={type:'offer', pid, price:pr.asking}; renderModal();
+}
+function bumpOffer(d){ S.modal.price=Math.max(CONFIG.priceStep, S.modal.price+d*CONFIG.priceStep); renderModal(); }
+function sendOffer(){
+  const m=S.modal, pr=byId(S.props,m.pid), p=me();
+  if(m.price>p.budget){ toast(L('الميزانية ما تكفي','Not enough budget')); return; }
+  if(m.price >= pr.asking*CONFIG.botAcceptRatio){
+    S.deals.push({id:Date.now()+Math.random(), propId:pr.id, seller:pr.owner, buyer:0, price:m.price, status:'pending', round:S.round});
+    toast(L(`${pname(pr.owner)} وافق — البيعة قيد الإتمام`,`${pname(pr.owner)} agreed — deal pending`));
+  } else toast(L(`${pname(pr.owner)} رفض العرض`,`${pname(pr.owner)} rejected the offer`));
+  closeModal(); render();
+}
+function dealRow(d, ctx){
+  const pr=byId(S.props,d.propId); if(!pr) return '';
+  const mineIn = d.buyer===0||d.seller===0;
+  let acts='';
+  if(ctx==='pending'){
+    if(!mineIn && perkLeft(me(),'outbid')) acts += isProt(d.buyer) ? `<span class="shield">🛡 ${L('محمي','Protected')}</span>` : `<button class="mini" onclick="usePerk('outbid',${d.id})">⬆️ ${L('مزايدة','Outbid')}</button>`;
+    if(perkLeft(me(),'glitch')) acts += `<button class="mini" onclick="usePerk('glitch',${d.id})">⚠️ ${L('خلل بالإجراءات','Glitch')}</button>`;
+  }
+  if(ctx==='done' && d.buyer!==0 && d.seller!==0 && perkLeft(me(),'hijack')) acts += isProt(d.buyer) ? `<span class="shield">🛡 ${L('محمي','Protected')}</span>` : `<button class="mini" onclick="usePerk('hijack',${d.id})">🦅 ${L('خطف الصفقة','Hijack')}</button>`;
+  return `<div class="deal ${mineIn?'mine':''}"><div class="dv">${houseSVG(pr)}</div><div class="di"><b>${propTitle(pr)}</b>
+    <small>${esc(pname(d.seller))} ${L('←','→')} ${esc(pname(d.buyer))} • <b>${money(d.price)}</b></small></div><div class="da">${acts}</div></div>`;
+}
+SCREENS.deals = () => {
+  const p=me(), market=S.props.filter(pr=>pr.owner!==0);
+  const pend=S.deals.filter(d=>d.status==='pending');
+  const myHolds=S.holds.filter(h=>h.holder===0 && h.round===S.round-1);
+  const nextLbl = L('إتمام الصفقات','complete the deals');
+  return `
+${hdr(`<span class="tag">${L('الجولة','Round')} ${S.round} — ${L('الصفقات','Deals')}</span>`)}
+${timerHTML()}
+<h2>${L('التفاوض والصفقات','Negotiation & deals')}</h2>
+<p class="sub">${L('تفاوضوا بالكلام، وسجّلوا هني السعر المتفق عليه. الصفقات تكتمل بنهاية الوقت.','Negotiate out loud, then record the agreed price here. Deals complete when time ends.')}</p>
+${myBar()}
+${isSusp(0)?`<div class="warn">⛔ ${L('مكتبك موقوف هالجولة بسبب مخالفة نظم.','Your office is suspended this round (regulation breach).')}</div>`:''}
+${myHolds.map(h=>{ const pr=byId(S.props,h.propId); return `<div class="note">🧾 ${L('عربونك على','Your deposit on')} ${propTitle(pr)} — ${L('اشترِه بـ','buy it for')} ${money(h.price)} ${L('أو تخسر العربون','or lose the deposit')} <button class="mini" onclick="buyHold(${h.propId})">${L('اشترِ الحين','Buy now')}</button></div>`; }).join('')}
+${S.offers.length?`<div class="card"><h3>📩 ${L('عروض على عقاراتك','Offers on your properties')}</h3>${S.offers.map(o=>{ const pr=byId(S.props,o.propId); return `<div class="deal"><div class="dv">${houseSVG(pr)}</div><div class="di"><b>${esc(office(o.buyer))}</b><small>${propTitle(pr)} • <b>${money(o.price)}</b> (${L('طلبك','you ask')} ${money(pr.asking)})</small></div><div class="da"><button class="mini ok" onclick="acceptOffer(${o.id})">${L('قبول','Accept')}</button><button class="mini" onclick="rejectOffer(${o.id})">${L('رفض','Reject')}</button></div></div>`; }).join('')}</div>`:''}
+<div class="card"><h3>⏳ ${L('صفقات قيد الإتمام','Pending deals')}</h3>${pend.length?pend.map(d=>dealRow(d,'pending')).join(''):`<div class="empty">${L('ما في صفقات للحين.','No deals yet.')}</div>`}</div>
+<div class="card"><h3>🏘️ ${L('السوق','Market')}</h3>
+  ${market.length?market.map(pr=>{ const lock=lockedProp(pr.id), sus=isSusp(pr.owner)||isSusp(0); return propRow(pr,false)+`<div class="acts">
+    <button class="mini ok" ${lock||sus?'disabled':''} onclick="openOffer(${pr.id})">🤝 ${L('سجّل عرض','Make offer')}</button>
+    ${perkLeft(p,'deposit')?`<button class="mini" ${lock||sus?'disabled':''} onclick="usePerk('deposit',${pr.id})">🧾 ${L('عربون','Deposit')}</button>`:''}
+    ${perkLeft(p,'rent')?`<button class="mini" ${sus?'disabled':''} onclick="usePerk('rent',${pr.id})">🔑 ${L('إيجار','Rent')}</button>`:''}</div>`; }).join(''):`<div class="empty">${L('السوق فاضي.','The market is empty.')}</div>`}
+</div>
+<div class="card"><h3>🏠 ${L('عقاراتك المعروضة','Your listed properties')}</h3>${owned(p).length?owned(p).map(pr=>propRow(pr,true)).join(''):`<div class="empty">${L('ما عندك عقارات.','You have no properties.')}</div>`}</div>
+${perksPanel('deals')}
+${endBtn(nextLbl,'endDeals()')}`;
+};
+function buyHold(pid){
+  const h=S.holds.find(x=>x.propId===pid&&x.holder===0); const pr=byId(S.props,pid);
+  const due=h.price-h.amount;
+  if(me().budget<due){ toast(L('الميزانية ما تكفي','Not enough budget')); return; }
+  S.deals.push({id:Date.now()+Math.random(), propId:pid, seller:pr.owner, buyer:0, price:h.price, credit:h.amount, status:'pending', round:S.round});
+  S.holds=S.holds.filter(x=>x!==h); toast(L('البيعة قيد الإتمام — العربون ينحسب من السعر','Deal pending — deposit counts toward the price')); render();
+}
+function endDeals(){
+  // العربون اللي ما انشرى: يروح للبايع
+  S.holds.filter(h=>h.round===S.round-1).forEach(h=>{ S.players[h.seller].budget+=h.amount; });
+  S.holds=S.holds.filter(h=>h.round>=S.round);
+  const done=[];
+  S.deals.filter(d=>d.status==='pending').forEach(d=>{
+    const pr=byId(S.props,d.propId), b=S.players[d.buyer], s=S.players[d.seller];
+    const pay = d.price-(d.credit||0);
+    if(!pr || pr.owner!==d.seller || b.budget<pay){ d.status='cancelled'; return; }
+    b.budget-=pay; s.budget+=d.price; // العربون (إن وجد) ينحسب من السعر ويوصل للبايع
+    s.profit += d.price - pr.cost; s.deals++; b.deals++;
+    pr.owner=b.id; pr.cost=d.price; pr.asking=b.isBot?roundTo(d.price*1.15):d.price;
+    d.status='done'; done.push(d);
+  });
+  S.roundDone=done; S.offers=[];
+  go('summary', null);
+}
+SCREENS.summary = () => { const last=S.round>=S.settings.rounds; return `
+${hdr(`<span class="tag">${L('الجولة','Round')} ${S.round} / ${S.settings.rounds}</span>`)}
+<h2>${L('ملخص الجولة','Round summary')} ${S.round}</h2>
+<p class="sub">${L('هذي الصفقات اللي اكتملت. هذا وقت «خطف الصفقة».','These deals completed. This is the time for “Deal hijack”.')}</p>
+${myBar()}
+<div class="card"><h3>✅ ${L('صفقات مكتملة','Completed deals')}</h3>${S.roundDone.length?S.roundDone.map(d=>dealRow(d,'done')).join(''):`<div class="empty">${L('ما اكتملت صفقات هالجولة.','No deals completed this round.')}</div>`}</div>
+${perksPanel('summary')}
+<button class="btn" onclick="${last?"go('vote','vote')":`startRound(${S.round+1})`}">${last?L('الذهاب للتصويت','Go to voting'):L('الجولة','Round')+' '+(last?'':S.round+1)} ←</button>`; };
+
+/* ---------- المزايا (استخدام) ---------- */
+const PERK_WHERE = {budgetUp:'any', budgetDown:'any', protect:'any', addons:'any', violation:'pre', negotiator:'pitch', outbid:'row', glitch:'row', hijack:'row', deposit:'row', rent:'row'};
+function perksPanel(ctx){
+  const p=me(); if(!p.perks.length) return '';
+  return `<div class="card"><h3>✨ ${L('مزاياك','Your perks')}</h3>${p.perks.map(id=>{
+    const k=byId(PERKS,id), used=p.used.includes(id), w=PERK_WHERE[id];
+    let ctl;
+    if(used) ctl=`<span class="usedtag">${L('مستخدمة','Used')}</span>`;
+    else if(w==='any' || (w==='pre'&&ctx==='pre')) ctl=`<button class="mini ok" onclick="usePerk('${id}')">${L('استخدم','Use')}</button>`;
+    else ctl=`<small class="where">${w==='pre'?L('قبل بداية الجولة','before a round'):w==='pitch'?L('وقت عرضك','during your pitch'):id==='hijack'?L('من ملخص الجولة','from the round summary'):L('من قائمة الصفقات/السوق','from deals/market')}</small>`;
+    return `<div class="perkrow ${used?'used':''}"><span class="pi">${k.icon}</span><span class="pt"><b>${N(k.name)}</b><small>${k.effect()}</small></span>${ctl}</div>`;
+  }).join('')}</div>`;
+}
+function usePerk(id, target){
+  const k=byId(PERKS,id), p=me();
+  if(!perkLeft(p,id)) return;
+  let inputs='';
+  const others = S.players.filter(x=>x.id!==0);
+  if(id==='budgetDown' || id==='violation') inputs = `<label class="lbl">${L('اختر المكتب','Choose the office')}</label><select id="pt" class="field">${others.map(o=>`<option value="${o.id}">${esc(office(o.id))} — ${money(o.budget)}</option>`).join('')}</select>`;
+  if(id==='addons'){
+    if(!owned(p).length){ toast(L('ما عندك عقار','You have no property')); return; }
+    inputs = `<label class="lbl">${L('العقار','Property')}</label><select id="pt" class="field">${owned(p).map(pr=>`<option value="${pr.id}">${propTitle(pr)}</option>`).join('')}</select>
+      <label class="lbl">${L('التجهيز','Fitting')}</label><select id="px" class="field">${CONFIG.extras.map(e=>`<option value="${e.id}">${e.icon} ${N(e.name)} — ${money(e.price)}</option>`).join('')}</select>`;
+  }
+  if(id==='outbid' || id==='hijack'){
+    const d=S.deals.find(x=>x.id===target); S.perkPrice=roundTo(d.price+CONFIG.priceStep);
+    inputs = `<div class="note">${propTitle(byId(S.props,d.propId))} — ${L('السعر الحالي','current price')} ${money(d.price)}</div><label class="lbl">${L('عرضك','Your offer')}</label><div class="stepper"><button onclick="S.perkPrice+=CONFIG.priceStep;$('ppv').textContent=money(S.perkPrice)">+</button><span class="v" id="ppv">${money(S.perkPrice)}</span><button onclick="S.perkPrice=Math.max(${roundTo(d.price+CONFIG.priceStep)},S.perkPrice-CONFIG.priceStep);$('ppv').textContent=money(S.perkPrice)">−</button></div>`;
+  }
+  if(id==='glitch'){ const d=S.deals.find(x=>x.id===target); inputs=`<div class="note">${propTitle(byId(S.props,d.propId))} — ${esc(pname(d.seller))} ${L('←','→')} ${esc(pname(d.buyer))} • ${money(d.price)}</div>`; }
+  if(id==='deposit'||id==='rent'){ const pr=byId(S.props,target); inputs=`<div class="note">${propTitle(byId(S.props,target))} — ${esc(office(pr.owner))} • ${money(pr.asking)}</div>`; }
+  S.modal={type:'perk', id, target, inputs}; renderModal();
+}
+function applyPerk(){
+  const m=S.modal, id=m.id, p=me(), sel=$('pt')?.value, sel2=$('px')?.value;
+  const consume=()=>{ p.used.push(id); };
+  if(id==='budgetUp'){ p.budget+=CONFIG.budgetUpAmount; consume(); toast(L(`+${money(CONFIG.budgetUpAmount)} لميزانيتك`,`+${money(CONFIG.budgetUpAmount)} to your budget`)); }
+  if(id==='budgetDown'){ const o=S.players[+sel]; o.budget=Math.max(0,o.budget-CONFIG.budgetDownAmount); consume(); toast(L(`نقصت ميزانية ${o.name}`,`${o.name}’s budget was cut`)); }
+  if(id==='violation'){ S.suspended[+sel]=S.round; consume(); toast(L(`${office(+sel)} موقوف هالجولة`,`${office(+sel)} is suspended this round`)); }
+  if(id==='protect'){ S.protectedRound[0]=S.round; consume(); toast(L('أنت محمي هالجولة 🛡','You are protected this round 🛡')); }
+  if(id==='negotiator'){ S.negotiatorRound=0; consume(); toast(L('المفاوض معك 🧑‍💼','The negotiator is with you 🧑‍💼')); }
+  if(id==='addons'){ const pr=byId(S.props,+sel), e=byId(CONFIG.extras,sel2);
+    if(pr.extras.includes(e.id)){ toast(L('العقار فيه هالتجهيز','Already has this fitting')); return; }
+    if(p.budget<e.price){ toast(L('الميزانية ما تكفي','Not enough budget')); return; }
+    p.budget-=e.price; pr.extras.push(e.id); pr.cost+=e.price; consume(); toast(L(`انضاف ${N(e.name)} — زادت القيمة`,`${N(e.name)} added — value up`)); }
+  if(id==='glitch'){ const d=S.deals.find(x=>x.id===m.target); d.status='cancelled'; consume(); toast(L('انلغت البيعة ورجع العقار لصاحبه','Deal cancelled; property back with its owner')); }
+  if(id==='outbid'){ const d=S.deals.find(x=>x.id===m.target);
+    if(S.perkPrice>p.budget){ toast(L('الميزانية ما تكفي','Not enough budget')); return; }
+    d.buyer=0; d.price=S.perkPrice; consume();
+    const rival = S.players.find(b=>b.isBot && b.id!==d.seller && !isSusp(b.id) && b.budget>=d.price+CONFIG.priceStep && Math.random()<.3);
+    if(rival){ d.buyer=rival.id; d.price+=CONFIG.priceStep; toast(L(`${rival.name} زاد عليك بـ ${money(d.price)}`,`${rival.name} raised to ${money(d.price)}`)); }
+    else toast(L('البيعة صارت لك بالسعر الجديد','The deal is now yours at the new price')); }
+  if(id==='hijack'){ const d=S.deals.find(x=>x.id===m.target), pr=byId(S.props,d.propId), first=S.players[d.buyer], s=S.players[d.seller];
+    if(S.perkPrice>p.budget){ toast(L('الميزانية ما تكفي','Not enough budget')); return; }
+    p.budget-=S.perkPrice; s.budget+=S.perkPrice; s.budget-=d.price; first.budget+=d.price; // تعويض مؤقت
+    s.profit += S.perkPrice-d.price; first.deals=Math.max(0,first.deals-1); p.deals++;
+    pr.owner=0; pr.cost=S.perkPrice; pr.asking=S.perkPrice; d.buyer=0; d.price=S.perkPrice; consume();
+    toast(L('خطفت الصفقة — العقار صار لك','Deal hijacked — the property is yours')); }
+  if(id==='deposit'){ const pr=byId(S.props,m.target);
+    if(p.budget<CONFIG.depositAmount){ toast(L('الميزانية ما تكفي','Not enough budget')); return; }
+    p.budget-=CONFIG.depositAmount; S.holds.push({propId:pr.id, holder:0, seller:pr.owner, amount:CONFIG.depositAmount, price:pr.asking, round:S.round}); consume();
+    toast(L('دفعت العربون — بالجولة الجاية تشتريه أو تخسره','Deposit paid — buy next round or lose it')); }
+  if(id==='rent'){ const pr=byId(S.props,m.target); consume();
+    if(Math.random()<.4) toast(L(`${pname(pr.owner)} رفض الإيجار — راحت الميزة`,`${pname(pr.owner)} refused — the perk is lost`));
+    else { S.rentals.push({propId:pr.id, renter:0, owner:pr.owner, per:CONFIG.rentPerRound, left:CONFIG.rentRounds, startRound:S.round}); toast(L('تم الإيجار 🔑','Rent agreed 🔑')); } }
+  closeModal(); render();
+}
+
+/* ---------- التصويت ---------- */
+function vote(id){ S.voteChoice=id; render(); }
+function endVote(){
+  if(S.voteChoice!==null) S.players[S.voteChoice].votes++;
+  S.players.filter(b=>b.isBot).forEach(b=>{ const c=S.presentedIds.filter(id=>id!==b.id); if(c.length) S.players[pick(c)].votes++; });
+  computeScores(); go('results', null);
+}
+SCREENS.vote = () => { const cands=S.presentedIds.filter(id=>id!==0); return `
+${hdr()}
+${timerHTML()}
+<h2>🎤 ${L('صوّت لأفضل إقناع','Vote for the best pitch')}</h2>
+<p class="sub">${L('مين أفضل واحد عرض وسوّق؟ صوت واحد، وما تقدر تصوت لنفسك.','Who pitched and marketed best? One vote, and not for yourself.')}</p>
+${cands.length?cands.map(id=>`<button class="votebtn ${S.voteChoice===id?'on':''}" onclick="vote(${id})">${esc(office(id))}${S.voteChoice===id?' ✓':''}</button>`).join(''):`<div class="empty">${L('ما في أحد غيرك عرض.','Nobody else pitched.')}</div>`}
+${endBtn(L('الذهاب للنتائج','go to Results'),'endVote()')}`; };
+
+/* ---------- النتائج ---------- */
+function computeScores(){
+  S.players.forEach(p=>{p.score=0;});
+  S.results = CATS.map(c=>{
+    const rows = S.players.map(p=>({p, v:c.metric(p)})).sort((a,b)=>b.v-a.v);
+    rows.forEach(r=>{ const rank = 1 + rows.filter(o=>o.v>r.v).length; r.rank=rank; r.pts = CONFIG.rankPoints[rank-1]||0; r.p.score+=r.pts; });
+    return {c, rows};
+  });
+}
+SCREENS.results = () => {
+  const ranked=[...S.players].sort((a,b)=> b.score-a.score || wealth(b)-wealth(a));
+  const [g,s,b]=ranked, MED={1:'🥇',2:'🥈',3:'🥉'};
+  const pod=(p,cls,n)=>p?`<div class="pod ${cls}"><div class="md">${MED[n]}</div><div class="pn">${esc(p.name)}</div><div class="ps">${p.score} ${L('نقطة','pts')}</div><div class="pb">${n}</div></div>`:'';
+  const fv=(c,v)=>c.money?money(v):v;
+  return `
+${hdr(`<span class="tag">${L('النتائج','Results')}</span>`)}
+<h2>🏆 ${L('النتائج','Results')}</h2>
+<div class="podium">${pod(s,'s',2)}${pod(g,'g',1)}${pod(b,'b',3)}</div>
+${ranked.length>3?`<div class="card rest">${ranked.slice(3).map((p,i)=>`<div class="row"><span>${i+4}. ${esc(p.name)}</span><b>${p.score}</b></div>`).join('')}</div>`:''}
+<p class="sub">${L('التعادل بالمجموع: يفوز صاحب الثروة النهائية الأعلى.','Tie on total: higher final wealth wins.')}</p>
+${S.results.map(r=>`<div class="card"><h3>${r.c.icon} ${N(r.c.name)} <small style="color:var(--mut)">— ${N(r.c.hint)}</small></h3>
+  ${r.rows.map(x=>`<div class="row"><span>${x.rank}. ${esc(x.p.name)} <small style="color:var(--mut)">${fv(r.c,x.v)}</small></span><b>+${x.pts}</b></div>`).join('')}</div>`).join('')}
+<button class="btn" onclick="newGame()">${L('لعبة جديدة','New game')}</button>`;
+};
+function newGame(){ stopTimer(); newState(S.settings); S.screen='setup'; render(); window.scrollTo(0,0); }
+
+/* ============================ النوافذ ============================ */
+let confirmFn=null;
+function askConfirm(text,fn){ confirmFn=fn; S.modal={type:'confirm',text}; renderModal(); }
+function confirmYes(){ const f=confirmFn; confirmFn=null; closeModal(); if(f) f(); }
+function openAssumptions(){ S.modal={type:'assume'}; renderModal(); }
+function openOffices(){ S.modal={type:'offices'}; renderModal(); }
+function closeModal(){ S.modal=null; renderModal(); }
+function renderModal(){
+  const root=$('modalRoot'), m=S.modal;
+  if(!m){ root.innerHTML=''; return; }
+  let inner='';
+  if(m.type==='assume') inner=`<h3>📝 ${L('افتراضات وقرارات تحتاج اعتماد','Assumptions & decisions to approve')}</h3><p class="sub">${L('كلها تتعدل من CONFIG في أول السكربت.','All editable in CONFIG at the top of the script.')}</p><ol>${ASSUMPTIONS[LANG].map(a=>`<li>${a}</li>`).join('')}</ol><button class="btn" onclick="closeModal()">${L('تمام','OK')}</button>`;
+  if(m.type==='confirm') inner=`<h3>${m.text}</h3><button class="btn" onclick="confirmYes()">${L('إيه، رجّع','Yes, go back')}</button><button class="btn ghost" onclick="closeModal()">${L('لا','No')}</button>`;
+  if(m.type==='offices') inner=`<h3>📊 ${L('المكاتب','Offices')}</h3><div class="otable">${S.players.map(p=>`<div class="orow"><b>${esc(office(p.id))}${p.id===0?L(' (أنت)',' (you)'):''}${isSusp(p.id)?' ⛔':''}${isProt(p.id)?' 🛡':''}</b>
+    <span>💰 ${money(p.budget)}</span><span>🏠 ${owned(p).length}</span><span>✨ ${p.perks.filter(k=>!p.used.includes(k)).length}/${p.perks.length}</span></div>`).join('')}</div>
+    <p class="sub">${L('✨ = المزايا الباقية. أنواع مزايا الباقين سرية.','✨ = perks left. Others’ perk types stay secret.')}</p><button class="btn" onclick="closeModal()">${L('تمام','OK')}</button>`;
+  if(m.type==='offer'){ const pr=byId(S.props,m.pid); inner=`<h3>🤝 ${L('سجّل العرض المتفق عليه','Record the agreed offer')}</h3>
+    <div class="preview">${houseSVG(pr)}</div><div class="note">${propTitle(pr)} — ${esc(office(pr.owner))} • ${L('السعر المطلوب','asking')} ${money(pr.asking)}</div>
+    <div class="row"><span>${L('عرضك','Your offer')}</span><div class="stepper"><button onclick="bumpOffer(1)">+</button><span class="v">${money(m.price)}</span><button onclick="bumpOffer(-1)">−</button></div></div>
+    <button class="btn" onclick="sendOffer()">${L('أرسل العرض','Send offer')}</button><button class="btn ghost" onclick="closeModal()">${L('إلغاء','Cancel')}</button>`; }
+  if(m.type==='perk'){ const k=byId(PERKS,m.id); inner=`<h3>${k.icon} ${L('تأكيد استخدام','Confirm')}: ${N(k.name)}</h3>
+    <div class="note"><b>${L('الأثر','Effect')}:</b> ${k.effect()}</div>
+    <div class="note"><b>${L('سعرها','Price')}:</b> ${money(CONFIG.perkPrice)} ${L('(مدفوع وقت الشراء) — تُستخدم مرة وحدة بس','(paid when bought) — single use only')}</div>
+    ${m.inputs}
+    <button class="btn" onclick="applyPerk()">${L('أكّد واستخدمها','Confirm & use')}</button><button class="btn ghost" onclick="closeModal()">${L('إلغاء','Cancel')}</button>`; }
+  root.innerHTML=`<div class="modal" onclick="if(event.target===this)closeModal()"><div class="sheet">${inner}</div></div>`;
+}
+
+/* ============================ العرض ============================ */
+function render(){
+  $('app').innerHTML = SCREENS[S.screen]();
+  const ls=$('langsw'); if(ls) ls.hidden = !(S.screen==='intro'||S.screen==='setup');
+  updTimer(); renderModal();
+}
+newState(); render();
+
+</script>
+</body>
+</html>
