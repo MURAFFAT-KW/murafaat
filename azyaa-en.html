@@ -965,16 +965,16 @@ const GAME = {
   intro: { ar: 'صمّم تشكيلتك وجهّز متجرك واعرض قطعتك المميزة.<br>أقنع الباقين يزورون متجرك ويشترون منك.<br>الأكثر إقناعًا وإبداعًا يفوز.', en: 'Design your collection, set up your store and show your signature piece.<br>Convince the others to visit your store and buy from you.<br>The most persuasive and creative wins.' },
   lead: { ar: 'كل لاعب على تلفونه. صمّم تشكيلتك وأقنع ربعك يشترون من متجرك.', en: 'Everyone on their own phone. Design your collection and convince your friends to buy from your store.' },
   timer: { min: 30, max: 300, step: 30 },
-  defaults: { hostPlays: 1, players: 3, capital: 100, wallet: 50, buyTime: 120, designTime: 300, buildTime: 120, talkRounds: 1, speakers: 2, talkTime: 60, shopRounds: 2, shopTime: 90, voteTime: 60 },
-  limits: { capital: [50, 500, 10], wallet: [10, 300, 10], buyTime: [30, 300, 30], designTime: [30, 300, 30], buildTime: [30, 300, 30], talkTime: [30, 300, 30], shopTime: [30, 300, 30], voteTime: [30, 300, 30], talkRounds: [1, 5, 1], speakers: [1, 5, 1], shopRounds: [1, 5, 1] },
+  defaults: { hostPlays: 1, players: 3, capital: 100, wallet: 50, buyTime: 120, designTime: 300, buildTime: 120, rounds: 2, speakers: 2, talkTime: 60, shopTime: 90, voteTime: 60 },
+  limits: { capital: [50, 500, 10], wallet: [10, 300, 10], buyTime: [30, 300, 30], designTime: [30, 300, 30], buildTime: [30, 300, 30], talkTime: [30, 300, 30], shopTime: [30, 300, 30], voteTime: [30, 300, 30], rounds: [1, 5, 1], speakers: [1, 5, 1] },
   afterStep() { G.settings.speakers = Math.min(G.settings.speakers, G.settings.players); },
   settingsView() {
     return timeRow('buyTime', L('وقت شراء المواد الأولية', 'Raw materials time')) + timeRow('designTime', L('وقت التصميم', 'Design time')) + timeRow('buildTime', L('وقت بناء المشروع', 'Project building time')) +
-      stp('talkRounds', 1, 5, { label: L('عدد جولات التحدث', 'Talk rounds') }) + stp('speakers', 1, Math.min(5, G.settings.players), { label: L('عدد المتحدثين بالجولة (عشوائي)', 'Speakers per round (random)') }) + timeRow('talkTime', L('وقت التحدث والإقناع', 'Talk time')) +
-      stp('shopRounds', 1, 5, { label: L('عدد جولات التسوق', 'Shopping rounds') }) + timeRow('shopTime', L('وقت التسوق', 'Shopping time')) + timeRow('voteTime', L('وقت التصويت', 'Voting time')) +
+      stp('rounds', 1, 5, { label: L('عدد الجولات (كل جولة: إقناع وبعده تسوق)', 'Rounds (each: pitching, then shopping)') }) + stp('speakers', 1, Math.min(5, G.settings.players), { label: L('عدد المتحدثين بالجولة (عشوائي)', 'Speakers per round (random)') }) + timeRow('talkTime', L('وقت التحدث والإقناع', 'Talk time')) +
+      timeRow('shopTime', L('وقت التسوق', 'Shopping time')) + timeRow('voteTime', L('وقت التصويت', 'Voting time')) +
       stp('capital', 50, 500, { label: L('رأس المال لكل لاعب', 'Capital per player'), fmt: money }) + stp('wallet', 10, 300, { label: L('محفظة التسوق لكل لاعب', 'Shopping wallet per player'), fmt: money });
   },
-  settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · ${s.talkRounds} ${L('جولات تحدث', 'talk rounds')} · ${s.shopRounds} ${L('جولات تسوق', 'shopping rounds')} · ${L('رأس المال', 'capital')} ${money(CAP())}`; },
+  settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · ${RND()} ${L('جولات (إقناع + تسوق)', 'rounds (pitch + shop)')} · ${L('رأس المال', 'capital')} ${money(CAP())}`; },
   freshExtra: () => ({ stores: {}, wallet: {}, visits: {}, sales: {}, salesMoney: {}, bought: {}, votes: {}, talk: null, shop: null, results: null, extraUsed: {}, spoken: [] }),
   resetMine(m) { Object.assign(m, { perks: [], types: [], colors: [], fabrics: [], store: { bg: null, border: null }, designs: Array(CONFIG.designsCount).fill(null), featured: null, brand: { name: '', desc: '' }, discount: 0, done: {}, vote: null }); },
   viewKey: () => (G.talk ? 't' + G.talk.round + G.talk.idx : '') + (G.shop ? 's' + G.shop.round : '') + (U.edit != null ? 'e' + U.edit : ''),
@@ -1059,6 +1059,8 @@ ACT.next = H(() => {
     }
   });
 });
+/* كل جولة: إقناع وبعدها تسوق. عدد جولات الإقناع = عدد جولات التسوق */
+function RND() { const s = G.settings; return +s.rounds || +s.talkRounds || 1; }
 function startTalk(r) {
   const k = Math.min(G.settings.speakers, G.players.length), all = G.players.map(p => p.id);
   let picks = shuffle(all.filter(id => !G.spoken.includes(id))).slice(0, k);
@@ -1070,13 +1072,12 @@ ACT.talkNext = H(() => {
   phaseTo(() => {
     const t = G.talk;
     if (t.idx < t.speakers.length - 1) { t.idx++; setTimer(G.settings.talkTime); }
-    else if (t.round < G.settings.talkRounds) startTalk(t.round + 1);
-    else { G.phase = 'shop'; G.shop = { round: 1, seen: {} }; setTimer(G.settings.shopTime); }
+    else { G.phase = 'shop'; G.shop = { round: t.round, seen: {} }; setTimer(G.settings.shopTime); addLog(L('بدت جولة التسوق ', 'Shopping round ') + t.round); }
   });
 });
 ACT.shopNext = H(() => {
   phaseTo(() => {
-    if (G.shop.round < G.settings.shopRounds) { G.shop.round++; setTimer(G.settings.shopTime); addLog(L('بدت جولة التسوق ', 'Shopping round ') + G.shop.round); }
+    if (G.shop.round < RND()) startTalk(G.shop.round + 1);
     else { G.phase = 'vote'; setTimer(G.settings.voteTime); }
   });
 });
@@ -1188,8 +1189,8 @@ function buildView() {
 }
 function talkView() {
   const t = G.talk, sp = t.speakers[t.idx], st = stOf(sp) || {}, feat = st.featured != null ? st.designs[st.featured] : null;
-  const nxt = t.idx < t.speakers.length - 1 ? L('الذهاب لإقناع ', 'go to ') + P(t.speakers[t.idx + 1]).name + L('', '’s pitch') : t.round < G.settings.talkRounds ? L('الذهاب لجولة التحدث ', 'go to talk round ') + (t.round + 1) : L('الذهاب للتسوق', 'go to Shopping');
-  return `<span class="tag">${L('جولة التحدث', 'Talk round')} ${t.round} / ${G.settings.talkRounds}</span>
+  const nxt = t.idx < t.speakers.length - 1 ? L('الذهاب لإقناع ', 'go to ') + P(t.speakers[t.idx + 1]).name + L('', '’s pitch') : L('الذهاب لجولة التسوق ', 'go to shopping round ') + t.round;
+  return `<span class="tag">${L('الجولة', 'Round')} ${t.round} / ${RND()} · ${L('الإقناع', 'Pitching')}</span>
   <div class="speakers">${t.speakers.map((id, i) => `<span class="spk ${i === t.idx ? 'now' : i < t.idx ? 'done' : ''}">${esc(P(id).name)}</span>`).join('')}</div>
   <div class="stage"><div class="who">${L('الحين يقنعكم', 'Now pitching')}<b>${esc(P(sp).name)}${sp === ME_ID ? L(' (أنت)', ' (you)') : ''}</b></div>
   <div class="card"><div class="ptitle">${esc(st.brand ? st.brand.name : '')}</div><div class="preview">${designSVG(feat)}</div>
@@ -1200,10 +1201,10 @@ function talkView() {
 ACT.extra = () => sendReq({ type: 'extra', g: G.gameNo });
 function mallView() {
   const others = G.players.filter(p => p.id !== ME_ID);
-  return `<span class="tag">${L('جولة التسوق', 'Shopping round')} ${G.shop.round} / ${G.settings.shopRounds}</span><h2>${L('السوق', 'The market')}</h2>
+  return `<span class="tag">${L('الجولة', 'Round')} ${G.shop.round} / ${RND()} · ${L('التسوق', 'Shopping')}</span><h2>${L('السوق', 'The market')}</h2>
   ${amPlayer() ? capBar() + `<div class="moneybar"><span class="money">🚶 ${L('زيارات متجرك', 'Your visits')}: ${G.visits[ME_ID] || 0}</span><span class="money">🛍️ ${L('مبيعاتك', 'Your sales')}: ${G.sales[ME_ID] || 0}</span></div>` : ''}
   <div class="grid">${others.map(p => storeHTML(stOf(p.id) || {}, p.name, `data-act="openStore" data-id="${p.id}"`)).join('')}</div>
-  ${endBtn(G.shop.round < G.settings.shopRounds ? L('الذهاب لجولة التسوق ', 'go to shopping round ') + (G.shop.round + 1) : L('الذهاب للتصويت', 'go to Voting'), 'shopNext')}${waitHost()}`;
+  ${endBtn(G.shop.round < RND() ? L('الذهاب لجولة الإقناع ', 'go to pitching round ') + (G.shop.round + 1) : L('الذهاب للتصويت', 'go to Voting'), 'shopNext')}${waitHost()}`;
 }
 ACT.openStore = d => { U.modal = { type: 'store', id: d.id }; if (amPlayer()) sendReq({ type: 'visit', sid: d.id, g: G.gameNo }); };
 ACT.buy = d => { sendReq({ type: 'buy', sid: d.sid, i: +d.i, g: G.gameNo }); };

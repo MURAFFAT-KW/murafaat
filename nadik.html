@@ -655,6 +655,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const POS = { GK: 'حارس', DF: 'دفاع', MF: 'وسط', FW: 'هجوم' };
   const POS_ORDER = { GK: 0, DF: 1, MF: 2, FW: 3 };
   const TIER = { s: { name: 'الفريق الأقوى', bal: 15, pv: 10 }, w: { name: 'الفريق الأضعف', bal: 50, pv: 5 } };
+  /* محفظة كل فئة يحددها المضيف بالإعدادات (بالملايين) */
+  const TB = k => { const v = G && G.settings ? G.settings[k === 's' ? 'sBal' : 'wBal'] : null; return v != null ? +v : (TIER[k] || TIER.w).bal; };
   /* five-a-side: slot 1 GK, 2 DF, 3 DF or MF, 4 MF or FW, 5 FW */
   const SLOTS = [['GK'], ['DF'], ['DF', 'MF'], ['MF', 'FW'], ['FW']];
   const SLOT_N = ['حارس', 'مدافع', 'مدافع أو وسط', 'وسط أو مهاجم', 'مهاجم'];
@@ -854,7 +856,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function freshRoom(code) {
     return {
       v: 1, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {}, online: [],
-      settings: { mode: 'hist', hostPlays: 1, players: 3, seasons: 5, listSec: 60, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
+      settings: { mode: 'hist', hostPlays: 1, players: 3, seasons: 5, sBal: 15, wBal: 50, listSec: 60, mkSec: 60, revSec: 60, voteSec: 30, base: 5 },
       picks: {}, tier: {}, team: {}, sq: {}, note: {}, own: {}, val: {}, bal: {}, start: {}, stats: {}, mk: null, hist: [], xi: {}, cup: null, prog: []
     };
   }
@@ -1117,7 +1119,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       G.sq[sid] = makeSquad(best.res[id].side);
       G.team[id] = sid; G.note[id] = best.note[id];
       G.sq[sid].five.forEach((r, i) => { G.own[sid + '.' + i] = id; G.val[sid + '.' + i] = TIER[G.tier[id]].pv; });
-      G.bal[id] = TIER[G.tier[id]].bal;
+      G.bal[id] = TB(G.tier[id]);
       G.stats[id] = { sold: 0, bought: 0 };
     });
     pl.forEach(id => { G.start[id] = assets(id); });
@@ -1291,7 +1293,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const sp = rankPts('sold', 20), bp = rankPts('bought', 20);
     /* rank by a value: first gets 20, then less step by step; ties share */
     const rankBy = fn => id => { const x = fn(id), rank = 1 + pl.filter(o => fn(o) > x + 1e-9).length; return Math.round(20 * (n - rank + 1) / n * 10) / 10; };
-    const wdiff = id => bal(id) - ((G.startBal || {})[id] != null ? G.startBal[id] : (TIER[G.tier[id]] || TIER.w).bal);
+    const wdiff = id => bal(id) - ((G.startBal || {})[id] != null ? G.startBal[id] : TB(G.tier[id]));
     const pval = id => roster(id).reduce((s, k) => s + val(k), 0);
     const wp = rankBy(wdiff), ap = rankBy(pval);
     const growth = id => { const s = G.start[id] || 1; return (assets(id) - s) / s; };
@@ -1373,7 +1375,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<section class="card"><h2>كيف تُلعب؟</h2><ol class="howto">' +
       '<li><span>كل لاعب يحط تشكيلتين، كل وحدة ٥ أساسيين واحتياطين: «الفريق الأضعف» و«الفريق الأقوى». تاريخية من الدوريات الخمسة، أو يكتب الأسماء بنفسه.</span></li>' +
       '<li><span>الخماسي: حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم.</span></li>' +
-      '<li><span>تختار سرًّا: الفريق الأقوى (كل لاعب ١٠ ملايين + ١٥ مليون بالمحفظة)، أو الأضعف (كل لاعب ٥ ملايين + ٥٠ مليون). الاثنين يبدون من ٨٥ مليون. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
+      '<li><span>تختار سرًّا: الفريق الأقوى (لاعبين أغلى ومحفظة أصغر)، أو الأضعف (لاعبين أرخص ومحفظة أكبر). المضيف يحدد المحفظتين قبل اللعبة. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
       '<li><span>زر «التشكيلات» يوريك فرق الكل بأرقامها وألوانها، ولون كل فريق يطلع جنب اسم صاحبه، عشان تعرف مع منو تفاوض.</span></li>' +
       '<li><span>١٠ أسواق انتقالات: بكل سوق تعرض لاعب واحد على الأقل بسعرك، وتزايد على لاعبين غيرك.</span></li>' +
       '<li><span>فلوس البيع تنضاف لرصيدك بنفس السوق. تقدر تبيع بدون ما تشتري طالما يبقى عندك خماسي كامل، والفريق بحد أقصى ٩ لاعبين (يعني تقدر تزيد لين ٤ احتياط).</span></li>' +
@@ -1424,7 +1426,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const settings = host ? '<section class="card" style="display:grid;gap:16px"><h2>الإعدادات</h2>' +
       '<div class="labelled"><span class="lbl">نوع التشكيلات</span>' + modeSeg + '<span class="muted small">' + ((s.mode || 'hist') === 'custom' ? 'كل لاعب يكتب أسماء فريقين (٥ أساسيين واحتياطين): واحد ضعيف وواحد قوي.' : 'كل لاعب يختار ناديين ومواسم من الدوريات الخمسة، ويطلع له الخماسي والاحتياطين من الأكثر لعب.') + '</span></div>' +
       '<div class="labelled"><span class="lbl">عدد اللاعبين (التشكيلات)</span>' + stp('players', 3, 32) + '<span class="muted small">إذا دخل لاعبين أقل من هالعدد، اللعبة تكمّل الباقي بلاعبين كمبيوتر لين ٨ بس. فوق ٨ لازم كلهم لاعبين حقيقيين.</span></div>' +
-      '<div class="labelled"><span class="lbl">عدد الجولات (المواسم)</span>' + stp('seasons', 1, 5) + '<span class="muted small">كل موسم فيه سوقين انتقالات (صيفي وشتوي)، يعني ' + (s.seasons * 2) + ' أسواق.</span></div>' +
+      '<div class="labelled"><span class="lbl">محفظة الفريق الأقوى (مليون)</span>' + stp('sBal', 0, 300) + '</div>' + '<div class="labelled"><span class="lbl">محفظة الفريق الأضعف (مليون)</span>' + stp('wBal', 0, 300) + '</div>' + '<div class="labelled"><span class="lbl">عدد الجولات (المواسم)</span>' + stp('seasons', 1, 5) + '<span class="muted small">كل موسم فيه سوقين انتقالات (صيفي وشتوي)، يعني ' + (s.seasons * 2) + ' أسواق.</span></div>' +
       '<div class="labelled"><span class="lbl">المضيف</span>' + seg2('hostPlays', [[1, 'ألعب'], [0, 'مضيف بس']]) + '<span class="muted small">' + (s.hostPlays === 0 ? 'ما تلعب. تتحكم باللعبة بس، وتحتاج ٣ لاعبين غيرك.' : 'تلعب مثل الباقين، وتتحكم باللعبة بعد.') + '</span></div>' +
       '<div class="labelled"><span class="lbl">وقت عرض اللاعبين للبيع</span>' + seg('listSec', TIMES, ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت السوق (المزايدة)</span>' + seg('mkSec', TIMES, ' ث') + '</div>' +
@@ -1478,7 +1480,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function tierView() {
     const x = inp(ME_ID).tier, done = x && x.g === G.gameNo && x.v;
     if (done) return '<section class="card pass"><h2>اخترت: ' + TIER[x.v].name + ' ✓</h2><p class="muted">اختيارك سري. لما يختار الكل، تنعرض الفرق.</p></section>' + progBox('مين اختار الفئة') + hostBtn('اكشف الفرق', 'tierNext');
-    const opt = (v, d) => '<button class="tier ' + v + (U.tierPick === v ? ' on' : '') + '" data-act="tierPick" data-v="' + v + '"><b>' + TIER[v].name + '</b><span class="big num">' + TIER[v].bal + ' مليون</span><span class="muted">' + d + '</span></button>';
+    const opt = (v, d) => '<button class="tier ' + v + (U.tierPick === v ? ' on' : '') + '" data-act="tierPick" data-v="' + v + '"><b>' + TIER[v].name + '</b><span class="big num">' + TB(v) + ' مليون</span><span class="muted">' + d + '</span></button>';
     return '<section class="card action"><h2 style="margin:0 0 6px">اختر فئتك سرًّا</h2><p class="muted">بتاخذ تشكيلة عشوائية من اختيارات اللاعبين الثانيين بنفس الفئة، وما تطلع لك أي وحدة من تشكيلتيك.</p>' +
       '<div class="tiers">' + opt('s', 'كل لاعب ١٠ ملايين. المجموع ٨٥ مليون') + opt('w', 'كل لاعب ٥ ملايين. المجموع ٨٥ مليون') + '</div>' +
       '<button class="btn xl primary" data-act="sendTier"' + (U.tierPick ? '' : ' aria-disabled="true"') + '>تأكيد</button></section>' + progBox('مين اختار الفئة');
@@ -1907,8 +1909,9 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     startGame();
   });
   ACT.step = H(d => {
-    const L = { players: [3, 32], seasons: [1, 5] }[d.k]; if (!L || G.phase !== 'lobby') return false;
-    G.settings[d.k] = Math.min(L[1], Math.max(L[0], (+G.settings[d.k] || L[0]) + (+d.v)));
+    const L = { players: [3, 32, 1], seasons: [1, 5, 1], sBal: [0, 300, 5], wBal: [0, 300, 5] }[d.k]; if (!L || G.phase !== 'lobby') return false;
+    const cur = G.settings[d.k] != null ? +G.settings[d.k] : L[0];
+    G.settings[d.k] = Math.min(L[1], Math.max(L[0], cur + (+d.v) * L[2]));
   });
   ACT.picksNext = H(() => {
     if (G.phase !== 'picks') return false;

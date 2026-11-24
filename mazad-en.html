@@ -1079,7 +1079,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<div class="labelled"><span class="lbl">Players (sales reps)</span>' + stp('players', 3, 25) + '</div>' +
       '<div class="labelled"><span class="lbl">Rounds</span>' + stp('rounds', 1, 5) + '<span class="muted small">In each round every player sells once, so ' + total + ' sales.</span></div>' +
       '<div class="labelled"><span class="lbl">Products</span>' + stp('products', minProd, (s.src || 'players') === 'ready' ? READY.length : 100) + '<span class="muted small">At least ' + minProd + ' (players × rounds).' + ((s.src || 'players') === 'players' ? ' Each player writes ' + Math.ceil(s.products / tgt) + '.' : '') + '</span></div>' +
-      '<div class="labelled"><span class="lbl">Starting wallet</span>' + seg('start', [10, 20, 30], ' KD') + '</div>' +
+      '<div class="labelled"><span class="lbl">Starting wallet</span>' + seg('start', [10, 15, 20, 30, 40, 50], ' KD') + '</div>' +
       '<div class="labelled"><span class="lbl">Points per item</span>' + seg('val', [3, 5, 7], ' pts') + '</div>' +
       '<div class="labelled"><span class="lbl">Item voting time</span>' + seg('voteSec', TIMES, ' s') + '</div>' +
       '<div class="labelled"><span class="lbl">Pricing time</span>' + seg('priceSec', TIMES, ' s') + '</div>' +

@@ -1079,7 +1079,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<div class="labelled"><span class="lbl">عدد اللاعبين (مسؤولي المبيعات)</span>' + stp('players', 3, 25) + '</div>' +
       '<div class="labelled"><span class="lbl">عدد الجولات</span>' + stp('rounds', 1, 5) + '<span class="muted small">بكل جولة كل لاعب يبيع مرة، يعني ' + total + ' بيعات.</span></div>' +
       '<div class="labelled"><span class="lbl">عدد المنتجات</span>' + stp('products', minProd, (s.src || 'players') === 'ready' ? READY.length : 100) + '<span class="muted small">أقل شي ' + minProd + ' (عدد اللاعبين × عدد الجولات).' + ((s.src || 'players') === 'players' ? ' كل لاعب يكتب ' + Math.ceil(s.products / tgt) + '.' : '') + '</span></div>' +
-      '<div class="labelled"><span class="lbl">المحفظة بالبداية</span>' + seg('start', [10, 20, 30], ' د.ك') + '</div>' +
+      '<div class="labelled"><span class="lbl">المحفظة بالبداية</span>' + seg('start', [10, 15, 20, 30, 40, 50], ' د.ك') + '</div>' +
       '<div class="labelled"><span class="lbl">كم يسوى كل غرض بالنقاط</span>' + seg('val', [3, 5, 7], ' نقاط') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت التصويت على الغرض</span>' + seg('voteSec', TIMES, ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت التسعير</span>' + seg('priceSec', TIMES, ' ث') + '</div>' +
