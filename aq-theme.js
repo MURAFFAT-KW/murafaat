@@ -57,7 +57,7 @@
     var out = v.replace(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)|\bwhite\b|\bblack\b/gi, function (m) { var r = map(m, role); if (r) { changed = true; return r; } return m; });
     return changed ? out : null;
   }
-  var PROPS = { 'background-color': 'bg', 'background-image': 'bg', 'color': 'fg', 'border-top-color': 'line', 'border-right-color': 'line', 'border-bottom-color': 'line', 'border-left-color': 'line', 'outline-color': 'line', 'caret-color': 'fg' };
+  var PROPS = { 'background-color': 'bg', 'background-image': 'bg', 'color': 'fg', 'border-top-color': 'line', 'border-right-color': 'line', 'border-bottom-color': 'line', 'border-left-color': 'line', 'outline-color': 'line', 'caret-color': 'fg', '-webkit-text-fill-color': 'fg' };
   function roleOfVar(name, val) {
     if (/text|ink|mut|fg|txt/i.test(name)) return 'fg';
     if (/line|border|stroke/i.test(name)) return 'line';
@@ -76,12 +76,18 @@
       return 'html.aq-dark ' + p;
     }).join(',');
   }
+  function brightBg(st) {
+    var v = (st.getPropertyValue('background-color') || '') + ' ' + (st.getPropertyValue('background-image') || '') + ' ' + (st.getPropertyValue('background') || '');
+    var m = v.match(/#[0-9a-f]{3,8}\b|rgba?\([^)]*\)/gi) || [];
+    return m.some(function (c) { var o = parse(c); if (!o || o.a < 0.6) return false; var x = toHsl(o); return x.l >= 0.45 && x.l < 0.82 && x.s > 0.35; });
+  }
   function ruleText(rule) {
-    var st = rule.style, decl = [];
+    var st = rule.style, decl = [], keepFg = brightBg(st);   // كلام غامق فوق لون فاتح ملوّن (مثل الزر الأصفر) يظل غامق
     for (var i = 0; i < st.length; i++) {
       var p = st[i], v = st.getPropertyValue(p), r;
       if (p.indexOf('--') === 0) { r = mapValue(v, roleOfVar(p, v)); if (r) decl.push(p + ':' + r); continue; }
       var role = PROPS[p]; if (!role) continue;
+      if (role === 'fg' && keepFg) continue;
       // خلفية بلون النص الغامق (مثل التنبيهات وزر الإنهاء): تصير كحلي فاتح شوي، مو أبيض
       if (role !== 'fg' && /var\(--(ink|text)\)/.test(v)) { decl.push(p + ':#33405F !important'); continue; }
       r = mapValue(v, role); if (r) decl.push(p + ':' + r + ' !important');
@@ -122,13 +128,43 @@
     if (el.closest && el.closest('svg')) return;
     var s = el.getAttribute('style'); if (!s || !/#|rgb|white/i.test(s)) return;
     if (el.__aqOrig == null || el.__aqLast !== s) { el.__aqOrig = s; }
-    var out = s.replace(/(^|;)\s*(background(?:-color)?|color|border(?:-[a-z]+)?-color|border(?:-(?:top|right|bottom|left))?)\s*:\s*([^;]+)/gi, function (m, pre, prop, val) {
-      var p = prop.toLowerCase(), role = p === 'color' ? 'fg' : (p.indexOf('border') === 0 ? 'line' : 'bg');
+    var out = s.replace(/(^|;)\s*(background(?:-color)?|-webkit-text-fill-color|color|border(?:-[a-z]+)?-color|border(?:-(?:top|right|bottom|left))?)\s*:\s*([^;]+)/gi, function (m, pre, prop, val) {
+      var p = prop.toLowerCase(), role = (p === 'color' || p === '-webkit-text-fill-color') ? 'fg' : (p.indexOf('border') === 0 ? 'line' : 'bg');
       var r = mapValue(val, role); return r ? pre + prop + ':' + r : m;
     });
     if (out !== s) { el.__aqLast = out; el.setAttribute('style', out); }
   }
   function fixTree(n) { if (!root.classList.contains('aq-dark') || !n || n.nodeType !== 1) return; fixInline(n); if (n.querySelectorAll) { var l = n.querySelectorAll('[style]'); for (var i = 0; i < l.length; i++) fixInline(l[i]); } }
+  /* شبكة أمان: أي كلام غامق طلع على خلفية غامقة (لون ما قدرنا نقلبه) يصير أبيض عشان يبين */
+  function lum(c) { var o = parse(c); if (!o) return null; return { l: (0.2126 * o.r + 0.7152 * o.g + 0.0722 * o.b) / 255, a: o.a }; }
+  function bgOf(el) {
+    for (var e = el; e && e.nodeType === 1; e = e.parentElement) {
+      var cs = getComputedStyle(e);
+      if (cs.backgroundImage && cs.backgroundImage !== 'none' && !/text/.test(cs.webkitBackgroundClip || '')) return null; // خلفية صورة أو تدرج: نخليها
+      var b = lum(cs.backgroundColor); if (b && b.a > 0.5) return b.l;
+    }
+    return 0.08;
+  }
+  var netT = 0, netList = [];
+  function netUndo() { netList.forEach(function (el) { try { el.style.removeProperty('color'); el.style.removeProperty('-webkit-text-fill-color'); } catch (e) { } }); netList = []; }
+  function safetyNet() {
+    if (!root.classList.contains('aq-dark') || !document.body) return;
+    var all = document.body.querySelectorAll('*'), n = 0;
+    for (var i = 0; i < all.length && n < 1500; i++) {
+      var el = all[i]; if (el.closest('svg') || el.__aqNet === 'ok') continue;
+      var hasText = false; for (var c = el.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.textContent.trim()) { hasText = true; break; }
+      if (!hasText) continue; n++;
+      var cs = getComputedStyle(el), f = lum(cs.webkitTextFillColor || cs.color) || lum(cs.color);
+      if (!f || f.a < 0.3) continue;
+      var bl = bgOf(el); if (bl == null) continue;
+      // كلام فاتح فوق خلفية فاتحة (مثل زر أصفر): يرجع غامق
+      if (f.l > 0.75 && bl > 0.62) { netList.push(el); el.style.setProperty('color', '#12203A', 'important'); el.style.setProperty('-webkit-text-fill-color', '#12203A', 'important'); el.__aqLast = el.getAttribute('style'); continue; }
+      if (f.l > 0.4 || bl > 0.4) continue;
+      netList.push(el); el.style.setProperty('color', '#EEF2F8', 'important'); el.style.setProperty('-webkit-text-fill-color', '#EEF2F8', 'important');
+      el.__aqLast = el.getAttribute('style');
+    }
+  }
+  function netSoon() { clearTimeout(netT); netT = setTimeout(safetyNet, 120); }
   var mo = null;
   function watch() {
     if (mo || !window.MutationObserver) return;
@@ -140,6 +176,7 @@
         else if (m.type === 'attributes' && m.target.__aqLast !== m.target.getAttribute('style')) fixInline(m.target);
       });
       if (restyle || document.styleSheets.length !== seen) build();
+      netSoon();
     });
     mo.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
   }
@@ -152,8 +189,8 @@
     var d = isDark();
     root.classList.toggle('aq-dark', d);
     themeMeta(d);
-    if (d) { build(); watch(); if (document.body) fixTree(document.body); }
-    else if (styleEl && styleEl.parentNode) { /* نخلي الورقة؛ ما تشتغل إلا مع .aq-dark */ }
+    if (d) { build(); watch(); if (document.body) fixTree(document.body); netSoon(); }
+    else netUndo();
     try { window.dispatchEvent(new CustomEvent('aqtheme', { detail: { dark: d } })); } catch (e) { }
   }
   window.AQTHEME = {
@@ -167,6 +204,6 @@
   root.classList.toggle('aq-dark', isDark());
   if (isDark()) { var s0 = document.createElement('style'); s0.textContent = BASE; (document.head || root).appendChild(s0); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply); else apply();
-  window.addEventListener('load', function () { if (isDark()) build(); });
+  window.addEventListener('load', function () { if (isDark()) { build(); netSoon(); } });
   window.addEventListener('storage', function (e) { if (e.key === KEY) apply(); });
 })();
