@@ -169,7 +169,8 @@ textarea.field{min-height:92px;resize:vertical}
 .ring.ended .fg{stroke:var(--bad)}
 .clock{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-d);font-size:2.3rem;font-weight:700;font-variant-numeric:tabular-nums}
 .tctl>.btn{flex:1 1 120px;min-height:50px;white-space:nowrap;font-size:.98rem;padding-inline:10px}
-.ring.paused{margin-bottom:22px}
+.ring.paused,.ring.tup{margin-bottom:22px}
+.ring.tup::after{content:'Time’s up ⏰';position:absolute;left:-40px;right:-40px;bottom:-24px;text-align:center;font-size:.9rem;font-weight:800;color:#C81E1E}
 .ring.paused::after{content:'⏸️ Paused';position:absolute;left:0;right:0;bottom:-24px;text-align:center;font-size:.85rem;font-weight:700;color:#6b7280}
 .tcontrols{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
 .timeup{border:1px solid var(--bad);color:#9E1219;background:rgba(211,47,47,.12);border-radius:12px;padding:10px 14px;font-weight:700;text-align:center}
@@ -579,6 +580,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
 .lkit[data-act]:active,.rkit[data-act]:active{transform:scale(.94)}
 </style>
 <link rel="icon" href="icon-192.png">
+<script src="aq-theme.js"></script>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -956,7 +958,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const p = G.players.find(x => x.id === id);
       if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
       if (d.room !== G.code) return;
-      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 33) {
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && !nameTaken(d.name, id) && G.players.length < 33) {
         G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
     });
@@ -1044,19 +1046,21 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     if (!isHost() || !G) return;
     if (G.players.some(p => isBot(p.id))) hostStep();
     const t = G.phase === 'market' && G.mk ? G.mk.endsAt : (G.phase === 'cup' && G.cup ? G.cup.endsAt : 0);
-    if (t && Date.now() >= t) { beep(); if (autoStep(true)) { publish(); render(); } }
+    /* خلص الوقت: ما يمشي لحاله، المضيف يضغط زر المرحلة الجاية */
+    const tk = G.phase === 'market' && G.mk ? G.mk.key + G.mk.stage : (G.cup ? 'cup' + G.cup.mi + G.cup.stage : '');
+    if (t && Date.now() >= t && G.tu !== tk) { G.tu = tk; beep(); publish(); render(); }
   }
   /* moves timed stages on when time is up (or force), and untimed ones when everyone is ready */
   function autoStep(force) {
     const n = G.players.length, done = progList().length;
     if (G.phase === 'market' && G.mk) {
-      const mk = G.mk, up = force || (mk.endsAt && Date.now() >= mk.endsAt);
+      const mk = G.mk, up = !!force;
       if (mk.stage === 'list' && (up || done >= n)) { openBidding(); return true; }
       if (mk.stage === 'bid' && (up || done >= n)) { resolveMarket(); return true; }
       if (mk.stage === 'review' && (up || done >= n)) { nextMarket(); return true; }
     }
     if (G.phase === 'cup' && G.cup && G.cup.stage === 'vote') {
-      const up = force || (G.cup.endsAt && Date.now() >= G.cup.endsAt);
+      const up = !!force;
       if (up || (voters(curMatch()).length && done >= voters(curMatch()).length)) { closeVote(); return true; }
     }
     return false;
@@ -1742,7 +1746,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (!U.code || U.view === 'home') html += homeView();
       else if (!G) html += '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>Connecting to room ' + esc(U.code) + '</h2></section><button class="btn ghost" data-act="leaveNow">Cancel</button>';
       else if (U.view === 'join') html += joinView();
-      else if (U.view === 'wait') html += waitView();
+      else if (U.view === 'wait') html += (G.phase === 'lobby' && !inRoom(ME_ID) && takenStop() ? joinView() : waitView());
       else if (U.view === 'spect') html += spectView();
       else if (U.view === 'kicked') html += kickedView();
       else html += gameView();
@@ -1769,6 +1773,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const fg = el.querySelector('.fg'); if (fg) fg.style.strokeDashoffset = String(326.7 * (1 - Math.min(1, r / d)));
       el.classList.toggle('low', r <= 10);
       el.classList.toggle('paused', +el.dataset.end - Date.now() > 1e9);
+      el.classList.toggle('tup', r <= 0 && !(+el.dataset.end - Date.now() > 1e9));
     });
   }
   setInterval(tickUI, 250);
@@ -1859,7 +1864,12 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
     }
   }
+  /* الاسم أي طول، بس ما يتكرر بنفس الغرفة */
+  function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function nameTaken(n, id) { const k = normName(n); return !!(G && k && G.players.some(p => p.id !== id && normName(p.name) === k)); }
+  function takenStop() { const nm = U.name.trim(); if (!nameTaken(nm, ME_ID)) return false; U.err = 'The name “' + nm + '” is already taken in this room. Pick another name.'; U.view = 'join'; try { if (typeof toast === 'function') toast(U.err); } catch (e) { } return true; }
   async function sendJoin() {
+    if (takenStop()) { render(); return; }
     ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), at: Date.now(), hb: Date.now() });
     lsSet({ name: U.name.trim() });
     U.view = 'wait';

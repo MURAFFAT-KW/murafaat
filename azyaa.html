@@ -189,7 +189,15 @@ html.aqguest .backbtn.hub{display:none!important}
 .notice .nbox{background:#fff;border:3px solid #DE0921;border-radius:22px;padding:24px 20px;max-width:520px;display:grid;gap:12px;color:#111}
 .notice h2{color:#111;font-size:1.35rem;text-align:center}
 .notice p{color:#111;line-height:1.85;font-size:1rem}
-.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}</style>
+.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}.edsplit{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:10px;align-items:start}
+.edopts{min-width:0}.edopts .card{padding:10px 10px 12px;margin-bottom:10px}.edopts h3{font-size:15px;margin:0 0 8px}
+.edopts .chips{gap:6px}.edopts .chip{font-size:13px;padding:6px 10px;min-height:34px}.edopts .swatches{gap:6px}
+.edprev{position:sticky;top:calc(72px + env(safe-area-inset-top,0px));min-width:0;align-self:start}
+.edprev .preview{margin:0 0 8px;padding:6px}.edprev .preview svg{height:min(46vh,320px)!important;width:100%!important;max-width:100%}
+.edprice{padding:8px!important;display:grid;gap:6px;justify-items:center;text-align:center}.edprice>span{font-weight:800;font-size:14px}
+.edprice .stepper{gap:6px}.edprice .stepper button{width:38px;height:38px;min-height:38px;font-size:18px}.edprice .stepper .v{min-width:56px;font-size:15px}
+@media (min-width:760px){.edsplit{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}.edprev .preview svg{height:420px!important}}
+</style>
 <style id="aq-pro-azyaa">
 .preview{background:radial-gradient(120% 90% at 50% 20%,#fff 0,#f6f0fb 55%,#ece2f6 100%)!important;border:1px solid #ece4f4;box-shadow:inset 0 -18px 30px rgba(123,47,190,.05)}
 .preview svg{height:300px!important;filter:drop-shadow(0 6px 10px rgba(60,30,90,.12))}
@@ -225,6 +233,7 @@ html.aqguest .backbtn.hub{display:none!important}
 <style id="aq-pro-polish">.btn,button{transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}.btn:active,button:active{transform:scale(.97)}.btn.primary,.btn.xl{box-shadow:0 8px 18px -10px rgba(18,32,58,.45),inset 0 -3px 0 rgba(0,0,0,.12)}</style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="أقنعني"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script src="aq-pro.js"></script>
 <link rel="icon" href="icon-192.png">
+<script src="aq-theme.js"></script>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -442,7 +451,7 @@ function hostStep() {
     const p = G.players.find(x => x.id === id);
     if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
     if (d.room !== G.code) return;
-    if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 26) { G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true; }
+    if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && !nameTaken(d.name, id) && G.players.length < 26) { G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true; }
     else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
   });
   Object.keys(INP).forEach(id => {
@@ -612,7 +621,7 @@ function render() {
     if (!U.code || U.view === 'home') html += homeView();
     else if (!G) html += `<section class="card" style="text-align:center"><div class="spin"></div><h3>${L('جاري الاتصال بالغرفة', 'Connecting to room')} ${esc(U.code)}</h3></section><button class="btn ghost" data-act="leaveNow">${L('إلغاء', 'Cancel')}</button>`;
     else if (U.view === 'join') html += joinView();
-    else if (U.view === 'wait') html += waitView();
+    else if (U.view === 'wait') html += (G.phase === 'lobby' && !inRoom(ME_ID) && takenStop() ? joinView() : waitView());
     else if (U.view === 'spect') html += spectView();
     else if (U.view === 'kicked') html += kickedView();
     else html += (G.phase === 'lobby' ? lobbyView() : GAME.view());
@@ -725,7 +734,12 @@ async function openRoom(code, autoJoin) {
     if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
   }
 }
+/* الاسم أي طول، بس ما يتكرر بنفس الغرفة */
+function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+function nameTaken(n, id) { const k = normName(n); return !!(G && k && G.players.some(p => p.id !== id && normName(p.name) === k)); }
+function takenStop() { const nm = U.name.trim(); if (!nameTaken(nm, ME_ID)) return false; U.err = 'الاسم «' + nm + '» مستخدم بالغرفة، اختار اسم ثاني.'; U.view = 'join'; try { if (typeof toast === 'function') toast(U.err); } catch (e) { } return true; }
 async function sendJoin() {
+  if (takenStop()) { render(); return; }
   ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), at: Date.now() });
   lsSet({ name: U.name.trim() });
   U.view = 'wait'; await saveMe(); render();
@@ -938,8 +952,11 @@ function storeHTML(st, name, act) {
 const P_ = CONFIG.prices;
 function spentOf(m) { return (m.perks || []).length * P_.perk + (m.types || []).length * P_.clothingType + (m.colors || []).length * P_.fabricColor + (m.fabrics || []).length * P_.fabricType + (m.store && m.store.bg ? P_.storeBg : 0) + (m.store && m.store.border ? P_.storeBorder : 0); }
 const stOf = id => (G.stores && G.stores[id]) || null;
-const capitalOf = id => { const s = stOf(id); const spent = s ? s.spent : spentOf(inp(id)); return CONFIG.startCapital - spent + ((G.salesMoney || {})[id] || 0); };
-const walletOf = id => (G.wallet && G.wallet[id] != null) ? G.wallet[id] : CONFIG.shoppingWallet;
+/* رأس المال ومحفظة التسوق يحددهم المضيف بالإعدادات */
+function CAP() { return (G && G.settings && +G.settings.capital) || 100; }
+function WAL() { return (G && G.settings && +G.settings.wallet) || 50; }
+const capitalOf = id => { const s = stOf(id); const spent = s ? s.spent : spentOf(inp(id)); return CAP() - spent + ((G.salesMoney || {})[id] || 0); };
+const walletOf = id => (G.wallet && G.wallet[id] != null) ? G.wallet[id] : WAL();
 
 /* ---------- تعريف اللعبة ---------- */
 const GAME = {
@@ -948,23 +965,23 @@ const GAME = {
   intro: { ar: 'صمّم تشكيلتك وجهّز متجرك واعرض قطعتك المميزة.<br>أقنع الباقين يزورون متجرك ويشترون منك.<br>الأكثر إقناعًا وإبداعًا يفوز.', en: 'Design your collection, set up your store and show your signature piece.<br>Convince the others to visit your store and buy from you.<br>The most persuasive and creative wins.' },
   lead: { ar: 'كل لاعب على تلفونه. صمّم تشكيلتك وأقنع ربعك يشترون من متجرك.', en: 'Everyone on their own phone. Design your collection and convince your friends to buy from your store.' },
   timer: { min: 30, max: 300, step: 30 },
-  defaults: { hostPlays: 1, players: 3, buyTime: 120, designTime: 300, buildTime: 120, talkRounds: 1, speakers: 2, talkTime: 60, shopRounds: 2, shopTime: 90, voteTime: 60 },
-  limits: { buyTime: [30, 300, 30], designTime: [30, 300, 30], buildTime: [30, 300, 30], talkTime: [30, 300, 30], shopTime: [30, 300, 30], voteTime: [30, 300, 30], talkRounds: [1, 5, 1], speakers: [1, 5, 1], shopRounds: [1, 5, 1] },
+  defaults: { hostPlays: 1, players: 3, capital: 100, wallet: 50, buyTime: 120, designTime: 300, buildTime: 120, talkRounds: 1, speakers: 2, talkTime: 60, shopRounds: 2, shopTime: 90, voteTime: 60 },
+  limits: { capital: [50, 500, 10], wallet: [10, 300, 10], buyTime: [30, 300, 30], designTime: [30, 300, 30], buildTime: [30, 300, 30], talkTime: [30, 300, 30], shopTime: [30, 300, 30], voteTime: [30, 300, 30], talkRounds: [1, 5, 1], speakers: [1, 5, 1], shopRounds: [1, 5, 1] },
   afterStep() { G.settings.speakers = Math.min(G.settings.speakers, G.settings.players); },
   settingsView() {
     return timeRow('buyTime', L('وقت شراء المواد الأولية', 'Raw materials time')) + timeRow('designTime', L('وقت التصميم', 'Design time')) + timeRow('buildTime', L('وقت بناء المشروع', 'Project building time')) +
       stp('talkRounds', 1, 5, { label: L('عدد جولات التحدث', 'Talk rounds') }) + stp('speakers', 1, Math.min(5, G.settings.players), { label: L('عدد المتحدثين بالجولة (عشوائي)', 'Speakers per round (random)') }) + timeRow('talkTime', L('وقت التحدث والإقناع', 'Talk time')) +
       stp('shopRounds', 1, 5, { label: L('عدد جولات التسوق', 'Shopping rounds') }) + timeRow('shopTime', L('وقت التسوق', 'Shopping time')) + timeRow('voteTime', L('وقت التصويت', 'Voting time')) +
-      `<p class="sub">${L('رأس المال', 'Capital')} ${money(CONFIG.startCapital)} · ${L('محفظة التسوق', 'Shopping wallet')} ${money(CONFIG.shoppingWallet)} <span class="badge">${L('مؤقت', 'temporary')}</span></p>`;
+      stp('capital', 50, 500, { label: L('رأس المال لكل لاعب', 'Capital per player'), fmt: money }) + stp('wallet', 10, 300, { label: L('محفظة التسوق لكل لاعب', 'Shopping wallet per player'), fmt: money });
   },
-  settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · ${s.talkRounds} ${L('جولات تحدث', 'talk rounds')} · ${s.shopRounds} ${L('جولات تسوق', 'shopping rounds')} · ${L('رأس المال', 'capital')} ${money(CONFIG.startCapital)}`; },
+  settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · ${s.talkRounds} ${L('جولات تحدث', 'talk rounds')} · ${s.shopRounds} ${L('جولات تسوق', 'shopping rounds')} · ${L('رأس المال', 'capital')} ${money(CAP())}`; },
   freshExtra: () => ({ stores: {}, wallet: {}, visits: {}, sales: {}, salesMoney: {}, bought: {}, votes: {}, talk: null, shop: null, results: null, extraUsed: {}, spoken: [] }),
   resetMine(m) { Object.assign(m, { perks: [], types: [], colors: [], fabrics: [], store: { bg: null, border: null }, designs: Array(CONFIG.designsCount).fill(null), featured: null, brand: { name: '', desc: '' }, discount: 0, done: {}, vote: null }); },
   viewKey: () => (G.talk ? 't' + G.talk.round + G.talk.idx : '') + (G.shop ? 's' + G.shop.round : '') + (U.edit != null ? 'e' + U.edit : ''),
   start() {
     phaseTo(() => {
       Object.assign(G, GAME.freshExtra());
-      G.players.forEach(p => { G.wallet[p.id] = CONFIG.shoppingWallet; G.visits[p.id] = 0; G.sales[p.id] = 0; G.salesMoney[p.id] = 0; G.bought[p.id] = []; G.votes[p.id] = 0; });
+      G.players.forEach(p => { G.wallet[p.id] = WAL(); G.visits[p.id] = 0; G.sales[p.id] = 0; G.salesMoney[p.id] = 0; G.bought[p.id] = []; G.votes[p.id] = 0; });
       G.phase = 'buy'; setTimer(G.settings.buyTime);
     });
   },
@@ -1081,10 +1098,10 @@ ACT.voteEnd = H(() => {
 });
 
 /* ---------- واجهات اللاعب ---------- */
-const capBar = () => `<div class="moneybar"><span class="money">💰 ${L('رأس المال', 'Capital')}: ${money(G.stores && G.stores[ME_ID] ? capitalOf(ME_ID) : CONFIG.startCapital - spentOf(mine()))}</span><span class="money alt">👛 ${L('محفظة التسوق', 'Shopping wallet')}: ${money(walletOf(ME_ID))}</span></div>`;
+const capBar = () => `<div class="moneybar"><span class="money">💰 ${L('رأس المال', 'Capital')}: ${money(G.stores && G.stores[ME_ID] ? capitalOf(ME_ID) : CAP() - spentOf(mine()))}</span><span class="money alt">👛 ${L('محفظة التسوق', 'Shopping wallet')}: ${money(walletOf(ME_ID))}</span></div>`;
 const doneBtn = () => { const d = (mine().done || {})[G.phase] === G.gameNo; return d ? `<div class="note" style="text-align:center">✓ ${L('سجّلنا إنك خلصت. تقدر تعدّل لين المضيف ينهي المرحلة.', 'Marked as done. You can still edit until the host ends this stage.')}</div>` : `<button class="btn ghost" data-act="markDone">✓ ${L('خلصت', 'I’m done')}</button>`; };
 ACT.markDone = () => { const m = mine(); m.done = m.done || {}; m.done[G.phase] = G.gameNo; saveMe(); };
-function spendOk(cost) { if (CONFIG.startCapital - spentOf(mine()) < cost) { toast(L('رأس المال ما يكفي', 'Not enough capital')); return false; } return true; }
+function spendOk(cost) { if (CAP() - spentOf(mine()) < cost) { toast(L('رأس المال ما يكفي', 'Not enough capital')); return false; } return true; }
 function perksView() {
   const m = mine();
   return `<h2>${L('المزايا', 'Perks')}</h2><p class="sub">${L('تقدر تشتري مزايا قبل المواد الأولية.', 'You can buy perks before the raw materials.')} <span class="badge">${L('تجريبي — غير نهائي', 'Trial — not final')}</span></p>${capBar()}
@@ -1144,11 +1161,18 @@ function pieceEd(part) {
   <div class="chips">${PATTERNS.map(p => `<button class="chip ${x.pattern === p.id ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="pattern" data-v="${p.id}">${N(p.name)}</button>`).join('')}</div>` : ''}`;
 }
 function editorView() {
-  return `<button class="mini" data-act="cancelD">${BACK} ${L('التصاميم', 'Designs')}</button><div class="preview">${designSVG(U.dd)}</div>
+  /* التصميم والخيارات جنب بعض: تختار وتشوف بنفس الوقت. بالعربي التصميم يسار والخيارات يمين، وبالإنجليزي العكس.
+     (الخيارات أول بالترتيب، فتصير يمين بالعربي ويسار بالإنجليزي تلقائيًا) والسعر تحت التصميم */
+  return `<button class="mini" data-act="cancelD">${BACK} ${L('التصاميم', 'Designs')}</button>
+  <div class="edsplit">
+  <div class="edopts">
   <div class="card"><h3>${L('اسم التصميم', 'Design name')}</h3><input class="field" id="dname" data-bind="dname" maxlength="20" value="${esc(U.draft.name || '')}"></div>
   <div class="card"><h3>${L('القطعة الأساسية', 'Main piece')}</h3>${pieceEd('base')}</div>
   <div class="card"><h3>${L('قطعة إضافية', 'Extra piece')} <span class="assume">${L('اختيارية', 'optional')}</span></h3>${pieceEd('extra')}</div>
-  <div class="card"><div class="row"><span>${L('سعر البيع', 'Price')}</span><div class="stepper"><button data-act="price" data-v="1">+</button><span class="v">${money(U.dd.price)}</span><button data-act="price" data-v="-1">−</button></div></div></div>
+  </div>
+  <div class="edprev"><div class="preview">${designSVG(U.dd)}</div>
+  <div class="card edprice"><span>${L('سعر البيع', 'Price')}</span><div class="stepper"><button data-act="price" data-v="1">+</button><span class="v">${money(U.dd.price)}</span><button data-act="price" data-v="-1">−</button></div></div></div>
+  </div>
   <button class="btn" data-act="saveD">${L('حفظ التصميم', 'Save design')}</button>${mine().designs[U.edit] ? `<button class="btn ghost" data-act="delD">${L('مسح التصميم', 'Delete design')}</button>` : ''}`;
 }
 ACT.feat = d => { mine().featured = +d.i; saveMe(); };

@@ -268,6 +268,7 @@ html.aqguest .backbtn.hub{display:none!important}
 <link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="أقنعني"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script src="aq-pro.js"></script>
 <style id="aq-pro-map">.mapcard .aqmap{width:100%;height:auto;display:block;border-radius:14px;margin-top:6px}.maplg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:.82rem}.maplg span{display:inline-flex;align-items:center;gap:5px}.maplg i{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
 <link rel="icon" href="icon-192.png">
+<script src="aq-theme.js"></script>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -485,7 +486,7 @@ function hostStep() {
     const p = G.players.find(x => x.id === id);
     if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
     if (d.room !== G.code) return;
-    if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 26) { G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true; }
+    if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && !nameTaken(d.name, id) && G.players.length < 26) { G.players.push({ id, name: uniqueName(d.name, id), at: d.at || 0 }); ch = true; }
     else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) { p.name = uniqueName(d.name, id); p.at = d.at; ch = true; }
   });
   Object.keys(INP).forEach(id => {
@@ -654,7 +655,7 @@ function render() {
     if (!U.code || U.view === 'home') html += homeView();
     else if (!G) html += `<section class="card" style="text-align:center"><div class="spin"></div><h3>${L('جاري الاتصال بالغرفة', 'Connecting to room')} ${esc(U.code)}</h3></section><button class="btn ghost" data-act="leaveNow">${L('إلغاء', 'Cancel')}</button>`;
     else if (U.view === 'join') html += joinView();
-    else if (U.view === 'wait') html += waitView();
+    else if (U.view === 'wait') html += (G.phase === 'lobby' && !inRoom(ME_ID) && takenStop() ? joinView() : waitView());
     else if (U.view === 'spect') html += spectView();
     else if (U.view === 'kicked') html += kickedView();
     else html += (G.phase === 'lobby' ? lobbyView() : GAME.view());
@@ -767,7 +768,12 @@ async function openRoom(code, autoJoin) {
     if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
   }
 }
+/* الاسم أي طول، بس ما يتكرر بنفس الغرفة */
+function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+function nameTaken(n, id) { const k = normName(n); return !!(G && k && G.players.some(p => p.id !== id && normName(p.name) === k)); }
+function takenStop() { const nm = U.name.trim(); if (!nameTaken(nm, ME_ID)) return false; U.err = 'The name “' + nm + '” is already taken in this room. Pick another name.'; U.view = 'join'; try { if (typeof toast === 'function') toast(U.err); } catch (e) { } return true; }
 async function sendJoin() {
+  if (takenStop()) { render(); return; }
   ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), at: Date.now() });
   lsSet({ name: U.name.trim() });
   U.view = 'wait'; await saveMe(); render();
@@ -1134,7 +1140,7 @@ function myBar() {
 }
 ACT.offices = () => { U.modal = { type: 'offices' }; };
 function officesModal() {
-  return `<h3>📊 ${L('المكاتب', 'Offices')}</h3>${G.players.map(p => `<div class="orow"><b>${esc(office(p.id))}${isSusp(p.id) ? ' ⛔' : ''}${isProt(p.id) ? ' 🛡' : ''}</b><span>💰 ${money(G.budget[p.id] || 0)}</span><span>🏠 ${owned(p.id).length}</span><span>✨ ${(G.perks[p.id] || []).filter(k => !(G.used[p.id] || []).includes(k)).length}/${(G.perks[p.id] || []).length}</span></div>`).join('')}
+  return `<h3>📊 ${L('المكاتب', 'Offices')}</h3>${G.players.map(p => `<div class="orow"><b>${esc(office(p.id))}${isSusp(p.id) ? ' ⛔' : ''}${isProt(p.id) ? ' 🛡' : ''}</b><span>💰 ${p.id === ME_ID ? money(G.budget[p.id] || 0) : L('سرية 🔒', 'secret 🔒')}</span><span>🏠 ${owned(p.id).length}</span><span>✨ ${(G.perks[p.id] || []).filter(k => !(G.used[p.id] || []).includes(k)).length}/${(G.perks[p.id] || []).length}</span></div>`).join('')}
   <p class="sub">${L('✨ = المزايا الباقية. أنواعها سرية.', '✨ = perks left. Their types are secret.')}</p><button class="btn" data-act="closeModal">${L('تمام', 'OK')}</button>`;
 }
 const doneBtn = () => { const d = (mine().done || {})[G.phase] === G.gameNo; return d ? `<div class="note" style="text-align:center">✓ ${L('سجّلنا إنك خلصت. تقدر تعدّل لين المضيف ينهي المرحلة.', 'Marked as done. You can edit until the host ends this stage.')}</div>` : `<button class="btn ghost" data-act="markDone">✓ ${L('خلصت', 'I’m done')}</button>`; };

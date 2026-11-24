@@ -170,7 +170,8 @@ textarea.field{min-height:92px;resize:vertical}
 .ring.ended .fg{stroke:var(--bad)}
 .clock{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-d);font-size:2.3rem;font-weight:700;font-variant-numeric:tabular-nums}
 .tctl>.btn{flex:1 1 120px;min-height:50px;white-space:nowrap;font-size:.98rem;padding-inline:10px}
-.ring.paused{margin-bottom:22px}
+.ring.paused,.ring.tup{margin-bottom:22px}
+.ring.tup::after{content:'Time’s up ⏰';position:absolute;left:-40px;right:-40px;bottom:-24px;text-align:center;font-size:.9rem;font-weight:800;color:#C81E1E}
 .ring.paused::after{content:'⏸️ Paused';position:absolute;left:0;right:0;bottom:-24px;text-align:center;font-size:.85rem;font-weight:700;color:#6b7280}
 .tcontrols{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
 .timeup{border:1px solid var(--bad);color:#9E1219;background:rgba(211,47,47,.12);border-radius:12px;padding:10px 14px;font-weight:700;text-align:center}
@@ -390,6 +391,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
 <style id="aq-pro-polish">.btn,button{transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}.btn:active,button:active{transform:scale(.97)}.btn.primary,.btn.xl{box-shadow:0 8px 18px -10px rgba(18,32,58,.45),inset 0 -3px 0 rgba(0,0,0,.12)}</style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="أقنعني"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script src="aq-pro.js"></script>
 <link rel="icon" href="icon-192.png">
+<script src="aq-theme.js"></script>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -463,7 +465,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const PMIN = 1, PMAX = 20;
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const PERKS = [
-    { id: 'half', name: '50% Sale', desc: 'Once prices are revealed, cut your price in half.', when: 'After prices are revealed' },
+    { id: 'half', name: 'Half Price', desc: 'During the pitch, halve your own price in front of the buyers. Your rival’s price stays the same.', when: 'During the pitch' },
     { id: 'up', name: 'Raise rival’s price', desc: 'Raise your rival’s price by up to 3 KD, making their item pricier.', when: 'After prices are revealed' },
     { id: 'down', name: 'Lower rival’s price', desc: 'Lower your rival’s price by up to 3 KD, so they earn less per sale.', when: 'After prices are revealed' },
     { id: 'rep', name: 'Sales rep', desc: 'Pull someone from the crowd to help you pitch; they can’t buy this round.', when: 'After prices are revealed' },
@@ -538,7 +540,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     return G.players.slice().sort((x, y) => (score(y.id) - score(x.id)) || (E(y.id).items.length - E(x.id).items.length) || (E(y.id).w - E(x.id).w));
   }
   /* ready-made items for the “ready-made items” option */
-  const READY = ['Phone', 'Wristwatch', 'Pillow', 'TV remote', 'Phone charger', 'Coffee mug', 'Sunglasses', 'Headphones', 'Wallet', 'Pen', 'Notebook', 'Umbrella', 'Backpack', 'Perfume', 'Lighter', 'Car key', 'Blanket', 'Chair', 'Desk lamp', 'Small fan', 'Tea flask', 'Water bottle', 'Tissue box', 'Mirror', 'Comb', 'Toothbrush', 'Bar of soap', 'Towel', 'Sandals', 'Sneakers', 'Cap', 'Ghutra', 'Wall clock', 'Arabic coffee pot', 'Coffee cup', 'Plate', 'Spoon', 'Frying pan', 'Blender', 'Book', 'Laptop', 'Tablet', 'Camera', 'Remote that doesn’t work', 'One flip-flop', 'Battery', 'Broken charger cable', 'Keychain', 'Empty bag', 'Chewing gum', 'Chocolate', 'Box of dates', 'Incense', 'Incense burner', 'Prayer mat', 'Fake flower', 'Kids’ toy', 'Football', 'Losing lottery ticket', 'Pebble from the beach', 'Small air conditioner', 'Rug', 'Smartwatch', 'Prescription glasses', 'Leather wallet', 'Moisturizer', 'Scented candle', 'Coffee machine', 'Bluetooth speaker', 'Power bank', 'Keyboard', 'Mouse', 'USB stick', 'Phone stand', 'Travel pillow', 'Suitcase', 'Notepad', 'Coloured pencils', 'Calculator', 'Ruler', 'Istikana tea glass', 'Serving tray', 'Bowl', 'Fancy fountain pen', 'Hair clip', 'Necktie', 'Socks', 'Gloves', 'Car charger', 'Car air freshener', 'Phone case', 'AC remote', 'Old calendar', 'Chipped mug', 'Pen that doesn’t write', 'Stopped clock', 'Key that opens nothing', 'Electricity bill', 'Empty box', 'Safety pin', 'Plastic spoon', 'Hourglass', 'Compass', 'Old map', 'Rare stamp', 'Old coin', 'Sharpened pencil', 'Eraser', 'Stapler', 'Scissors', 'Sticky tape', 'Fridge magnet', 'Poster', 'Photo frame', 'Photo album', 'Prayer beads', 'Amber prayer beads', 'Oud oil', 'Ring', 'Bracelet', 'Necklace', '3D glasses', 'Game controller', 'Cassette tape', 'CD', 'Old radio', 'Retro game console', 'Rubik’s cube', 'Chess set', 'Dice', 'Deck of cards', 'Basketball', 'Tennis racket', 'Skipping rope', 'Dumbbell', 'Yoga mat', 'Whistle', 'Silver medal', 'Small trophy', 'Team shirt', 'Sports cap', 'Small tent', 'Lantern', 'Torch', 'Fire lighter', 'Camping chair', 'Firewood', 'Grill', 'Skewer', 'Mini fridge', 'Water cooler', 'Kitchen knife', 'Chopping board', 'Pressure cooker', 'Toaster', 'Kitchen scale', 'Coffee grinder', 'Teapot', 'Apron', 'Juice glass', 'Broom', 'Mop', 'Bucket', 'Handheld vacuum', 'Clothes hanger', 'Iron', 'Laundry basket', 'Clothes peg', 'Curtain', 'Cushion', 'Cactus plant', 'Plant pot', 'Seeds', 'Watering can', 'Fish tank', 'Bird cage', 'Cat collar', 'Dog bone', 'Ant farm', 'Dinosaur model', 'Small telescope', 'Microscope', 'Globe', 'Alarm clock', 'Thermometer', 'Stethoscope', 'First aid kit', 'Face mask', 'Hand sanitiser', 'Swimming goggles', 'Pool float', 'Beach umbrella', 'Beach towel', 'Sunscreen', 'Seashell', 'Fishing rod', 'Fishing bait', 'Paddle', 'Paper boat', 'Message in a bottle'];
+  const READY = ['Phone', 'Wristwatch', 'Pillow', 'TV remote', 'Phone charger', 'Coffee mug', 'Sunglasses', 'Headphones', 'Wallet', 'Pen', 'Notebook', 'Umbrella', 'Backpack', 'Perfume', 'Lighter', 'Car key', 'Blanket', 'Chair', 'Desk lamp', 'Small fan', 'Tea flask', 'Water bottle', 'Tissue box', 'Mirror', 'Comb', 'Toothbrush', 'Bar of soap', 'Towel', 'Sandals', 'Sneakers', 'Cap', 'Ghutra', 'Wall clock', 'Arabic coffee pot', 'Coffee cup', 'Plate', 'Spoon', 'Frying pan', 'Blender', 'Book', 'Laptop', 'Tablet', 'Camera', 'Remote that doesn’t work', 'One flip-flop', 'Battery', 'Broken charger cable', 'Keychain', 'Empty bag', 'Chewing gum', 'Chocolate', 'Box of dates', 'Incense', 'Incense burner', 'Prayer mat', 'Fake flower', 'Kids’ toy', 'Football', 'Losing lottery ticket', 'Pebble from the beach', 'Small air conditioner', 'Rug', 'Smartwatch', 'Prescription glasses', 'Leather wallet', 'Moisturizer', 'Scented candle', 'Coffee machine', 'Bluetooth speaker', 'Power bank', 'Keyboard', 'Mouse', 'USB stick', 'Phone stand', 'Travel pillow', 'Suitcase', 'Notepad', 'Coloured pencils', 'Calculator', 'Ruler', 'Istikana tea glass', 'Serving tray', 'Bowl', 'Fancy fountain pen', 'Hair clip', 'Necktie', 'Socks', 'Gloves', 'Car charger', 'Car air freshener', 'Phone case', 'AC remote', 'Old calendar', 'Chipped mug', 'Pen that doesn’t write', 'Stopped clock', 'Key that opens nothing', 'Electricity bill', 'Empty box', 'Safety pin', 'Plastic spoon', 'Hourglass', 'Compass', 'Old map', 'Rare stamp', 'Old coin', 'Sharpened pencil', 'Eraser', 'Stapler', 'Scissors', 'Sticky tape', 'Fridge magnet', 'Poster', 'Photo frame', 'Photo album', 'Prayer beads', 'Amber prayer beads', 'Oud oil', 'Ring', 'Bracelet', 'Necklace', '3D glasses', 'Game controller', 'Cassette tape', 'CD', 'Old radio', 'Retro game console', 'Rubik’s cube', 'Chess set', 'Dice', 'Deck of cards', 'Basketball', 'Tennis racket', 'Skipping rope', 'Dumbbell', 'Yoga mat', 'Whistle', 'Silver medal', 'Small trophy', 'Team shirt', 'Sports cap', 'Small tent', 'Lantern', 'Torch', 'Fire lighter', 'Camping chair', 'Firewood', 'Grill', 'Skewer', 'Mini fridge', 'Water cooler', 'Kitchen knife', 'Chopping board', 'Pressure cooker', 'Toaster', 'Kitchen scale', 'Coffee grinder', 'Teapot', 'Apron', 'Juice glass', 'Broom', 'Mop', 'Bucket', 'Handheld vacuum', 'Clothes hanger', 'Laundry basket', 'Clothes peg', 'Curtain', 'Cushion', 'Cactus plant', 'Plant pot', 'Seeds', 'Watering can', 'Fish tank', 'Bird cage', 'Cat collar', 'Dog bone', 'Ant farm', 'Dinosaur model', 'Small telescope', 'Microscope', 'Globe', 'Alarm clock', 'Thermometer', 'Stethoscope', 'First aid kit', 'Face mask', 'Hand sanitiser', 'Swimming goggles', 'Pool float', 'Beach umbrella', 'Beach towel', 'Sunscreen', 'Seashell', 'Fishing rod', 'Fishing bait', 'Paddle', 'Paper boat', 'Message in a bottle'];
   const SRC = { players: 'Players write items', ready: 'Ready-made items' };
   function addReady() {
     const seen = new Set(G.pool.map(x => norm(x.t)));
@@ -711,7 +713,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const p = G.players.find(x => x.id === id);
       if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
       if (d.room !== G.code) return;
-      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 26) {
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && !nameTaken(d.name, id) && G.players.length < 26) {
         G.players.push({ id, name: uniqueName(d.name, id), gender: d.gender === 'f' ? 'f' : 'm', at: d.at || 0 });
         ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) {
@@ -757,7 +759,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function hostTickFn() {
     if (!isHost() || !G || G.phase !== 'round' || !G.cur) return;
     const c = G.cur;
-    if (c.endsAt && Date.now() >= c.endsAt) { beep(); if (roundStep(true)) { publish(); render(); } }
+    /* خلص الوقت: ما يمشي لحاله، المضيف يضغط زر المرحلة الجاية */
+    if (c.endsAt && Date.now() >= c.endsAt && c.tu !== c.stage) { c.tu = c.stage; beep(); publish(); render(); }
   }
   function applyReq(id, r) {
     const c = G.cur;
@@ -785,9 +788,10 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (!(c.n && c.n[os] > 0)) return { ok: false, why: 'Your rival didn’t sell' };
       return { ok: true, side };
     }
+    if (id === 'half') { if (c.stage !== 'pitch1' && c.stage !== 'pitch2') return { ok: false, why: 'During the pitch' }; if (c.prices[side] <= 0.5) return { ok: false, why: 'Your price is already the lowest' }; return { ok: true, side }; }
     if (!PRICE_STAGES.includes(c.stage)) return { ok: false, why: 'After prices are revealed' };
     if (id === 'half' && c.prices[side] <= 0.5) return { ok: false, why: 'Your price is already the lowest' };
-    if (id === 'up' && c.prices[os] >= PMAX) return { ok: false, why: 'Their price is already the highest' };
+    if (id === 'up' && c.prices[os] >= PMAX) return { ok: false, why: 'Not possible now' };
     if (id === 'down' && c.prices[os] <= 0.5) return { ok: false, why: 'Their price is already the lowest' };
     if (id === 'rep') {
       if (c.help && c.help[side]) return { ok: false, why: 'You already have a rep' };
@@ -815,15 +819,15 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       msg = me + ' changed rival: ' + op + ' is out and ' + P(nw).name + ' is in.';
     } else if (r.id === 'half') {
       const o = c.prices[side]; c.prices[side] = half(o / 2);
-      msg = me + ' used 50% Sale: from ' + kd(o) + ' to ' + kd(c.prices[side]) + '.';
+      msg = me + ' used Half Price: their price is now halved in front of you.';
     } else if (r.id === 'up') {
       const amt = Math.min(3, Math.max(1, Math.round(+r.amt || 3))), o = c.prices[os];
       c.prices[os] = Math.min(PMAX, o + amt);
-      msg = me + ' raised ' + op + '’s price: from ' + kd(o) + ' to ' + kd(c.prices[os]) + '.';
+      msg = me + ' raised ' + op + '’s price.';
     } else if (r.id === 'down') {
       const amt = Math.min(3, Math.max(1, Math.round(+r.amt || 3))), o = c.prices[os];
       c.prices[os] = Math.max(0.5, o - amt);
-      msg = me + ' lowered ' + op + '’s price: from ' + kd(o) + ' to ' + kd(c.prices[os]) + '.';
+      msg = me + ' lowered ' + op + '’s price.';
     } else if (r.id === 'rep') {
       if (!buyers().includes(r.target)) return false;
       c.help = c.help || {}; c.help[side] = r.target;
@@ -919,8 +923,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function roundStep(force) {
     if (G.phase !== 'round' || !G.cur) return false;
     const c = G.cur;
-    const timeUp = c.endsAt && Date.now() >= c.endsAt;
-    const go = force || timeUp;
+    const go = !!force;
     if (c.stage === 'vote') {
       const done = G.players.map(p => p.id).filter(id => { const x = inp(id).vote; return x && x.key === c.key; });
       if (!go && done.length < G.players.length) return false;
@@ -941,7 +944,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     if (!go) {
       if (c.stage === 'buy') {
         const bs = buyers();
-        if (bs.every(id => { const x = inp(id).buy; return x && x.key === c.key; })) { settle(); return true; }
+        const got = bs.some(id => { const x = inp(id).buy; return x && x.key === c.key && (x.v === 'a' || x.v === 'b') && c.prices[x.v] <= E(id).w; });
+        if (got || bs.every(id => { const x = inp(id).buy; return x && x.key === c.key; })) { settle(); return true; }
       }
       return false;
     }
@@ -951,18 +955,25 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     if (c.stage === 'buy') { settle(); return true; }
     return false;
   }
+  /* بيعة وحدة بكل جولة: أول مشتري يأكد الشراء ياخذ الغرض، والبائع الثاني ما يبيع */
   function settle() {
     const c = G.cur, name = itemText(c.item);
     c.buys = {}; const n = { a: 0, b: 0 };
+    const tries = buyers().map(id => ({ id, x: inp(id).buy })).filter(o => o.x && o.x.key === c.key && (o.x.v === 'a' || o.x.v === 'b') && G.econ[o.id] && c.prices[o.x.v] <= G.econ[o.id].w)
+      .sort((p, q) => (p.x.t || 0) - (q.x.t || 0));
+    const win = tries[0] || null;
+    c.deal = null;
+    if (win) {
+      const v = win.x.v, e = G.econ[win.id];
+      e.w -= c.prices[v]; e.items.push(name);
+      G.econ[c[v]].p += c.prices[v]; n[v] = 1;
+      c.sales[v].push(win.id); c.paid[win.id] = c.prices[v];
+      c.deal = { s: v, buyer: win.id, price: c.prices[v] };
+    }
     buyers().forEach(id => {
-      const x = inp(id).buy, e = G.econ[id];
-      let v = x && x.key === c.key ? x.v : '-';
-      if ((v === 'a' || v === 'b') && e && c.prices[v] <= e.w) {
-        e.w -= c.prices[v]; e.items.push(name);
-        G.econ[c[v]].p += c.prices[v]; n[v]++;
-        c.sales[v].push(id); c.paid[id] = c.prices[v];
-      } else if (v === 'a' || v === 'b') v = 'x';
-      c.buys[id] = v;
+      if (win && id === win.id) { c.buys[id] = win.x.v; return; }
+      const x = inp(id).buy;
+      c.buys[id] = x && x.key === c.key ? (x.v === 'x' ? 'x' : 'l') : '-';
     });
     c.n = n;
     G.history.push({ no: c.no, item: name, a: c.a, b: c.b, pa: c.prices.a, pb: c.prices.b, na: n.a, nb: n.b });
@@ -989,7 +1000,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function splashView() {
     return '<section class="splash intro"><div class="lg">' + FULL + '</div>' +
       '<h1 class="sr">Aqnieni!</h1><div class="ar">ALMAZAD</div>' +
-      '<div class="intro-art"><svg class="stage-art intro-svg" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><g transform="rotate(-28 78 82)"><rect x="62" y="74" width="34" height="13" rx="3" fill="#8A5A35"/><rect x="66" y="74" width="5" height="13" fill="#6E4527"/><rect x="87" y="74" width="5" height="13" fill="#6E4527"/><rect x="76.5" y="86" width="5" height="30" rx="2" fill="#A9744A"/></g><rect x="48" y="104" width="44" height="6" rx="2" fill="#8A5A35"/><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg></div>' +
+      '<div class="intro-art"><svg class="stage-art intro-svg" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg></div>' +
       '<p class="introtx">In each sale, two players sell the same item, each setting a secret price.<br>Each seller gets their turn to convince you to buy from them.<br>Everyone else buys or passes, and the highest total at the end wins.</p>' +
       '<button class="btn primary go" data-act="enter">Got it</button></section>';
   }
@@ -1148,7 +1159,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const one = s => {
       const p = P(c[s]), sp = c.speaker === s, me = c[s] === ME_ID;
       return '<div class="party ' + (sp ? 'speaking' : '') + (me ? ' mine' : '') + '"><div class="pid">' + avatar(p, 52) + '<div><span class="muted small">Seller ' + (s === c.first || !c.prices ? (s === 'a' ? 'first' : 'second') : (s === 'a' ? 'first' : 'second')) + '</span><h3>' + esc(p.name) + (me ? ' <span class="muted small">(you)</span>' : '') + '</h3></div></div>' +
-        (showPrice && c.prices ? '<div class="price num">' + kd(c.prices[s]) + (c.auto[s] ? '<span class="muted small"> (didn’t set a price, got the default)</span>' : '') + '</div>' : '') +
+        (showPrice && c.prices ? '<div class="price num">' + ((c.a === ME_ID || c.b === ME_ID) && c[s] !== ME_ID ? 'Secret 🤫' : kd(c.prices[s])) + (c.auto[s] && !((c.a === ME_ID || c.b === ME_ID) && c[s] !== ME_ID) ? '<span class="muted small"> (didn’t set a price, got the default)</span>' : '') + '</div>' : '') +
         (c.help && c.help[s] ? '<span class="muted small">Sales rep: <b>' + esc(P(c.help[s]).name) + '</b></span>' : '') +
         (c.cancel && c.cancel[s] ? '<span class="chip bad">Sales cancelled by objection</span>' : '') +
         (sp ? '<span class="chip live">Pitching now</span>' : '') + '<span class="muted small">Perks left: ' + ((G.perks[c[s]] || []).length - (G.pused[c[s]] || []).length) + '</span></div>';
@@ -1157,7 +1168,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   }
   function itemCard() {
     const c = G.cur;
-    return '<section class="card qcard"><svg class="stage-art" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><g transform="rotate(-28 78 82)"><rect x="62" y="74" width="34" height="13" rx="3" fill="#8A5A35"/><rect x="66" y="74" width="5" height="13" fill="#6E4527"/><rect x="87" y="74" width="5" height="13" fill="#6E4527"/><rect x="76.5" y="86" width="5" height="30" rx="2" fill="#A9744A"/></g><rect x="48" y="104" width="44" height="6" rx="2" fill="#8A5A35"/><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg><div class="qlabel">Item for sale</div><h2>' + esc(itemText(c.item)) + '</h2>' + (c.tie ? '<p class="muted small">Votes were tied, so the game picked one at random.</p>' : '') + '</section>';
+    return '<section class="card qcard"><svg class="stage-art" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg><div class="qlabel">Item for sale</div><h2>' + esc(itemText(c.item)) + '</h2>' + (c.tie ? '<p class="muted small">Votes were tied, so the game picked one at random.</p>' : '') + '</section>';
   }
 
   function roundView() {
@@ -1219,35 +1230,45 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
         };
         body = '<section class="card action" style="display:grid;gap:14px"><h2 style="margin:0">Buy ' + esc(itemText(c.item)) + '?</h2><p class="muted">Left in your wallet: ' + kd(w) + '. Each item is worth ' + G.settings.val + ' points at the end.</p><div class="vopts">' +
           opt('a') + opt('b') + '<button class="vopt none ' + (U.pick === 'x' ? 'on' : '') + '" data-act="pick" data-v="x"><span class="vt"><b>Pass</b><span>I don’t want to buy this round</span></span><span class="radio">' + (U.pick === 'x' ? '✓' : '') + '</span></button></div>' +
-          '<button class="btn xl primary" data-act="sendBuy">Confirm</button><p class="muted small">If time runs out and you haven’t chosen, you count as abstaining.</p></section>';
+          '<button class="btn xl primary" data-act="sendBuy">Confirm</button><p class="muted small">Only one sale: the first person to confirm a purchase gets the item and the sale closes.</p></section>';
       } else body = '<section class="card pass"><h2>Decision received ✓</h2><p class="muted">' + (b.v === 'x' ? 'You passed.' : 'You chose to buy from ' + esc(P(c[b.v]).name) + '.') + '</p></section>';
       return head + itemCard() + sellersBox(true) + body + clockBox('Decision time', 'go to the result') + progBox('Who decided', buyers());
     }
     if (c.stage === 'result') {
-      const list = s => buyers().filter(id => c.buys[id] === s);
-      const cx = buyers().filter(id => c.buys[id] === 'c');
-      const ref = buyers().filter(id => c.buys[id] === 'x'), abst = buyers().filter(id => c.buys[id] === '-');
-      const rev = s => c.n[s] * c.prices[s];
-      const win = rev('a') === rev('b') ? null : (rev('a') > rev('b') ? 'a' : 'b');
-      const col = s => '<div class="party' + (win === s ? ' speaking' : '') + '"><div class="pid">' + avatar(P(c[s]), 48) + '<div><h3>' + esc(P(c[s]).name) + '</h3><span class="muted small">for ' + kd(c.prices[s]) + '</span></div></div>' +
-        '<div class="price num">' + (c.cancel && c.cancel[s] ? 'Cancelled ' + c.cancel[s] + ' sales' : 'sold ' + c.n[s] + ' · earned ' + kd(rev(s))) + '</div>' +
-        (c.cancel && c.cancel[s] ? '<span class="chip bad">Objection: sale cancelled</span>' : '') +
-        '<div class="plist">' + (list(s).map(id => '<span class="pchip ok">' + avatar(P(id), 24) + esc(P(id).name) + '</span>').join('') || '<span class="muted small">Nobody bought from them</span>') + '</div>' +
-        (win === s ? '<span class="chip gold">Best seller this round</span>' : '') + '</div>';
+      /* بعد البيعة: الكل يشوف «مبروك تمت البيعة» مع اسم البايع والمشتري بس. كل واحد يشوف نتيجته هو.
+         المضيف اللي يدير بس (ما يلعب) يشوف كل التفاصيل والترتيب. والترتيب الكامل يطلع بالنهاية */
+      const hostOnly = isHost() && !inRoom(ME_ID);
+      const d = c.deal, cx = d && c.cancel && c.cancel[d.s];
+      const nm = id => esc(P(id).name);
+      let top;
+      if (d && !cx) top = '<section class="verdict"><h2>🎉 Congrats, it’s a sale!</h2><p>Seller: <b>' + nm(c[d.s]) + '</b> · Buyer: <b>' + nm(d.buyer) + '</b></p></section>';
+      else if (d && cx) top = '<section class="verdict"><h2>The sale was cancelled by an objection</h2><p>Seller: <b>' + nm(c[d.s]) + '</b> · Buyer: <b>' + nm(d.buyer) + '</b></p></section>';
+      else top = '<section class="verdict"><h2>No sale this round</h2></section>';
       let mine = '';
-      if (mySide) mine = 'You sold ' + c.n[mySide] + ' and earned ' + kd(rev(mySide)) + '.';
-      else if (c.buys[ME_ID] === 'a' || c.buys[ME_ID] === 'b') mine = 'You bought ' + esc(itemText(c.item)) + ' for ' + kd(c.prices[c.buys[ME_ID]]) + '.';
+      const e = G.econ[ME_ID];
+      if (mySide) {
+        if (d && d.s === mySide && !cx) mine = 'You sold the item for ' + kd(d.price) + '.';
+        else if (d && d.s === mySide && cx) mine = 'Your sale was cancelled by an objection.';
+        else mine = 'You didn’t sell this round.';
+        if (e) mine += ' Your total profit: ' + kd(e.p) + '.';
+      } else if (d && d.buyer === ME_ID) mine = cx ? 'Your purchase was cancelled by an objection; your money is back.' : 'You bought the item for ' + kd(d.price) + '.';
+      else if (c.buys[ME_ID] === 'l') mine = 'Someone confirmed before you, so you didn’t buy.';
       else if (c.buys[ME_ID] === 'x') mine = 'You passed.';
-      else if (c.buys[ME_ID] === 'c') mine = 'Your purchase was cancelled by objection, and your money refunded.';
-      else if (helpFor) mine = 'You were a sales rep ' + esc(P(c[helpFor]).name) + '.';
-      else if (inRoom(ME_ID)) mine = 'You didn’t choose, counted as abstaining.';
+      else if (helpFor) mine = 'You were the sales rep for ' + nm(c[helpFor]) + '.';
+      else if (inRoom(ME_ID)) mine = d ? 'The sale closed before you chose.' : 'You didn’t choose, so you abstained.';
+      let detail = '';
+      if (hostOnly) {
+        const ref = buyers().filter(id => c.buys[id] === 'x'), late = buyers().filter(id => c.buys[id] === 'l'), abst = buyers().filter(id => c.buys[id] === '-');
+        detail = '<section class="card" style="display:grid;gap:8px"><h3>Host-only details</h3>' +
+          '<p class="small">' + nm(c.a) + ': ' + kd(c.prices.a) + ' · ' + nm(c.b) + ': ' + kd(c.prices.b) + '</p>' +
+          (d ? '<p class="small">' + nm(d.buyer) + ' bought from ' + nm(c[d.s]) + ' for ' + kd(d.price) + (cx ? ' (cancelled)' : '') + '</p>' : '') +
+          (late.length ? '<p class="small muted">Tried to buy after it closed: ' + late.map(nm).join(', ') + '</p>' : '') +
+          (ref.length ? '<p class="small muted">Passed: ' + ref.map(nm).join(', ') + '</p>' : '') +
+          (abst.length ? '<p class="small muted">Abstained: ' + abst.map(nm).join(', ') + '</p>' : '') + '</section>' + standings(false);
+      }
       const last = G.roundNo >= G.total;
-      return head + '<section class="verdict"><h2>' + (win ? esc(P(c[win]).name) + ' wins the round' : (c.n.a + c.n.b ? 'Tied on profits!' : 'Nobody bought anything!')) + '</h2><p>' + mine + '</p></section>' +
-        itemCard() + '<div class="parties">' + col('a') + col('b') + '</div>' +
-        (cx.length ? '<section class="card small muted">Purchases cancelled and refunded: ' + cx.map(id => esc(P(id).name)).join(', ') + '</section>' : '') + pp +
-        (ref.length || abst.length ? '<section class="card small muted">' + (ref.length ? 'Passed: ' + ref.map(id => esc(P(id).name)).join(', ') : '') + (ref.length && abst.length ? ' · ' : '') + (abst.length ? 'Abstained: ' + abst.map(id => esc(P(id).name)).join(', ') : '') + '</section>' : '') +
-        standings(false) +
-        (isHost() ? '<button class="btn xl primary" data-act="nextRound">' + (last ? 'Final result' : 'Next round') + '</button>' : waitHost());
+      return head + top + (mine ? '<section class="card pass"><p>' + mine + '</p></section>' : '') + pp + detail +
+        (isHost() ? '<button class="btn xl primary" data-act="nextRound">' + (last ? 'Final results' : 'Next round') + '</button>' : waitHost());
     }
     return head;
   }
@@ -1288,7 +1309,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (!st.ok) { U.modal = null; return ''; }
       const os = other(st.side);
       let act;
-      if (m.id === 'up' || m.id === 'down') act = '<p class="muted">' + esc(P(c[os]).name) + '’s price is now ' + kd(c.prices[os]) + '. ' + (m.id === 'up' ? 'Raise it by' : 'Lower it by') + ' how much?</p><div class="seg-wide">' + [1, 2, 3].map(a => '<button data-act="perkGo" data-amt="' + a + '">' + (m.id === 'up' ? '+' : '−') + a + ' KD</button>').join('') + '</div>';
+      if (m.id === 'up' || m.id === 'down') act = '<p class="muted">' + (m.id === 'up' ? 'Raise' : 'Lower') + ' ' + esc(P(c[os]).name) + '’s price by how much? (their price stays secret from you)</p><div class="seg-wide">' + [1, 2, 3].map(a => '<button data-act="perkGo" data-amt="' + a + '">' + (m.id === 'up' ? '+' : '−') + a + ' KD</button>').join('') + '</div>';
       else if (m.id === 'rep') act = '<p class="muted">Choose who becomes your sales rep:</p><div class="cands">' + buyers().map(id => '<button class="cand" data-act="perkGo" data-target="' + id + '">' + avatar(P(id), 40) + '<b>' + esc(P(id).name) + '</b></button>').join('') + '</div>';
       else act = (m.id === 'half' ? '<p class="muted">Your price becomes ' + kd(half(c.prices[st.side] / 2)) + ' instead of ' + kd(c.prices[st.side]) + '.</p>' : '') + '<button class="btn xl primary" data-act="perkGo">Use perk</button>';
       body = '<h2>' + k.name + '</h2><p class="muted">' + k.desc + ' Can be used once per game.</p>' + act + '<button class="btn ghost" data-act="closeModal">Cancel</button>';
@@ -1330,7 +1351,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (!U.code || U.view === 'home') html += homeView();
       else if (!G) html += '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>Connecting to room ' + esc(U.code) + '</h2></section><button class="btn ghost" data-act="leaveNow">Cancel</button>';
       else if (U.view === 'join') html += joinView();
-      else if (U.view === 'wait') html += waitView();
+      else if (U.view === 'wait') html += (G.phase === 'lobby' && !inRoom(ME_ID) && takenStop() ? joinView() : waitView());
       else if (U.view === 'spect') html += spectView();
       else if (U.view === 'kicked') html += kickedView();
       else html += gameView();
@@ -1357,7 +1378,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const r = remain(), d = G.cur.dur || 1;
     const pz = isPz();
     document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = fmt(r); });
-    document.querySelectorAll('[data-ring]').forEach(el => el.classList.toggle('paused', pz));
+    document.querySelectorAll('[data-ring]').forEach(el => { el.classList.toggle('paused', pz); el.classList.toggle('tup', !pz && r <= 0); });
     document.querySelectorAll('[data-ring]').forEach(el => {
       const fg = el.querySelector('.fg'); if (fg) fg.style.strokeDashoffset = String(326.7 * (1 - Math.min(1, r / d)));
       el.classList.toggle('low', r <= 10);
@@ -1454,7 +1475,12 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
     }
   }
+  /* الاسم أي طول، بس ما يتكرر بنفس الغرفة */
+  function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function nameTaken(n, id) { const k = normName(n); return !!(G && k && G.players.some(p => p.id !== id && normName(p.name) === k)); }
+  function takenStop() { const nm = U.name.trim(); if (!nameTaken(nm, ME_ID)) return false; U.err = 'The name “' + nm + '” is already taken in this room. Pick another name.'; U.view = 'join'; try { if (typeof toast === 'function') toast(U.err); } catch (e) { } return true; }
   async function sendJoin() {
+    if (takenStop()) { render(); return; }
     ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), gender: U.gender, at: Date.now() });
     lsSet({ name: U.name.trim(), gender: U.gender });
     U.view = 'wait';
@@ -1535,7 +1561,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const c = G.cur; if (!c || c.stage !== 'buy') return false;
     if (!U.pick) { toast('Choose: who to buy from, or pass.'); return false; }
     if ((U.pick === 'a' || U.pick === 'b') && c.prices[U.pick] > E(ME_ID).w) { toast('Not enough money in your wallet.'); return false; }
-    mine().buy = { key: c.key, v: U.pick }; render(); await saveMe();
+    mine().buy = { key: c.key, v: U.pick, t: Date.now() }; render(); await saveMe();
   };
 
   /* ---------- events ---------- */

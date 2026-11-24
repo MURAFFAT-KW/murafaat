@@ -170,7 +170,8 @@ textarea.field{min-height:92px;resize:vertical}
 .ring.ended .fg{stroke:var(--bad)}
 .clock{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--font-d);font-size:2.3rem;font-weight:700;font-variant-numeric:tabular-nums}
 .tctl>.btn{flex:1 1 120px;min-height:50px;white-space:nowrap;font-size:.98rem;padding-inline:10px}
-.ring.paused{margin-bottom:22px}
+.ring.paused,.ring.tup{margin-bottom:22px}
+.ring.tup::after{content:'انتهى الوقت ⏰';position:absolute;left:-40px;right:-40px;bottom:-24px;text-align:center;font-size:.9rem;font-weight:800;color:#C81E1E}
 .ring.paused::after{content:'⏸️ متوقف';position:absolute;left:0;right:0;bottom:-24px;text-align:center;font-size:.85rem;font-weight:700;color:#6b7280}
 .tcontrols{display:flex;flex-direction:column;gap:10px;min-width:0;width:100%}
 .timeup{border:1px solid var(--bad);color:#9E1219;background:rgba(211,47,47,.12);border-radius:12px;padding:10px 14px;font-weight:700;text-align:center}
@@ -390,6 +391,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
 <style id="aq-pro-polish">.btn,button{transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}.btn:active,button:active{transform:scale(.97)}.btn.primary,.btn.xl{box-shadow:0 8px 18px -10px rgba(18,32,58,.45),inset 0 -3px 0 rgba(0,0,0,.12)}</style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="أقنعني"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script src="aq-pro.js"></script>
 <link rel="icon" href="icon-192.png">
+<script src="aq-theme.js"></script>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -463,7 +465,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   const PMIN = 1, PMAX = 20;
   const CODE_CH = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   const PERKS = [
-    { id: 'half', name: 'تنزيلات ٥٠٪', desc: 'بعد ما تنكشف الأسعار، تنزّل سعرك للنص.', when: 'بعد كشف الأسعار' },
+    { id: 'half', name: 'نص السعر', desc: 'وقت العرض، تنزّل سعرك للنص قدام المشترين. سعر خصمك يظل مثل ما هو.', when: 'وقت العرض' },
     { id: 'up', name: 'رفع سعر الخصم', desc: 'تزيد سعر خصمك لين ٣ دنانير، فيصير غرضه أغلى.', when: 'بعد كشف الأسعار' },
     { id: 'down', name: 'تنزيل سعر الخصم', desc: 'تنقص سعر خصمك لين ٣ دنانير، فيقل ربحه بكل بيعة.', when: 'بعد كشف الأسعار' },
     { id: 'rep', name: 'مسؤول مبيعات', desc: 'تسحب واحد من الجمهور يساعدك تقنع، وما يقدر يشتري بهالجولة.', when: 'بعد كشف الأسعار' },
@@ -538,7 +540,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     return G.players.slice().sort((x, y) => (score(y.id) - score(x.id)) || (E(y.id).items.length - E(x.id).items.length) || (E(y.id).w - E(x.id).w));
   }
   /* ready-made items for the «أغراض جاهزة» option */
-  const READY = ['جوال', 'ساعة يد', 'مخدة', 'ريموت تلفزيون', 'شاحن جوال', 'كوب قهوة', 'نظارة شمسية', 'سماعات', 'محفظة', 'قلم', 'دفتر', 'مظلة', 'شنطة ظهر', 'عطر', 'ولاعة', 'مفتاح سيارة', 'بطانية', 'كرسي', 'مصباح مكتب', 'مروحة صغيرة', 'ترمس شاي', 'قارورة ماي', 'علبة مناديل', 'مراية', 'مشط', 'فرشاة أسنان', 'صابونة', 'منشفة', 'نعال', 'جوتي رياضي', 'قبعة', 'شماغ', 'ساعة حائط', 'دلة قهوة', 'فنجان', 'صحن', 'ملعقة', 'مقلاة', 'خلاط', 'كتاب', 'لابتوب', 'تابلت', 'كاميرا', 'ريموت ما يشتغل', 'فردة شبشب', 'بطارية', 'سلك شاحن خربان', 'ميدالية مفاتيح', 'كيس فاضي', 'علكة', 'شوكولاتة', 'علبة تمر', 'بخور', 'مبخرة', 'سجادة صلاة', 'وردة صناعية', 'لعبة أطفال', 'كورة', 'ورقة يانصيب خسرانة', 'حجر من البحر', 'مكيف صغير', 'سجادة', 'ساعة ذكية', 'نظارة طبية', 'محفظة جلد', 'كريم مرطب', 'شمعة معطرة', 'مكينة قهوة', 'سماعة بلوتوث', 'باور بانك', 'كيبورد', 'ماوس', 'فلاش ميموري', 'حامل جوال', 'مخدة سفر', 'شنطة سفر', 'دفتر ملاحظات', 'ألوان خشبية', 'آلة حاسبة', 'مسطرة', 'كاسة شاي استكانة', 'صينية', 'زبدية', 'قلم حبر فاخر', 'مشبك شعر', 'ربطة عنق', 'جوارب', 'قفازات', 'شاحن سيارة', 'معطر سيارة', 'كفر جوال', 'ريموت مكيف', 'تقويم قديم', 'كوب مكسور', 'قلم ما يكتب', 'ساعة واقفة', 'مفتاح ما يفتح شي', 'فاتورة كهرباء', 'كرتون فاضي', 'دبوس', 'ملعقة بلاستيك', 'ساعة رملية', 'بوصلة', 'خريطة قديمة', 'طابع بريد نادر', 'عملة قديمة', 'قلم رصاص مبري', 'ممحاة', 'دباسة', 'مقص', 'لاصق', 'مغناطيس ثلاجة', 'بوستر', 'برواز صورة', 'ألبوم صور', 'سبحة', 'مسباح كهرماني', 'دهن عود', 'خاتم', 'سوار', 'قلادة', 'نظارة ثلاثية الأبعاد', 'ريموت لعبة', 'شريط كاسيت', 'سي دي', 'راديو قديم', 'جهاز ألعاب قديم', 'مكعب روبيك', 'لعبة شطرنج', 'زهر نرد', 'ورق لعب', 'كورة سلة', 'مضرب تنس', 'حبل نط', 'دمبل', 'سجادة يوغا', 'صفارة', 'ميدالية فضية', 'كأس بطولة صغير', 'قميص فريق', 'كاب رياضي', 'خيمة صغيرة', 'فانوس', 'كشاف', 'ولاعة شبة', 'كرسي بر', 'حطب', 'منقلة', 'سيخ شوي', 'ثلاجة صغيرة', 'كولر ماي', 'سكين مطبخ', 'لوح تقطيع', 'قدر ضغط', 'محمصة خبز', 'ميزان مطبخ', 'مطحنة قهوة', 'إبريق شاي', 'صينية تقديم', 'مريلة', 'كاسة عصير', 'مكنسة', 'ممسحة', 'دلو', 'مكنسة كهربائية صغيرة', 'علاقة ملابس', 'مكوى', 'سلة غسيل', 'مشبك ملابس', 'ستارة', 'مخدة كنب', 'نبتة صبار', 'أصيص زرع', 'بذور', 'مرش ماي', 'حوض سمك', 'قفص طير', 'طوق قطو', 'عظمة كلب', 'بيت نمل للتجارب', 'مجسم ديناصور', 'تلسكوب صغير', 'مجهر', 'كرة أرضية', 'ساعة منبه', 'ميزان حرارة', 'سماعة طبيب', 'شنطة إسعافات', 'كمامة', 'معقم يدين', 'نظارة سباحة', 'طوافة بحر', 'مظلة بحر', 'منشفة بحر', 'كريم شمس', 'صدفة بحر', 'سنارة صيد', 'طعم صيد', 'مجداف', 'قارب ورقي', 'زجاجة فيها رسالة'];
+  const READY = ['جوال', 'ساعة يد', 'مخدة', 'ريموت تلفزيون', 'شاحن جوال', 'كوب قهوة', 'نظارة شمسية', 'سماعات', 'محفظة', 'قلم', 'دفتر', 'مظلة', 'شنطة ظهر', 'عطر', 'ولاعة', 'مفتاح سيارة', 'بطانية', 'كرسي', 'مصباح مكتب', 'مروحة صغيرة', 'ترمس شاي', 'قارورة ماي', 'علبة مناديل', 'مراية', 'مشط', 'فرشاة أسنان', 'صابونة', 'منشفة', 'نعال', 'جوتي رياضي', 'قبعة', 'شماغ', 'ساعة حائط', 'دلة قهوة', 'فنجان', 'صحن', 'ملعقة', 'مقلاة', 'خلاط', 'كتاب', 'لابتوب', 'تابلت', 'كاميرا', 'ريموت ما يشتغل', 'فردة شبشب', 'بطارية', 'سلك شاحن خربان', 'ميدالية مفاتيح', 'كيس فاضي', 'علكة', 'شوكولاتة', 'علبة تمر', 'بخور', 'مبخرة', 'سجادة صلاة', 'وردة صناعية', 'لعبة أطفال', 'كورة', 'ورقة يانصيب خسرانة', 'حجر من البحر', 'مكيف صغير', 'سجادة', 'ساعة ذكية', 'نظارة طبية', 'محفظة جلد', 'كريم مرطب', 'شمعة معطرة', 'مكينة قهوة', 'سماعة بلوتوث', 'باور بانك', 'كيبورد', 'ماوس', 'فلاش ميموري', 'حامل جوال', 'مخدة سفر', 'شنطة سفر', 'دفتر ملاحظات', 'ألوان خشبية', 'آلة حاسبة', 'مسطرة', 'كاسة شاي استكانة', 'صينية', 'زبدية', 'قلم حبر فاخر', 'مشبك شعر', 'ربطة عنق', 'جوارب', 'قفازات', 'شاحن سيارة', 'معطر سيارة', 'كفر جوال', 'ريموت مكيف', 'تقويم قديم', 'كوب مكسور', 'قلم ما يكتب', 'ساعة واقفة', 'مفتاح ما يفتح شي', 'فاتورة كهرباء', 'كرتون فاضي', 'دبوس', 'ملعقة بلاستيك', 'ساعة رملية', 'بوصلة', 'خريطة قديمة', 'طابع بريد نادر', 'عملة قديمة', 'قلم رصاص مبري', 'ممحاة', 'دباسة', 'مقص', 'لاصق', 'مغناطيس ثلاجة', 'بوستر', 'برواز صورة', 'ألبوم صور', 'سبحة', 'مسباح كهرماني', 'دهن عود', 'خاتم', 'سوار', 'قلادة', 'نظارة ثلاثية الأبعاد', 'ريموت لعبة', 'شريط كاسيت', 'سي دي', 'راديو قديم', 'جهاز ألعاب قديم', 'مكعب روبيك', 'لعبة شطرنج', 'زهر نرد', 'ورق لعب', 'كورة سلة', 'مضرب تنس', 'حبل نط', 'دمبل', 'سجادة يوغا', 'صفارة', 'ميدالية فضية', 'كأس بطولة صغير', 'قميص فريق', 'كاب رياضي', 'خيمة صغيرة', 'فانوس', 'كشاف', 'ولاعة شبة', 'كرسي بر', 'حطب', 'منقلة', 'سيخ شوي', 'ثلاجة صغيرة', 'كولر ماي', 'سكين مطبخ', 'لوح تقطيع', 'قدر ضغط', 'محمصة خبز', 'ميزان مطبخ', 'مطحنة قهوة', 'إبريق شاي', 'صينية تقديم', 'مريلة', 'كاسة عصير', 'مكنسة', 'ممسحة', 'دلو', 'مكنسة كهربائية صغيرة', 'علاقة ملابس', 'سلة غسيل', 'مشبك ملابس', 'ستارة', 'مخدة كنب', 'نبتة صبار', 'أصيص زرع', 'بذور', 'مرش ماي', 'حوض سمك', 'قفص طير', 'طوق قطو', 'عظمة كلب', 'بيت نمل للتجارب', 'مجسم ديناصور', 'تلسكوب صغير', 'مجهر', 'كرة أرضية', 'ساعة منبه', 'ميزان حرارة', 'سماعة طبيب', 'شنطة إسعافات', 'كمامة', 'معقم يدين', 'نظارة سباحة', 'طوافة بحر', 'مظلة بحر', 'منشفة بحر', 'كريم شمس', 'صدفة بحر', 'سنارة صيد', 'طعم صيد', 'مجداف', 'قارب ورقي', 'زجاجة فيها رسالة'];
   const SRC = { players: 'أغراض يكتبها اللاعبين', ready: 'أغراض جاهزة' };
   function addReady() {
     const seen = new Set(G.pool.map(x => norm(x.t)));
@@ -711,7 +713,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       const p = G.players.find(x => x.id === id);
       if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
       if (d.room !== G.code) return;
-      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 26) {
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && !nameTaken(d.name, id) && G.players.length < 26) {
         G.players.push({ id, name: uniqueName(d.name, id), gender: d.gender === 'f' ? 'f' : 'm', at: d.at || 0 });
         ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) {
@@ -757,7 +759,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function hostTickFn() {
     if (!isHost() || !G || G.phase !== 'round' || !G.cur) return;
     const c = G.cur;
-    if (c.endsAt && Date.now() >= c.endsAt) { beep(); if (roundStep(true)) { publish(); render(); } }
+    /* خلص الوقت: ما يمشي لحاله، المضيف يضغط زر المرحلة الجاية */
+    if (c.endsAt && Date.now() >= c.endsAt && c.tu !== c.stage) { c.tu = c.stage; beep(); publish(); render(); }
   }
   function applyReq(id, r) {
     const c = G.cur;
@@ -785,9 +788,10 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (!(c.n && c.n[os] > 0)) return { ok: false, why: 'خصمك ما باع' };
       return { ok: true, side };
     }
+    if (id === 'half') { if (c.stage !== 'pitch1' && c.stage !== 'pitch2') return { ok: false, why: 'وقت العرض' }; if (c.prices[side] <= 0.5) return { ok: false, why: 'سعرك أقل شي' }; return { ok: true, side }; }
     if (!PRICE_STAGES.includes(c.stage)) return { ok: false, why: 'بعد كشف الأسعار' };
     if (id === 'half' && c.prices[side] <= 0.5) return { ok: false, why: 'سعرك أقل شي' };
-    if (id === 'up' && c.prices[os] >= PMAX) return { ok: false, why: 'سعره أعلى شي' };
+    if (id === 'up' && c.prices[os] >= PMAX) return { ok: false, why: 'ما تنفع الحين' };
     if (id === 'down' && c.prices[os] <= 0.5) return { ok: false, why: 'سعره أقل شي' };
     if (id === 'rep') {
       if (c.help && c.help[side]) return { ok: false, why: 'عندك مسؤول' };
@@ -815,15 +819,15 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       msg = me + gv(P(pid), ' غيّر خصمه', ' غيّرت خصمها') + ': طلع ' + op + ' ودخل ' + P(nw).name + '.';
     } else if (r.id === 'half') {
       const o = c.prices[side]; c.prices[side] = half(o / 2);
-      msg = me + gv(P(pid), ' سوّى', ' سوّت') + ' تنزيلات ٥٠٪: من ' + kd(o) + ' إلى ' + kd(c.prices[side]) + '.';
+      msg = me + gv(P(pid), ' استخدم', ' استخدمت') + ' «نص السعر»: سعره صار النص قدامكم.';
     } else if (r.id === 'up') {
       const amt = Math.min(3, Math.max(1, Math.round(+r.amt || 3))), o = c.prices[os];
       c.prices[os] = Math.min(PMAX, o + amt);
-      msg = me + gv(P(pid), ' رفع', ' رفعت') + ' سعر ' + op + ': من ' + kd(o) + ' إلى ' + kd(c.prices[os]) + '.';
+      msg = me + gv(P(pid), ' رفع', ' رفعت') + ' سعر ' + op + '.';
     } else if (r.id === 'down') {
       const amt = Math.min(3, Math.max(1, Math.round(+r.amt || 3))), o = c.prices[os];
       c.prices[os] = Math.max(0.5, o - amt);
-      msg = me + gv(P(pid), ' نزّل', ' نزّلت') + ' سعر ' + op + ': من ' + kd(o) + ' إلى ' + kd(c.prices[os]) + '.';
+      msg = me + gv(P(pid), ' نزّل', ' نزّلت') + ' سعر ' + op + '.';
     } else if (r.id === 'rep') {
       if (!buyers().includes(r.target)) return false;
       c.help = c.help || {}; c.help[side] = r.target;
@@ -919,8 +923,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function roundStep(force) {
     if (G.phase !== 'round' || !G.cur) return false;
     const c = G.cur;
-    const timeUp = c.endsAt && Date.now() >= c.endsAt;
-    const go = force || timeUp;
+    const go = !!force;
     if (c.stage === 'vote') {
       const done = G.players.map(p => p.id).filter(id => { const x = inp(id).vote; return x && x.key === c.key; });
       if (!go && done.length < G.players.length) return false;
@@ -941,7 +944,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     if (!go) {
       if (c.stage === 'buy') {
         const bs = buyers();
-        if (bs.every(id => { const x = inp(id).buy; return x && x.key === c.key; })) { settle(); return true; }
+        const got = bs.some(id => { const x = inp(id).buy; return x && x.key === c.key && (x.v === 'a' || x.v === 'b') && c.prices[x.v] <= E(id).w; });
+        if (got || bs.every(id => { const x = inp(id).buy; return x && x.key === c.key; })) { settle(); return true; }
       }
       return false;
     }
@@ -951,18 +955,25 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     if (c.stage === 'buy') { settle(); return true; }
     return false;
   }
+  /* بيعة وحدة بكل جولة: أول مشتري يأكد الشراء ياخذ الغرض، والبائع الثاني ما يبيع */
   function settle() {
     const c = G.cur, name = itemText(c.item);
     c.buys = {}; const n = { a: 0, b: 0 };
+    const tries = buyers().map(id => ({ id, x: inp(id).buy })).filter(o => o.x && o.x.key === c.key && (o.x.v === 'a' || o.x.v === 'b') && G.econ[o.id] && c.prices[o.x.v] <= G.econ[o.id].w)
+      .sort((p, q) => (p.x.t || 0) - (q.x.t || 0));
+    const win = tries[0] || null;
+    c.deal = null;
+    if (win) {
+      const v = win.x.v, e = G.econ[win.id];
+      e.w -= c.prices[v]; e.items.push(name);
+      G.econ[c[v]].p += c.prices[v]; n[v] = 1;
+      c.sales[v].push(win.id); c.paid[win.id] = c.prices[v];
+      c.deal = { s: v, buyer: win.id, price: c.prices[v] };
+    }
     buyers().forEach(id => {
-      const x = inp(id).buy, e = G.econ[id];
-      let v = x && x.key === c.key ? x.v : '-';
-      if ((v === 'a' || v === 'b') && e && c.prices[v] <= e.w) {
-        e.w -= c.prices[v]; e.items.push(name);
-        G.econ[c[v]].p += c.prices[v]; n[v]++;
-        c.sales[v].push(id); c.paid[id] = c.prices[v];
-      } else if (v === 'a' || v === 'b') v = 'x';
-      c.buys[id] = v;
+      if (win && id === win.id) { c.buys[id] = win.x.v; return; }
+      const x = inp(id).buy;
+      c.buys[id] = x && x.key === c.key ? (x.v === 'x' ? 'x' : 'l') : '-';
     });
     c.n = n;
     G.history.push({ no: c.no, item: name, a: c.a, b: c.b, pa: c.prices.a, pb: c.prices.b, na: n.a, nb: n.b });
@@ -989,7 +1000,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   function splashView() {
     return '<section class="splash intro"><div class="lg">' + FULL + '</div>' +
       '<h1 class="sr">أقنعني!</h1><div class="ar">المزاد</div>' +
-      '<div class="intro-art"><svg class="stage-art intro-svg" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><g transform="rotate(-28 78 82)"><rect x="62" y="74" width="34" height="13" rx="3" fill="#8A5A35"/><rect x="66" y="74" width="5" height="13" fill="#6E4527"/><rect x="87" y="74" width="5" height="13" fill="#6E4527"/><rect x="76.5" y="86" width="5" height="30" rx="2" fill="#A9744A"/></g><rect x="48" y="104" width="44" height="6" rx="2" fill="#8A5A35"/><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg></div>' +
+      '<div class="intro-art"><svg class="stage-art intro-svg" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg></div>' +
       '<p class="introtx">بكل بيعة اثنين يبيعون نفس الغرض، وكل واحد يحط سعره سرًّا.<br>كل بائع ياخذ وقته يقنعكم تشترون منه هو.<br>الباقين يشترون أو يرفضون، والأعلى مجموع بالنهاية يفوز.</p>' +
       '<button class="btn primary go" data-act="enter">فهمت</button></section>';
   }
@@ -1148,7 +1159,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const one = s => {
       const p = P(c[s]), sp = c.speaker === s, me = c[s] === ME_ID;
       return '<div class="party ' + (sp ? 'speaking' : '') + (me ? ' mine' : '') + '"><div class="pid">' + avatar(p, 52) + '<div><span class="muted small">البائع ' + (s === c.first || !c.prices ? (s === 'a' ? 'الأول' : 'الثاني') : (s === 'a' ? 'الأول' : 'الثاني')) + '</span><h3>' + esc(p.name) + (me ? ' <span class="muted small">(أنت)</span>' : '') + '</h3></div></div>' +
-        (showPrice && c.prices ? '<div class="price num">' + kd(c.prices[s]) + (c.auto[s] ? '<span class="muted small"> (ما حط سعر، أخذ الافتراضي)</span>' : '') + '</div>' : '') +
+        (showPrice && c.prices ? '<div class="price num">' + ((c.a === ME_ID || c.b === ME_ID) && c[s] !== ME_ID ? 'سعره سر 🤫' : kd(c.prices[s])) + (c.auto[s] && !((c.a === ME_ID || c.b === ME_ID) && c[s] !== ME_ID) ? '<span class="muted small"> (ما حط سعر، أخذ الافتراضي)</span>' : '') + '</div>' : '') +
         (c.help && c.help[s] ? '<span class="muted small">مسؤول المبيعات: <b>' + esc(P(c.help[s]).name) + '</b></span>' : '') +
         (c.cancel && c.cancel[s] ? '<span class="chip bad">انلغت بيعاته بالاعتراض</span>' : '') +
         (sp ? '<span class="chip live">يقنعكم الحين</span>' : '') + '<span class="muted small">مزايا باقية: ' + ((G.perks[c[s]] || []).length - (G.pused[c[s]] || []).length) + '</span></div>';
@@ -1157,7 +1168,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   }
   function itemCard() {
     const c = G.cur;
-    return '<section class="card qcard"><svg class="stage-art" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><g transform="rotate(-28 78 82)"><rect x="62" y="74" width="34" height="13" rx="3" fill="#8A5A35"/><rect x="66" y="74" width="5" height="13" fill="#6E4527"/><rect x="87" y="74" width="5" height="13" fill="#6E4527"/><rect x="76.5" y="86" width="5" height="30" rx="2" fill="#A9744A"/></g><rect x="48" y="104" width="44" height="6" rx="2" fill="#8A5A35"/><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg><div class="qlabel">الغرض المعروض للبيع</div><h2>' + esc(itemText(c.item)) + '</h2>' + (c.tie ? '<p class="muted small">تعادلت الأصوات واختارت اللعبة واحد عشوائي.</p>' : '') + '</section>';
+    return '<section class="card qcard"><svg class="stage-art" viewBox="0 0 320 124" aria-hidden="true"><polygon points="60,0 82,0 176,104 120,104" fill="rgba(5,84,164,.07)"/><polygon points="238,0 260,0 200,104 144,104" fill="rgba(5,84,164,.07)"/><ellipse cx="160" cy="112" rx="108" ry="9" fill="#E8F0FA"/><rect x="118" y="78" width="84" height="30" rx="4" fill="#FFFFFF" stroke="#C9D8EC" stroke-width="1.4"/><rect x="112" y="72" width="96" height="9" rx="3" fill="#0554A4"/><rect x="112" y="72" width="96" height="3" rx="1.5" fill="#2F7AD0"/><rect x="128" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="186" y="84" width="6" height="22" fill="#EEF3FA"/><rect x="134" y="38" width="52" height="34" rx="3" fill="#0554A4"/><rect x="160" y="38" width="26" height="34" fill="#04478C"/><rect x="129" y="30" width="62" height="11" rx="2" fill="#0A63BF"/><rect x="155" y="30" width="10" height="42" fill="#FBC611"/><rect x="129" y="33" width="62" height="5" fill="#FBC611"/><path d="M160 30 C150 16 136 20 142 28 C146 32 156 31 160 30 C164 31 174 32 178 28 C184 20 170 16 160 30Z" fill="#FBC611" stroke="#D9A800" stroke-width="1"/><circle cx="160" cy="29" r="3.4" fill="#E0A800"/><path d="M191 44 L214 56" stroke="#9AA9BD" stroke-width="1"/><g transform="rotate(14 222 60)"><path d="M210 50 H234 L240 60 L234 70 H210 Z" fill="#FFFFFF" stroke="#0554A4" stroke-width="1.6"/><circle cx="214.5" cy="60" r="2.4" fill="none" stroke="#0554A4" stroke-width="1.2"/><path d="M220 56 H233 M220 61 H230 M220 65.5 H228" stroke="#0554A4" stroke-width="1.6" stroke-linecap="round"/></g><circle cx="276" cy="24" r="2" fill="#FBC611"/><circle cx="292" cy="40" r="1.4" fill="#0554A4"/><circle cx="34" cy="34" r="1.6" fill="#FBC611"/><path d="M268 14 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2z" fill="#FBC611"/></svg><div class="qlabel">الغرض المعروض للبيع</div><h2>' + esc(itemText(c.item)) + '</h2>' + (c.tie ? '<p class="muted small">تعادلت الأصوات واختارت اللعبة واحد عشوائي.</p>' : '') + '</section>';
   }
 
   function roundView() {
@@ -1219,34 +1230,44 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
         };
         body = '<section class="card action" style="display:grid;gap:14px"><h2 style="margin:0">تشتري ' + esc(itemText(c.item)) + '؟</h2><p class="muted">باقي بمحفظتك ' + kd(w) + '. كل غرض يسوى ' + G.settings.val + ' نقاط بالنهاية.</p><div class="vopts">' +
           opt('a') + opt('b') + '<button class="vopt none ' + (U.pick === 'x' ? 'on' : '') + '" data-act="pick" data-v="x"><span class="vt"><b>أرفض</b><span>ما أبي أشتري بهالجولة</span></span><span class="radio">' + (U.pick === 'x' ? '✓' : '') + '</span></button></div>' +
-          '<button class="btn xl primary" data-act="sendBuy">تأكيد</button><p class="muted small">إذا خلص الوقت وما اخترت، تنحسب ممتنع.</p></section>';
+          '<button class="btn xl primary" data-act="sendBuy">تأكيد</button><p class="muted small">بيعة وحدة بس: أول واحد يأكد الشراء ياخذ الغرض وتسكر البيعة.</p></section>';
       } else body = '<section class="card pass"><h2>وصل قرارك ✓</h2><p class="muted">' + (b.v === 'x' ? 'رفضت الشراء.' : 'اخترت تشتري من ' + esc(P(c[b.v]).name) + '.') + '</p></section>';
       return head + itemCard() + sellersBox(true) + body + clockBox('وقت القرار', 'الذهاب للنتيجة') + progBox('مين قرر', buyers());
     }
     if (c.stage === 'result') {
-      const list = s => buyers().filter(id => c.buys[id] === s);
-      const cx = buyers().filter(id => c.buys[id] === 'c');
-      const ref = buyers().filter(id => c.buys[id] === 'x'), abst = buyers().filter(id => c.buys[id] === '-');
-      const rev = s => c.n[s] * c.prices[s];
-      const win = rev('a') === rev('b') ? null : (rev('a') > rev('b') ? 'a' : 'b');
-      const col = s => '<div class="party' + (win === s ? ' speaking' : '') + '"><div class="pid">' + avatar(P(c[s]), 48) + '<div><h3>' + esc(P(c[s]).name) + '</h3><span class="muted small">بـ ' + kd(c.prices[s]) + '</span></div></div>' +
-        '<div class="price num">' + (c.cancel && c.cancel[s] ? 'انلغت ' + c.cancel[s] + ' بيعات' : 'باع ' + c.n[s] + ' · ربح ' + kd(rev(s))) + '</div>' +
-        (c.cancel && c.cancel[s] ? '<span class="chip bad">اعتراض: انلغت البيعة</span>' : '') +
-        '<div class="plist">' + (list(s).map(id => '<span class="pchip ok">' + avatar(P(id), 24) + esc(P(id).name) + '</span>').join('') || '<span class="muted small">محد اشترى منه</span>') + '</div>' +
-        (win === s ? '<span class="chip gold">أشطر بائع بالجولة</span>' : '') + '</div>';
+      /* بعد البيعة: الكل يشوف «مبروك تمت البيعة» مع اسم البايع والمشتري بس. كل واحد يشوف نتيجته هو.
+         المضيف اللي يدير بس (ما يلعب) يشوف كل التفاصيل والترتيب. والترتيب الكامل يطلع بالنهاية */
+      const hostOnly = isHost() && !inRoom(ME_ID);
+      const d = c.deal, cx = d && c.cancel && c.cancel[d.s];
+      const nm = id => esc(P(id).name);
+      let top;
+      if (d && !cx) top = '<section class="verdict"><h2>🎉 مبروك تمت البيعة</h2><p>البائع: <b>' + nm(c[d.s]) + '</b> · المشتري: <b>' + nm(d.buyer) + '</b></p></section>';
+      else if (d && cx) top = '<section class="verdict"><h2>انلغت البيعة بالاعتراض</h2><p>البائع: <b>' + nm(c[d.s]) + '</b> · المشتري: <b>' + nm(d.buyer) + '</b></p></section>';
+      else top = '<section class="verdict"><h2>ما تمت أي بيعة بهالجولة</h2></section>';
       let mine = '';
-      if (mySide) mine = 'بعت ' + c.n[mySide] + ' وربحت ' + kd(rev(mySide)) + '.';
-      else if (c.buys[ME_ID] === 'a' || c.buys[ME_ID] === 'b') mine = 'اشتريت ' + esc(itemText(c.item)) + ' بـ ' + kd(c.prices[c.buys[ME_ID]]) + '.';
+      const e = G.econ[ME_ID];
+      if (mySide) {
+        if (d && d.s === mySide && !cx) mine = 'بعت الغرض بـ ' + kd(d.price) + '.';
+        else if (d && d.s === mySide && cx) mine = 'انلغت بيعتك بالاعتراض.';
+        else mine = 'ما بعت بهالجولة.';
+        if (e) mine += ' مجموع أرباحك: ' + kd(e.p) + '.';
+      } else if (d && d.buyer === ME_ID) mine = cx ? 'انلغت شروتك بالاعتراض، ورجعت فلوسك.' : 'اشتريت الغرض بـ ' + kd(d.price) + '.';
+      else if (c.buys[ME_ID] === 'l') mine = 'غيرك أكد الشراء قبلك، فما اشتريت.';
       else if (c.buys[ME_ID] === 'x') mine = 'رفضت الشراء.';
-      else if (c.buys[ME_ID] === 'c') mine = 'انلغت شروتك بالاعتراض، ورجعت فلوسك.';
-      else if (helpFor) mine = 'كنت مسؤول مبيعات ' + esc(P(c[helpFor]).name) + '.';
-      else if (inRoom(ME_ID)) mine = 'ما اخترت، انحسبت ممتنع.';
+      else if (helpFor) mine = 'كنت مسؤول مبيعات ' + nm(c[helpFor]) + '.';
+      else if (inRoom(ME_ID)) mine = d ? 'سكرت البيعة قبل ما تختار.' : 'ما اخترت، انحسبت ممتنع.';
+      let detail = '';
+      if (hostOnly) {
+        const ref = buyers().filter(id => c.buys[id] === 'x'), late = buyers().filter(id => c.buys[id] === 'l'), abst = buyers().filter(id => c.buys[id] === '-');
+        detail = '<section class="card" style="display:grid;gap:8px"><h3>تفاصيل للمضيف بس</h3>' +
+          '<p class="small">' + nm(c.a) + ': ' + kd(c.prices.a) + ' · ' + nm(c.b) + ': ' + kd(c.prices.b) + '</p>' +
+          (d ? '<p class="small">' + nm(d.buyer) + ' اشترى من ' + nm(c[d.s]) + ' بـ ' + kd(d.price) + (cx ? ' (انلغت)' : '') + '</p>' : '') +
+          (late.length ? '<p class="small muted">حاولوا يشترون بعد ما سكرت: ' + late.map(nm).join('، ') + '</p>' : '') +
+          (ref.length ? '<p class="small muted">رفضوا: ' + ref.map(nm).join('، ') + '</p>' : '') +
+          (abst.length ? '<p class="small muted">امتنعوا: ' + abst.map(nm).join('، ') + '</p>' : '') + '</section>' + standings(false);
+      }
       const last = G.roundNo >= G.total;
-      return head + '<section class="verdict"><h2>' + (win ? esc(P(c[win]).name) + ' ' + gv(P(c[win]), 'كسب الجولة', 'كسبت الجولة') : (c.n.a + c.n.b ? 'تعادل بالأرباح!' : 'محد اشترى شي!')) + '</h2><p>' + mine + '</p></section>' +
-        itemCard() + '<div class="parties">' + col('a') + col('b') + '</div>' +
-        (cx.length ? '<section class="card small muted">انلغت شروتهم ورجعت فلوسهم: ' + cx.map(id => esc(P(id).name)).join('، ') + '</section>' : '') + pp +
-        (ref.length || abst.length ? '<section class="card small muted">' + (ref.length ? 'رفضوا: ' + ref.map(id => esc(P(id).name)).join('، ') : '') + (ref.length && abst.length ? ' · ' : '') + (abst.length ? 'امتنعوا: ' + abst.map(id => esc(P(id).name)).join('، ') : '') + '</section>' : '') +
-        standings(false) +
+      return head + top + (mine ? '<section class="card pass"><p>' + mine + '</p></section>' : '') + pp + detail +
         (isHost() ? '<button class="btn xl primary" data-act="nextRound">' + (last ? 'النتيجة النهائية' : 'الجولة التالية') + '</button>' : waitHost());
     }
     return head;
@@ -1288,7 +1309,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (!st.ok) { U.modal = null; return ''; }
       const os = other(st.side);
       let act;
-      if (m.id === 'up' || m.id === 'down') act = '<p class="muted">سعر ' + esc(P(c[os]).name) + ' الحين ' + kd(c.prices[os]) + '. كم ' + (m.id === 'up' ? 'تزيده' : 'تنقصه') + '؟</p><div class="seg-wide">' + [1, 2, 3].map(a => '<button data-act="perkGo" data-amt="' + a + '">' + (m.id === 'up' ? '+' : '−') + a + ' د.ك</button>').join('') + '</div>';
+      if (m.id === 'up' || m.id === 'down') act = '<p class="muted">كم ' + (m.id === 'up' ? 'تزيد' : 'تنقص') + ' سعر ' + esc(P(c[os]).name) + '؟ (سعره يظل سر عنك)</p><div class="seg-wide">' + [1, 2, 3].map(a => '<button data-act="perkGo" data-amt="' + a + '">' + (m.id === 'up' ? '+' : '−') + a + ' د.ك</button>').join('') + '</div>';
       else if (m.id === 'rep') act = '<p class="muted">اختر مين يصير مسؤول مبيعاتك:</p><div class="cands">' + buyers().map(id => '<button class="cand" data-act="perkGo" data-target="' + id + '">' + avatar(P(id), 40) + '<b>' + esc(P(id).name) + '</b></button>').join('') + '</div>';
       else act = (m.id === 'half' ? '<p class="muted">سعرك يصير ' + kd(half(c.prices[st.side] / 2)) + ' بدل ' + kd(c.prices[st.side]) + '.</p>' : '') + '<button class="btn xl primary" data-act="perkGo">استخدم الميزة</button>';
       body = '<h2>' + k.name + '</h2><p class="muted">' + k.desc + ' تنستخدم مرة وحدة باللعبة.</p>' + act + '<button class="btn ghost" data-act="closeModal">إلغاء</button>';
@@ -1330,7 +1351,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (!U.code || U.view === 'home') html += homeView();
       else if (!G) html += '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>جاري الاتصال بالغرفة ' + esc(U.code) + '</h2></section><button class="btn ghost" data-act="leaveNow">إلغاء</button>';
       else if (U.view === 'join') html += joinView();
-      else if (U.view === 'wait') html += waitView();
+      else if (U.view === 'wait') html += (G.phase === 'lobby' && !inRoom(ME_ID) && takenStop() ? joinView() : waitView());
       else if (U.view === 'spect') html += spectView();
       else if (U.view === 'kicked') html += kickedView();
       else html += gameView();
@@ -1357,7 +1378,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const r = remain(), d = G.cur.dur || 1;
     const pz = isPz();
     document.querySelectorAll('[data-clock]').forEach(el => { el.textContent = fmt(r); });
-    document.querySelectorAll('[data-ring]').forEach(el => el.classList.toggle('paused', pz));
+    document.querySelectorAll('[data-ring]').forEach(el => { el.classList.toggle('paused', pz); el.classList.toggle('tup', !pz && r <= 0); });
     document.querySelectorAll('[data-ring]').forEach(el => {
       const fg = el.querySelector('.fg'); if (fg) fg.style.strokeDashoffset = String(326.7 * (1 - Math.min(1, r / d)));
       el.classList.toggle('low', r <= 10);
@@ -1454,7 +1475,12 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
     }
   }
+  /* الاسم أي طول، بس ما يتكرر بنفس الغرفة */
+  function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function nameTaken(n, id) { const k = normName(n); return !!(G && k && G.players.some(p => p.id !== id && normName(p.name) === k)); }
+  function takenStop() { const nm = U.name.trim(); if (!nameTaken(nm, ME_ID)) return false; U.err = 'الاسم «' + nm + '» مستخدم بالغرفة، اختار اسم ثاني.'; U.view = 'join'; try { if (typeof toast === 'function') toast(U.err); } catch (e) { } return true; }
   async function sendJoin() {
+    if (takenStop()) { render(); return; }
     ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), gender: U.gender, at: Date.now() });
     lsSet({ name: U.name.trim(), gender: U.gender });
     U.view = 'wait';
@@ -1535,7 +1561,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const c = G.cur; if (!c || c.stage !== 'buy') return false;
     if (!U.pick) { toast('اختر: تشتري من مين، ولا ترفض.'); return false; }
     if ((U.pick === 'a' || U.pick === 'b') && c.prices[U.pick] > E(ME_ID).w) { toast('فلوس محفظتك ما تكفي.'); return false; }
-    mine().buy = { key: c.key, v: U.pick }; render(); await saveMe();
+    mine().buy = { key: c.key, v: U.pick, t: Date.now() }; render(); await saveMe();
   };
 
   /* ---------- events ---------- */

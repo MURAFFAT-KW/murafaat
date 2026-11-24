@@ -67,6 +67,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
 <style id="aq-pro-intro">.intro-art{display:block;width:min(84vw,340px);margin:4px auto 6px}.intro-art svg{width:100%;height:auto;display:block}.intro-art .pitch{margin:0 auto;max-width:300px}.intro-art.fig{display:flex;justify-content:center;align-items:flex-end;gap:2px}.intro-art.fig svg{width:31%;height:auto}.intro-art.fig svg:nth-child(2){width:36%}.intro-art.house svg{border-radius:18px;box-shadow:0 10px 24px -12px rgba(18,32,58,.35)}</style>
 <style id="aq-pro-polish">.btn,button{transition:transform .12s ease,box-shadow .12s ease,filter .12s ease}.btn:active,button:active{transform:scale(.97)}.btn.primary,.btn.xl{box-shadow:0 8px 18px -10px rgba(18,32,58,.45),inset 0 -3px 0 rgba(0,0,0,.12)}</style>
 <link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="أقنعني"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script src="aq-pro.js"></script>
+<script src="aq-theme.js"></script>
 </head><body>
 <script src="aq-brand.js"></script>
 
@@ -683,11 +684,14 @@ const MZ = (function () {
     const e = [['A', t.A], ['B', t.B], ['none', t.none]].sort((x, y) => y[1] - x[1]);
     const tie = e[0][1] === e[1][1];
     const margin = e[0][1] - e[1][1];
-    return { leader: tie ? null : e[0][0], tie, margin, appealable: tie || margin === 1 };
+    /* ما أحد صوّت: ما تنحسب تعادل، تنحسب «لا أحد». والاستئناف مسموح بكل سؤال بدون حد */
+    if (t.A + t.B + t.none === 0) return { leader: 'none', tie: false, margin: 0, zero: true, appealable: true };
+    return { leader: tie ? null : e[0][0], tie, margin, appealable: true };
   }
 
   /* Appeal vote: options A, B only. A tie means a new tie-break round. */
   function appealOutcome(t) {
+    if (!t || t.A + t.B === 0) return 'none';
     if (t.A > t.B) return 'A';
     if (t.B > t.A) return 'B';
     return 'tie';
@@ -959,7 +963,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       const p = G.players.find(x => x.id === id);
       if (G.phase === 'lobby' && p && (d.room !== G.code || !d.name)) { G.players = G.players.filter(x => x.id !== id); ch = true; return; }
       if (d.room !== G.code) return;
-      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && G.players.length < 26) {
+      if (G.phase === 'lobby' && !p && !G.kicked[id] && d.name && !nameTaken(d.name, id) && G.players.length < 26) {
         G.players.push({ id, name: uniqueName(d.name, id), gender: d.gender === 'f' ? 'f' : 'm', perks: [], score: 0, at: d.at || 0 });
         ch = true;
       } else if (G.phase === 'lobby' && p && d.at && d.at > (p.at || 0)) {
@@ -1000,7 +1004,9 @@ if (typeof module !== 'undefined') module.exports = MZ;
     if (G.phase !== 'case' || !c) return;
     const t = c.timer;
     if (t && t.running && left() <= 0) { t.running = false; t.remaining = 0; t.done = true; beep(); publish(); render(); }
-    if ((c.stage === 'vote' && c.vote && Date.now() >= c.vote.endsAt) || (c.obj && Date.now() >= c.obj.endsAt)) hostStep();
+    /* خلص وقت التصويت: ما يمشي لحاله، المضيف يضغط الزر. بس نسوي صوت مرة وحدة */
+    const vo = (c.stage === 'vote' && c.vote) || c.obj;
+    if (vo && !vo.tu && Date.now() >= vo.endsAt) { vo.tu = 1; beep(); publish(); render(); }
   }
 
   /* ---------- timer (host clock) ---------- */
@@ -1032,7 +1038,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const vc = document.getElementById('vclock');
     const end = G.cur.obj ? G.cur.obj.endsAt : (G.cur.vote ? G.cur.vote.endsAt : 0);
     const eo = G.cur.obj || G.cur.vote;
-    if (vc && end) vc.textContent = fmt(vLeft(eo)) + (vPz(eo) ? ' ⏸️' : '');
+    if (vc && end) vc.textContent = vLeft(eo) <= 0 && !vPz(eo) ? 'انتهى الوقت ⏰' : fmt(vLeft(eo)) + (vPz(eo) ? ' ⏸️' : '');
   }
   setInterval(paintClocks, 250);
 
@@ -1182,8 +1188,8 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const done = Object.keys(picks);
     let ch = false;
     if (done.length !== v.done.length) { v.done = done; ch = true; }
-    if (done.length >= c.jurors.length || Date.now() >= v.endsAt) {
-      if (!done.length && c.jurors.length) { v.endsAt = Date.now() + (v.dur || SEC('voteSec')) * 1000; v.retry = (v.retry || 0) + 1; return true; }
+    if (done.length >= c.jurors.length || v.force) {
+      if (!done.length && c.jurors.length) { v.force = 0; v.tu = 0; v.endsAt = Date.now() + (v.dur || SEC('voteSec')) * 1000; v.retry = (v.retry || 0) + 1; return true; }
       if (v.kind === 'first') { c.v1 = tally(picks, ['A', 'B', 'none']); c.o1 = firstVoteOutcome(c.v1); c.appeal = null; c.stage = 'tally1'; }
       else { const t = tally(picks, ['A', 'B']); c.rounds.push({ kind: v.kind, A: t.A, B: t.B }); c.lastT = t; c.stage = 'tally2'; }
       c.vote = null; ch = true;
@@ -1198,7 +1204,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const done = Object.keys(votes);
     let ch = false;
     if (done.length !== o.done.length) { o.done = done; ch = true; }
-    if (done.length >= o.jurors.length || Date.now() >= o.endsAt) {
+    if (done.length >= o.jurors.length || o.force) {
       const yes = done.filter(j => votes[j] === 'yes').length, nay = done.length - yes;
       const acc = yes > nay, side = o.side, other = side === 'A' ? 'B' : 'A';
       c.used[c[side] + ':objection'] = true;
@@ -1583,12 +1589,13 @@ if (typeof module !== 'undefined') module.exports = MZ;
     if (c.stage === 'tally1') {
       const o = c.o1;
       let msg;
-      if (o.tie) msg = 'تعادل الخيارين الأعلى.';
+      if (o.zero) msg = 'ما أحد صوّت، فما في فايز بهالسؤال.';
+      else if (o.tie) msg = 'تعادل الخيارين الأعلى.';
       else if (o.leader === 'none') msg = 'تقدّم خيار «لا أحد»: لم يقتنع المحلفون بأي طرف.';
       else msg = 'تقدّم ' + esc(P(c[o.leader]).name) + ' في التصويت الأول.';
       let appealBox = '';
       if (o.appealable) {
-        const why = o.tie ? 'تعادل في الصدارة' : 'الفارق صوت واحد فقط';
+        const why = o.tie ? 'تعادل في الصدارة' : o.margin === 1 ? 'الفارق صوت واحد فقط' : 'الاستئناف مسموح بكل سؤال';
         const card = (h, body) => '<section class="card" style="display:grid;gap:12px;border-color:var(--gold)"><h2>' + h + '</h2>' + body + '</section>';
         if (c.appeal) {
           const by = c.appeal.by, names = by.map(k => esc(P(c[k]).name)).join(' و');
@@ -1610,7 +1617,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const last = c.rounds[c.rounds.length - 1];
     const ttl = last.kind === 'appeal' ? 'نتيجة تصويت الاستئناف' : 'نتيجة الجولة الفاصلة';
     return '<div class="vkind appeal"><b>' + ttl + '</b><span class="muted">اكتمل التصويت.</span></div>' +
-      '<section class="card" style="display:grid;gap:16px">' + bars(c.lastT, ['A', 'B'], labels, out === 'tie' ? null : out) + '<p><b>' + (out === 'tie' ? 'تعادل الطرفان. تُفتح جولة تصويت فاصلة بخيارين فقط.' : 'فاز ' + esc(P(c[out]).name) + ' بتصويت الاستئناف.') + '</b></p></section>' +
+      '<section class="card" style="display:grid;gap:16px">' + bars(c.lastT, ['A', 'B'], labels, out === 'tie' || out === 'none' ? null : out) + '<p><b>' + (out === 'none' ? 'ما أحد صوّت بالاستئناف، فما في فايز بهالسؤال.' : out === 'tie' ? 'تعادل الطرفان. تُفتح جولة تصويت فاصلة بخيارين فقط.' : 'فاز ' + esc(P(c[out]).name) + ' بتصويت الاستئناف.') + '</b></p></section>' +
       (!host ? '<p class="muted" style="text-align:center">بانتظار المضيف.</p>' : (out === 'tie' ? '<button class="btn xl gold" data-act="tiebreak">بدء الجولة الفاصلة</button>' : '<button class="btn xl primary" data-act="finalAppeal">اعتماد الحكم النهائي واحتساب النقاط</button>'));
   }
   function outcomeText(o, A, B) {
@@ -1725,7 +1732,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       if (!U.code || U.view === 'home') html += homeView();
       else if (!G) html += '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>جاري الاتصال بالغرفة ' + esc(U.code) + '</h2></section><button class="btn ghost" data-act="leaveNow">إلغاء</button>';
       else if (U.view === 'join') html += joinView();
-      else if (U.view === 'wait') html += waitView();
+      else if (U.view === 'wait') html += (G.phase === 'lobby' && !inRoom(ME_ID) && takenStop() ? joinView() : waitView());
       else if (U.view === 'spect') html += spectView();
       else if (U.view === 'kicked') html += kickedView();
       else html += gameView();
@@ -1821,7 +1828,12 @@ if (typeof module !== 'undefined') module.exports = MZ;
       if (G && !inRoom(ME_ID) && G.phase === 'lobby') await sendJoin();
     }
   }
+  /* الاسم أي طول، بس ما يتكرر بنفس الغرفة */
+  function normName(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); }
+  function nameTaken(n, id) { const k = normName(n); return !!(G && k && G.players.some(p => p.id !== id && normName(p.name) === k)); }
+  function takenStop() { const nm = U.name.trim(); if (!nameTaken(nm, ME_ID)) return false; U.err = 'الاسم «' + nm + '» مستخدم بالغرفة، اختار اسم ثاني.'; U.view = 'join'; try { if (typeof toast === 'function') toast(U.err); } catch (e) { } return true; }
   async function sendJoin() {
+    if (takenStop()) { render(); return; }
     ME = Object.assign(ME && ME.room === U.code ? ME : blankMe(U.code), { room: U.code, name: U.name.trim(), gender: U.gender, at: Date.now() });
     lsSet({ name: U.name.trim(), gender: U.gender });
     U.view = 'wait';
@@ -1847,8 +1859,8 @@ if (typeof module !== 'undefined') module.exports = MZ;
     if (s.source === 'preset' && need > PACKN) { s[d.k] = old; toast('الأسئلة الجاهزة ' + PACKN + ' بس لكل مجموعة. قلّل اللاعبين أو الجولات، أو اختر «أسئلة اللاعبين».'); return false; }
     s.questions = Math.max(s.questions || 0, need);
   });
-  ACT.endVote = H(() => { const c = G.cur; if (!c || c.stage !== 'vote' || !c.vote) return false; if (!(c.vote.done || []).length && c.jurors.length) { toast('ما صوّت أحد للحين. التصويت يظل مفتوح لين يصوّت محلّف واحد على الأقل.'); return false; } c.vote.endsAt = Date.now() - 1; });
-  ACT.endObj = H(() => { const c = G.cur; if (!c || !c.obj) return false; c.obj.endsAt = Date.now() - 1; });
+  ACT.endVote = H(() => { const c = G.cur; if (!c || c.stage !== 'vote' || !c.vote) return false; if (!(c.vote.done || []).length && c.jurors.length) { toast('ما صوّت أحد للحين. التصويت يظل مفتوح لين يصوّت محلّف واحد على الأقل.'); return false; } c.vote.force = 1; hostStep(); });
+  ACT.endObj = H(() => { const c = G.cur; if (!c || !c.obj) return false; c.obj.force = 1; hostStep(); });
   ACT.set = H(d => { const v = d.k === 'source' || d.k === 'pack' ? d.v : +d.v; G.settings[d.k] = v; if (d.k === 'source' && v === 'preset') { const s = G.settings; if ((s.rounds || 1) > PACKN) s.rounds = PACKN; s.questions = Math.min(Math.max(s.questions, s.rounds), PACKN); } });
   ACT.startGame = H(() => {
     const tgt = G.settings.players || 3, real = G.players.length - (G.settings.hostPlays === 0 ? 1 : 0);
