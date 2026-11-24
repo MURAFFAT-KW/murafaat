@@ -1188,7 +1188,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const done = Object.keys(picks);
     let ch = false;
     if (done.length !== v.done.length) { v.done = done; ch = true; }
-    if (done.length >= c.jurors.length || v.force) {
+    if (v.force) { /* المضيف بس اللي ينهي التصويت */
       if (!done.length && c.jurors.length) { v.force = 0; v.tu = 0; v.endsAt = Date.now() + (v.dur || SEC('voteSec')) * 1000; v.retry = (v.retry || 0) + 1; return true; }
       if (v.kind === 'first') { c.v1 = tally(picks, ['A', 'B', 'none']); c.o1 = firstVoteOutcome(c.v1); c.appeal = null; c.stage = 'tally1'; }
       else { const t = tally(picks, ['A', 'B']); c.rounds.push({ kind: v.kind, A: t.A, B: t.B }); c.lastT = t; c.stage = 'tally2'; }
@@ -1204,7 +1204,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const done = Object.keys(votes);
     let ch = false;
     if (done.length !== o.done.length) { o.done = done; ch = true; }
-    if (done.length >= o.jurors.length || o.force) {
+    if (o.force) { /* المضيف بس اللي ينهي الاعتراض */
       const yes = done.filter(j => votes[j] === 'yes').length, nay = done.length - yes;
       const acc = yes > nay, side = o.side, other = side === 'A' ? 'B' : 'A';
       c.used[c[side] + ':objection'] = true;
@@ -1535,7 +1535,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   }
   function objBox() {
     const c = G.cur;
-    return c.obj ? objBox0() + (isHost() ? '<button class="btn primary" data-act="endObj">إنهاء (الذهاب لنتيجة الاعتراض)</button>' : '') : '';
+    return c.obj ? objBox0() + (isHost() ? (c.obj.done.length >= c.obj.jurors.length ? '<p class="muted small" style="margin:0">✓ كل المحلفين صوّتوا.</p>' : '') + '<button class="btn primary" data-act="endObj">إنهاء (الذهاب لنتيجة الاعتراض)</button>' : '') : '';
   }
   function objBox0() {
     const c = G.cur, o = c.obj;
@@ -1560,7 +1560,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     return caseTop() + objBox() + timerPanel() + witnessBox() + '<div class="parties">' + partyCard('A') + partyCard('B') + '</div>' + caseNotes();
   }
   function voteView() {
-    const hb = isHost() ? vCtl() + '<button class="btn xl primary" data-act="endVote">إنهاء (الذهاب لنتيجة التصويت)</button>' : '';
+    const hb = isHost() ? vCtl() + (G.cur.vote && G.cur.vote.done.length >= G.cur.jurors.length ? '<p class="muted small" style="margin:0;text-align:center">✓ كل المحلفين صوّتوا. انقلهم لما تكون جاهز.</p>' : '') + '<button class="btn xl primary" data-act="endVote">إنهاء (الذهاب لنتيجة التصويت)</button>' : '';
     return voteView0() + hb;
   }
   function voteView0() {

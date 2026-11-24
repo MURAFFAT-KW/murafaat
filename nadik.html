@@ -1057,13 +1057,13 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const n = G.players.length, done = progList().length;
     if (G.phase === 'market' && G.mk) {
       const mk = G.mk, up = !!force;
-      if (mk.stage === 'list' && (up || done >= n)) { openBidding(); return true; }
-      if (mk.stage === 'bid' && (up || done >= n)) { resolveMarket(); return true; }
-      if (mk.stage === 'review' && (up || done >= n)) { nextMarket(); return true; }
+      if (mk.stage === 'list' && up) { openBidding(); return true; }
+      if (mk.stage === 'bid' && up) { resolveMarket(); return true; }
+      if (mk.stage === 'review' && up) { nextMarket(); return true; }
     }
     if (G.phase === 'cup' && G.cup && G.cup.stage === 'vote') {
       const up = !!force;
-      if (up || (voters(curMatch()).length && done >= voters(curMatch()).length)) { closeVote(); return true; }
+      if (up) /* المضيف بس اللي ينقل */ { closeVote(); return true; }
     }
     return false;
   }
