@@ -292,7 +292,7 @@ html.aqguest .backbtn.hub{display:none!important}
 })();
 </script>
 <div id="app"></div>
-<button class="fab" id="fab">📝 Assumptions</button>
+<button class="fab" id="fab" hidden>📝 Assumptions</button>
 <style>#langsw{position:fixed;top:max(10px,env(safe-area-inset-top));right:12px;z-index:60;background:#fff;border:1.5px solid #D5DBE5;border-radius:99px;padding:5px 14px;font:700 .9rem/1.4 "Readex Pro","Alexandria",system-ui,sans-serif;color:#12203A;text-decoration:none;box-shadow:0 3px 10px rgba(18,32,58,.1)}#langsw[hidden]{display:none}html.aqguest #langsw{}</style>
 <a id="langsw" href="azyaa.html" lang="ar">عربي</a>
 <script>(function(){var a=document.getElementById('langsw');a.addEventListener('click',function(){try{localStorage.setItem('aqnieni.lang','ar')}catch(x){}a.href='azyaa.html'+location.hash;});})();</script>
@@ -628,7 +628,7 @@ function render() {
     html += modalView();
   }
   const ls = $('langsw'); if (ls) ls.hidden = !(U.splash || U.notice || !U.code);
-  const fab = $('fab'); if (fab) fab.hidden = !!U.notice;
+  const fab = $('fab'); if (fab) fab.hidden = !!U.notice || !/[?&]dev(=|&|$)/.test(location.search);
   if (html === U.lastHtml) { tickUI(); return; }
   const key = U.splash ? 'splash' : (G ? U.view + G.phase + (GAME.viewKey ? GAME.viewKey() : '') : U.view);
   const ae = document.activeElement, fid = ae && ae.id && app.contains(ae) ? ae.id : null;
