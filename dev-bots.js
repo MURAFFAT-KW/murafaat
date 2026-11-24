@@ -441,16 +441,21 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
         }
       } else if (st === 'buy') {
         var isSeller = cur.a === me.id || cur.b === me.id;
-        if (!isSeller && !(m.buy && m.buy.key === cur.key)) {
+        if (!isSeller && !cur.closed && !(m.buy && m.buy.key === cur.key)) {
+          // كل بوت ياخذ وقت تفكير مختلف، عشان مو نفس الشخص يسبق كل مرة
+          if (mem['bd' + cur.key] == null) mem['bd' + cur.key] = c.rnd(1, 9);
+          if (w < mem['bd' + cur.key]) return null;
           if (!mem['bp' + cur.key]) {
             mem['bp' + cur.key] = 1;
-            var pr = cur.prices || {}, opts = ['a', 'b'].filter(function (k) { return pr[k] != null && pr[k] <= (wallet == null ? 20 : wallet); });
+            var pr = cur.prices || {}, cap = wallet == null ? 20 : wallet;
+            var opts = ['a', 'b'].filter(function (k) { return pr[k] != null && pr[k] <= cap; });
             var choice = 'x';
             if (opts.length) {
-              // يميل للأرخص، ويرفض إذا الأسعار غالية مقارنة بمحفظته
-              opts.sort(function (x, y) { return pr[x] - pr[y] + (Math.random() - 0.5) * 6; });
-              var cheap = pr[opts[0]], ratio = wallet ? cheap / wallet : 0.5;
-              choice = Math.random() < (ratio > 0.6 ? 0.35 : 0.8) ? opts[0] : (Math.random() < 0.5 && opts[1] ? opts[1] : 'x');
+              opts.sort(function (x, y) { return pr[x] - pr[y] + (Math.random() - 0.5) * 3; });
+              var p0 = pr[opts[0]];
+              // سعر حلو = يشتري غالبًا، معقول = أحيانًا، غالي = نادرًا
+              var want = p0 <= 6 ? 0.9 : p0 <= 9 ? 0.6 : p0 <= 13 ? 0.3 : 0.1;
+              if (Math.random() < want) choice = opts[0];
             }
             var el = c.acts('pick').find(function (e) { return e.dataset.v === choice; }) || c.acts('pick').find(function (e) { return e.dataset.v === 'x'; });
             if (el) { c.clickEl(el); return '.'; }
@@ -462,7 +467,8 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
       }
       if (host) {
         if (st === 'result') { if (w > 4 && c.click('nextRound')) return 'المضيف: الجولة الجاية'; return null; }
-        var mx = st === 'reveal' ? 4 : (st === 'pitch1' || st === 'pitch2') ? 10 : 30;
+        // ما شي ينتقل بروحه: المضيف ينقل كل مرحلة
+        var mx = st === 'reveal' ? 4 : (st === 'pitch1' || st === 'pitch2') ? (cur.spDone === st ? 3 : 12) : st === 'buy' ? (cur.closed ? 3 : 14) : 12;
         if (w > mx && c.click('skip')) return 'المضيف: إنهاء (' + st + ')';
       }
       return null;

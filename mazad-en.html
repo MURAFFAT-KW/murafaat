@@ -764,7 +764,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   }
   function applyReq(id, r) {
     const c = G.cur;
-    if (r.type === 'done' && c && r.key === c.key && (c.stage === 'pitch1' || c.stage === 'pitch2') && c[c.speaker] === id) roundStep(true);
+    if (r.type === 'done' && c && r.key === c.key && (c.stage === 'pitch1' || c.stage === 'pitch2') && c[c.speaker] === id) { c.spDone = c.stage; publish(); }
     if (r.type === 'perk' && c && r.key === c.key) usePerk(id, r);
   }
   /* perks: who can use what, now */
@@ -926,7 +926,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const go = !!force;
     if (c.stage === 'vote') {
       const done = G.players.map(p => p.id).filter(id => { const x = inp(id).vote; return x && x.key === c.key; });
-      if (!go && done.length < G.players.length) return false;
+      if (!go) return false; /* المضيف هو اللي ينقل للمرحلة الجاية، حتى لو الكل صوّت */
       const t = {};
       done.forEach(id => { const v = inp(id).vote.v; if (c.cands.includes(v)) t[v] = (t[v] || 0) + 1; });
       chooseItem(t);
@@ -934,7 +934,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     }
     if (c.stage === 'price') {
       const pa = priceIn('a'), pb = priceIn('b');
-      if (!go && (pa == null || pb == null)) return false;
+      if (!go) return false; /* حتى لو البائعين حطوا السعر، المضيف ينقل */
       c.prices = { a: pa == null ? G.settings.val : pa, b: pb == null ? G.settings.val : pb };
       c.auto = { a: pa == null, b: pb == null };
       c.first = Math.random() < .5 ? 'a' : 'b';
@@ -945,24 +945,25 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (c.stage === 'buy') {
         const bs = buyers();
         const got = bs.some(id => { const x = inp(id).buy; return x && x.key === c.key && (x.v === 'a' || x.v === 'b') && c.prices[x.v] <= E(id).w; });
-        if (got || bs.every(id => { const x = inp(id).buy; return x && x.key === c.key; })) { settle(); return true; }
+        /* أول واحد يأكد الشراء تسكر البيعة، بس الجولة تظل لين المضيف ينقل */
+        if (got && !c.closed) { closeSale(); return true; }
       }
       return false;
     }
     if (c.stage === 'reveal') { setStage('pitch1', G.settings.pitch); c.speaker = c.first; return true; }
     if (c.stage === 'pitch1') { setStage('pitch2', G.settings.pitch); c.speaker = other(c.first); return true; }
     if (c.stage === 'pitch2') { setStage('buy', SEC('buySec')); c.speaker = null; return true; }
-    if (c.stage === 'buy') { settle(); return true; }
+    if (c.stage === 'buy') { settle(); return true; } // المضيف ضغط: نسكر ونروح للنتيجة
     return false;
   }
   /* بيعة وحدة بكل جولة: أول مشتري يأكد الشراء ياخذ الغرض، والبائع الثاني ما يبيع */
-  function settle() {
+  function closeSale() {
     const c = G.cur, name = itemText(c.item);
     c.buys = {}; const n = { a: 0, b: 0 };
     const tries = buyers().map(id => ({ id, x: inp(id).buy })).filter(o => o.x && o.x.key === c.key && (o.x.v === 'a' || o.x.v === 'b') && G.econ[o.id] && c.prices[o.x.v] <= G.econ[o.id].w)
       .sort((p, q) => (p.x.t || 0) - (q.x.t || 0));
     const win = tries[0] || null;
-    c.deal = null;
+    c.deal = null; c.closed = true;
     if (win) {
       const v = win.x.v, e = G.econ[win.id];
       e.w -= c.prices[v]; e.items.push(name);
@@ -976,6 +977,12 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       c.buys[id] = x && x.key === c.key ? (x.v === 'x' ? 'x' : 'l') : '-';
     });
     c.n = n;
+    return true;
+  }
+  function settle() {
+    const c = G.cur, name = itemText(c.item);
+    if (!c.closed) closeSale();
+    const n = c.n || { a: 0, b: 0 };
     G.history.push({ no: c.no, item: name, a: c.a, b: c.b, pa: c.prices.a, pb: c.prices.b, na: n.a, nb: n.b });
     G.roundNo++;
     setStage('result', 0);
@@ -1213,13 +1220,14 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       return head + itemCard() + sellersBox(true) +
         (mine ? '<section class="card action pass"><h2>Your turn! Convince them to buy from you</h2><p class="muted">Your price ' + kd(c.prices[mySide]) + '. Say why your item is worth it.</p><button class="btn xl" data-act="pitchDone">I’m done</button></section>'
           : '<section class="card pass"><h2>' + esc(P(c[c.speaker]).name) + ' is pitching now</h2><p class="muted">Listen closely, then decide.</p></section>') +
-        pp + clockBox(c.stage === 'pitch1' ? 'Offer one' : 'Offer two', c.stage === 'pitch1' ? 'go to the turn of ' + P(c[other(c.first)]).name : 'go to the buying decision');
+        (c.spDone === c.stage ? '<section class="card"><p class="muted" style="margin:0">✓ ' + esc(P(c[c.speaker]).name) + ' finished talking. The host moves on when ready.</p></section>' : '') + pp + clockBox(c.stage === 'pitch1' ? 'Offer one' : 'Offer two', c.stage === 'pitch1' ? 'go to the turn of ' + P(c[other(c.first)]).name : 'go to the buying decision');
     }
     if (c.stage === 'buy') {
       const b = inp(ME_ID).buy, sent = b && b.key === c.key;
       if (U.pickKey !== c.key + 'b') { U.pickKey = c.key + 'b'; U.pick = null; }
       let body;
-      if (!inRoom(ME_ID)) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>People are deciding…</h2></section>';
+      if (c.closed && c.deal) body = '<section class="card pass"><h2>The sale is closed ✓</h2><p class="muted">Someone confirmed a purchase. Wait for the host to move on.</p></section>';
+      else if (!inRoom(ME_ID)) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>People are deciding…</h2></section>';
       else if (seller || helpFor) body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>People are deciding…</h2><p class="muted">' + (seller ? 'Let’s see how many bought from you.' : 'You’re a sales rep, you don’t buy this round.') + '</p></section>';
       else if (!sent) {
         const w = E(ME_ID).w;
