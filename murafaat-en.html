@@ -846,7 +846,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   function freshRoom(code) {
     return {
       v: 2, code, host: ME_ID, rev: 0, sentAt: 0, gameNo: 0, phase: 'lobby', players: [], kicked: {}, reqSeen: {},
-      settings: { hostPlays: 1, players: 3, questions: 3, rounds: 1, cases: 3, prep: 60, plead: 60, replySec: 30, voteSec: 60, objSec: 30, perQ: 2, source: 'preset', pack: 'all' },
+      settings: { hostPlays: 1, players: 3, questions: 3, rounds: 3, cases: 3, prep: 60, plead: 60, replySec: 30, voteSec: 60, objSec: 30, perQ: 2, source: 'preset', pack: 'all' },
       qmap: {}, qShown: [], pool: [], order: [], spares: [], caseNo: 0, cur: null, results: [], appear: {},
       ansRound: 0, ansQueue: [], ansReturn: 'start', prog: [], nocase: null
     };
@@ -1043,12 +1043,12 @@ if (typeof module !== 'undefined') module.exports = MZ;
     let list;
     if (G.settings.source === 'custom') list = shuffle(G.questions || []);
     else list = shuffle((PACKS[G.settings.pack] || PACKS.all).qs.map((x, i) => ({ id: 'kall' + i, text: x.t, opts: x.o })));
-    const n = Math.min(list.length, Math.max(G.settings.questions || 3, G.players.length * (G.settings.rounds || 1)));
+    const n = Math.min(list.length, Math.max(G.settings.questions || 3, (G.settings.rounds || 1)));
     const pool = list.slice(0, n);
     G.qmap = {};
     pool.forEach(x => (G.qmap[x.id] = { id: x.id, text: x.text, opts: x.opts || null }));
     G.pool = pool.map(x => x.id);
-    const nc = Math.min(G.players.length * (G.settings.rounds || 1), n);
+    const nc = Math.min((G.settings.rounds || 1), n);
     G.order = G.pool.slice(0, nc);
     G.spares = G.pool.slice(nc);
     ANS = {}; saveAns();
@@ -1184,6 +1184,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     let ch = false;
     if (done.length !== v.done.length) { v.done = done; ch = true; }
     if (done.length >= c.jurors.length || Date.now() >= v.endsAt) {
+      if (!done.length && c.jurors.length) { v.endsAt = Date.now() + (v.dur || SEC('voteSec')) * 1000; v.retry = (v.retry || 0) + 1; return true; }
       if (v.kind === 'first') { c.v1 = tally(picks, ['A', 'B', 'none']); c.o1 = firstVoteOutcome(c.v1); c.appeal = null; c.stage = 'tally1'; }
       else { const t = tally(picks, ['A', 'B']); c.rounds.push({ kind: v.kind, A: t.A, B: t.B }); c.lastT = t; c.stage = 'tally2'; }
       c.vote = null; ch = true;
@@ -1260,8 +1261,10 @@ if (typeof module !== 'undefined') module.exports = MZ;
     if (c[side] !== id && !(r.type === 'spk' && id === G.host)) return false;
     if (r.type === 'spk') { if (!c.helper[side]) return false; c.spk[side] = c.spk[side] === 'main' ? 'helper' : 'main'; return true; }
     if (r.type === 'appeal') {
-      if (c.stage !== 'tally1' || !c.o1 || !c.o1.appealable || c.appeal) return false;
-      c.appeal = { by: side }; c.notes.push(P(id).name + ' requested an appeal.'); return true;
+      if (c.stage !== 'tally1' || !c.o1 || !c.o1.appealable) return false;
+      const by = (c.appeal && c.appeal.by) || [];
+      if (by.includes(side)) return false;
+      c.appeal = { by: by.concat(side) }; c.notes.push(P(id).name + ' requested an appeal.'); return true;
     }
     if (r.type !== 'perk') return false;
     const st = perkState(side, r.id);
@@ -1349,7 +1352,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       '<li><span>The host creates a room and sends the code or link; everyone joins from their phone.</span></li>' +
       '<li><span>Each player writes their answers secretly on their phone; answers are never shown with names.</span></li>' +
       '<li><span>Two players with different answers are chosen, and each defends the other’s view, with a timer and perks.</span></li>' +
-      '<li><span>The other players vote from their phones. If the vote is close, either side can request an appeal.</span></li></ol></section>';
+      '<li><span>The other players vote from their phones. If the vote is close, either side (or both) can request an appeal and the host accepts or rejects; the host can also open one. “Nobody” is only an option in the first vote.</span></li></ol></section>';
   }
   function joinView() {
     return '<section class="card" style="display:grid;gap:14px;text-align:center"><span class="muted">You’re joining room</span><div class="bigcode" dir="ltr">' + esc(U.code) + '</div></section>' +
@@ -1391,8 +1394,8 @@ if (typeof module !== 'undefined') module.exports = MZ;
       (host && p.id !== ME_ID ? '<button class="x" data-act="kick" data-id="' + p.id + '" aria-label="Remove ' + esc(p.name) + '">×</button>' : '') + '</div></div>').join('');
     const settings = host ? '<section class="card" style="display:grid;gap:18px"><h2>Game settings</h2>' +
       '<div class="labelled"><span class="lbl">Players (lawyers)</span>' + stp('players', 3, 25) + '</div>' +
-      '<div class="labelled"><span class="lbl">Rounds</span>' + stp('rounds', 1, 5) + '<span class="muted small">Each round has ' + tgt + ' questions, about one per player. That’s ' + (tgt * s.rounds) + ' questions played.</span></div>' +
-      '<div class="labelled"><span class="lbl">Questions</span>' + stp('questions', tgt * s.rounds, s.source === 'preset' ? PACKN : 60) + '<span class="muted small">At least ' + (tgt * s.rounds) + ' (players × rounds). The game draws from them at random; extras are used by the “Swap question” perk.' + (s.source === 'custom' ? ' Each player writes ' + Math.ceil(s.questions / tgt) + '.' : '') + '</span></div>' +
+      '<div class="labelled"><span class="lbl">Rounds</span>' + stp('rounds', 1, 30) + '<span class="muted small">Each round is one debate: two sides and one question. So ' + s.rounds + ' debate' + (s.rounds > 1 ? 's' : '') + ' in total.</span></div>' +
+      '<div class="labelled"><span class="lbl">Questions</span>' + stp('questions', s.rounds, s.source === 'preset' ? PACKN : 60) + '<span class="muted small">This is the question bank, not all of them get asked. Each round draws one question at random, and extras are used by the “Swap question” perk. At least ' + s.rounds + ' (one per round).' + (s.source === 'custom' ? ' Each player writes ' + Math.ceil(s.questions / tgt) + '.' : '') + '</span></div>' +
       '<div class="labelled"><span class="lbl">Host</span>' + seg2('hostPlays', [[1, 'I’ll play'], [0, 'Host only']]) + '<span class="muted small">' + (s.hostPlays === 0 ? 'You don’t play. You only run the game, and you need 3 players besides you.' : 'You play like everyone else, and also run the game.') + '</span></div>' +
       '<div class="labelled"><span class="lbl">Prep time</span>' + seg('prep', TIMES, ' s') + '</div>' +
       '<div class="labelled"><span class="lbl">Argument time</span>' + seg('plead', TIMES, ' s') + '</div>' +
@@ -1435,7 +1438,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   function qreviewView() {
     return '<section class="card"><h2>The group’s questions</h2><p class="muted" style="margin-bottom:12px">' + G.qShown.length + ' questions, without their authors.</p><ul class="qlist">' +
       G.qShown.map(id => '<li>' + esc(G.qmap[id] ? G.qmap[id].text : '') + '</li>').join('') + '</ul></section>' +
-      (G.qShown.length < G.players.length * (G.settings.rounds || 1) ? '<div class="note">Fewer questions were written than needed, so only <b>' + G.qShown.length + '</b> questions will be played.</div>' : '') +
+      (G.qShown.length < (G.settings.rounds || 1) ? '<div class="note">Fewer questions were written than needed, so only <b>' + G.qShown.length + '</b> questions will be played.</div>' : '') +
       (isHost() ? '<button class="btn xl primary" data-act="startAnswers">Start secret answers</button>' : '<p class="muted" style="text-align:center">Waiting for the host to start the answers.</p>');
   }
   function answersView() {
@@ -1560,7 +1563,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const title = first ? 'First vote' : (v.kind === 'appeal' ? 'Appeal vote: final verdict' : 'Tie-break round ' + (v.round - 1));
     const expl = first ? 'Pick the more convincing side. Pick “Nobody” if neither side made a winning case.' :
       'You must pick one of the two sides. There’s no “Nobody” option. Your first-vote ballot doesn’t count here.';
-    const head = '<div class="vkind ' + (first ? '' : 'appeal') + '"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>' + title + '</b><span class="chip num" id="vclock">' + fmt(vLeft(v)) + (vPz(v) ? ' ⏸️' : '') + '</span></div><span class="muted">Vote ' + v.done.length + ' of ' + c.jurors.length + '. Votes are secret until everyone has voted.</span></div>';
+    const head = '<div class="vkind ' + (first ? '' : 'appeal') + '"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><b>' + title + '</b><span class="chip num" id="vclock">' + fmt(vLeft(v)) + (vPz(v) ? ' ⏸️' : '') + '</span></div><span class="muted">Vote ' + v.done.length + ' of ' + c.jurors.length + '. Votes are secret until everyone has voted.</span>' + (v.retry ? '<span class="muted small">Nobody voted in time, so the vote was reopened.</span>' : '') + '</div>';
     if (!c.jurors.includes(ME_ID)) return head + '<section class="card pass"><h2>' + (mySide() ? 'The jury is voting on your argument' : 'The jury is voting') + '</h2><p class="muted">The result shows when everyone votes or time runs out.</p></section>';
     const voted = ME && ME.vote && ME.vote.key === v.key;
     if (voted) return head + '<section class="card pass"><h2>Vote received</h2><p class="muted">Waiting for the other jurors.</p></section>';
@@ -1587,13 +1590,17 @@ if (typeof module !== 'undefined') module.exports = MZ;
       let appealBox = '';
       if (o.appealable) {
         const why = o.tie ? 'Tied at the top' : 'Margin of just one vote';
+        const card = (h, body) => '<section class="card" style="display:grid;gap:12px;border-color:var(--gold)"><h2>' + h + '</h2>' + body + '</section>';
         if (c.appeal) {
-          appealBox = '<section class="card" style="display:grid;gap:12px;border-color:var(--gold)"><h2>Appeal requested by ' + esc(P(c[c.appeal.by]).name) + '</h2><p>' + (host ? 'Confirm starting a second vote with just two options. First-vote ballots don’t count.' : 'Waiting for the host to confirm ' + esc(P(G.host).name) + '.') + '</p>' +
-            (host ? '<div class="btn-row"><button class="btn gold" data-act="confirmAppeal">Confirm: start the appeal vote</button><button class="btn ghost" data-act="cancelAppeal">Reject request</button></div>' : '') + '</section>';
+          const by = c.appeal.by, names = by.map(k => esc(P(c[k]).name)).join(' and ');
+          const meToo = ms && !by.includes(ms) ? '<button class="btn gold" data-act="reqAppeal" data-side="' + ms + '">I request an appeal too</button>' : '';
+          appealBox = card('Appeal requested by ' + names,
+            (host ? '<p>Accept to start a second vote with just two options (no “Nobody”), or reject and the first vote stands.</p><div class="btn-row"><button class="btn gold" data-act="confirmAppeal">Accept: start the appeal vote</button><button class="btn ghost" data-act="cancelAppeal">Reject: confirm the first vote</button></div>'
+              : '<p class="muted">Waiting for the host ' + esc(P(G.host).name) + ' to accept or reject.</p>') + meToo);
         } else {
-          appealBox = '<section class="card" style="display:grid;gap:12px;border-color:var(--gold)"><h2>Appeal available</h2><p class="muted">Reason: ' + why + '. Either side can request an appeal from their phone.</p>' +
+          appealBox = card('Appeal available', '<p class="muted">Reason: ' + why + '. Either side, or both, can request an appeal from their phone and the host accepts or rejects. The host can also open an appeal directly.</p>' +
             (ms ? '<button class="btn xl gold" data-act="reqAppeal" data-side="' + ms + '">Request an appeal</button>' : '') +
-            (host ? '<button class="btn" data-act="noAppeal">Continue without appeal</button>' : (ms ? '' : '<p class="muted small">Waiting for both sides and the host to decide.</p>')) + '</section>';
+            (host ? '<div class="btn-row"><button class="btn gold" data-act="hostAppeal">Host: open an appeal</button><button class="btn" data-act="noAppeal">Continue without appeal</button></div>' : (ms ? '' : '<p class="muted small">Waiting for the sides and the host to decide.</p>')));
         }
       }
       return '<div class="vkind"><b>First vote result</b><span class="muted">These are the jury’s votes.</span></div>' +
@@ -1834,16 +1841,16 @@ if (typeof module !== 'undefined') module.exports = MZ;
   ACT.kick = H(d => { G.players = G.players.filter(p => p.id !== d.id); G.kicked[d.id] = true; });
   ACT.step = H(d => {
     const s = G.settings; if (G.phase !== 'lobby') return false;
-    const L = { players: [3, 25], rounds: [1, 5], questions: [3, s.source === 'preset' ? PACKN : 60] }[d.k]; if (!L) return false;
+    const L = { players: [3, 25], rounds: [1, 30], questions: [3, s.source === 'preset' ? PACKN : 60] }[d.k]; if (!L) return false;
     const old = s[d.k];
     s[d.k] = Math.min(L[1], Math.max(L[0], (+s[d.k] || L[0]) + (+d.v)));
-    const need = (s.players || 3) * (s.rounds || 1);
+    const need = (s.rounds || 1);
     if (s.source === 'preset' && need > PACKN) { s[d.k] = old; toast('Ready-made questions are only ' + PACKN + ' per group. Reduce players or rounds, or choose “Players’ questions”.'); return false; }
     s.questions = Math.max(s.questions || 0, need);
   });
-  ACT.endVote = H(() => { const c = G.cur; if (!c || c.stage !== 'vote' || !c.vote) return false; c.vote.endsAt = Date.now() - 1; });
+  ACT.endVote = H(() => { const c = G.cur; if (!c || c.stage !== 'vote' || !c.vote) return false; if (!(c.vote.done || []).length && c.jurors.length) { toast('Nobody has voted yet. The vote stays open until at least one juror votes.'); return false; } c.vote.endsAt = Date.now() - 1; });
   ACT.endObj = H(() => { const c = G.cur; if (!c || !c.obj) return false; c.obj.endsAt = Date.now() - 1; });
-  ACT.set = H(d => { const v = d.k === 'source' || d.k === 'pack' ? d.v : +d.v; G.settings[d.k] = v; if (d.k === 'source' && v === 'preset') { const s = G.settings; if ((s.players || 3) * (s.rounds || 1) > PACKN) s.rounds = Math.max(1, Math.floor(PACKN / (s.players || 3))); s.questions = Math.min(Math.max(s.questions, (s.players || 3) * s.rounds), PACKN); } });
+  ACT.set = H(d => { const v = d.k === 'source' || d.k === 'pack' ? d.v : +d.v; G.settings[d.k] = v; if (d.k === 'source' && v === 'preset') { const s = G.settings; if ((s.rounds || 1) > PACKN) s.rounds = PACKN; s.questions = Math.min(Math.max(s.questions, s.rounds), PACKN); } });
   ACT.startGame = H(() => {
     const tgt = G.settings.players || 3, real = G.players.length - (G.settings.hostPlays === 0 ? 1 : 0);
     if (real !== tgt) { U.err = real > tgt ? 'More players joined than the set number. Increase the number of players or remove one.' : 'Waiting for ' + (tgt - real) + ' players.'; return; }
@@ -1960,8 +1967,9 @@ if (typeof module !== 'undefined') module.exports = MZ;
     else if (s === 'reply2') startVote('first', 1);
   });
   ACT.cancelWit = H(() => { const c = G.cur; if (!c.witness || !c.witness.pending) return false; c.notes.push('Witness call cancelled ' + P(c.witness.pid).name + '.'); c.witness = null; });
-  ACT.confirmAppeal = H(() => { const c = G.cur; if (!c.appeal) return false; c.appealUsed = true; startVote('appeal', 1); });
-  ACT.cancelAppeal = H(() => { G.cur.appeal = null; });
+  ACT.confirmAppeal = H(() => { const c = G.cur; if (!c.appeal || c.stage !== 'tally1') return false; c.appealUsed = true; startVote('appeal', 1); });
+  ACT.cancelAppeal = H(() => { const c = G.cur; if (!c.appeal || !c.o1) return false; c.appeal = null; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
+  ACT.hostAppeal = H(() => { const c = G.cur; if (!c || c.stage !== 'tally1' || !c.o1 || !c.o1.appealable) return false; c.appeal = null; c.appealUsed = true; c.notes.push('The host opened an appeal.'); startVote('appeal', 1); });
   ACT.noAppeal = H(() => { const c = G.cur; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
   ACT.tiebreak = H(() => { const c = G.cur; startVote('tiebreak', c.rounds.length + 1); });
   ACT.finalAppeal = H(() => { const c = G.cur; finalize(appealOutcome(c.lastT), 'appeal'); });

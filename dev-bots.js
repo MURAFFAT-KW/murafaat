@@ -302,6 +302,16 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
   var ANS_EN = ['Yes', 'No', 'Definitely', 'Never', 'Depends', 'Sometimes', 'Of course not', 'The best', 'Not important', 'Both', 'Morning', 'Night', 'Sea', 'Desert', 'Coffee', 'Tea'];
   var Q_AR = ['الأكل البيتي أحسن من المطاعم؟', 'الصيف أحلى من الشتا؟', 'السفر بروحك أحسن؟', 'القهوة أهم من الفطور؟', 'الدوام من البيت أحسن؟'];
   var Q_EN = ['Is home food better than restaurants?', 'Is summer better than winter?', 'Is solo travel better?', 'Is coffee more important than breakfast?', 'Is working from home better?'];
+  // جواب له علاقة بالسؤال: من الخيارات الجاهزة للسؤال، وإلا من نص السؤال نفسه
+  function ansFor(c, G, qid) {
+    var q = (G.qmap || {})[qid] || {}, o = q.opts, t = String(q.text || '');
+    if (o && o.length) return c.pick(o);
+    var m = t.match(/^(.+?)\s+(?:أحسن|أفضل|أهم|أحلى|أصعب|أسهل)\s+من\s+(.+?)[؟?]?$/) || t.match(/^(.+?)\s+(?:better|more important|nicer|harder|easier)\s+than\s+(.+?)[؟?]?$/i);
+    if (m) return c.pick([m[1].replace(/^(هل|is|are)\s+/i, ''), m[2]]);
+    m = t.match(/^(.+?)\s+(?:ولا|أو|or)\s+(.+?)[؟?]?$/i);
+    if (m) return c.pick([m[1].replace(/^(هل|is|are)\s+/i, ''), m[2]]);
+    return c.pick(c.en ? ['Yes', 'No'] : ['أكيد', 'لا أبد']);
+  }
   B.murafaat = function (c, isBot) {
     var G = c.G(), me = c.me(); if (!G || !me) return null;
     var host = c.isHost(), ph = G.phase, mem = c.mem;
@@ -310,7 +320,8 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
     // نوافذ اختيار (مساعد / شاهد)
     if (c.has('pickHelper')) { c.click('pickHelper', null, 'rand'); return 'اختار مساعد'; }
     if (c.has('pickWitness')) { c.click('pickWitness', null, 'rand'); return 'استدعى شاهد'; }
-    var wt = c.$('#wtext'); if (wt && c.vis(wt) && c.has('witSubmit')) { c.fill(wt, c.en ? 'I think both have a point, but the first argument convinced me more.' : 'برأيي الاثنين عندهم حق، بس الحجة الأولى أقنعتني أكثر.'); c.click('witSubmit'); return 'كتب شهادته'; }
+    var wt = c.$('#wtext'); if (wt && c.vis(wt) && c.has('witSubmit')) { var cw = G.cur || {}, da = cw.defA || '', db = cw.defB || '', fa = Math.random() < 0.5, x1 = fa ? da : db, x2 = fa ? db : da;
+      c.fill(wt, c.en ? 'From what I\'ve seen, «' + x1 + '» makes more sense than «' + x2 + '».' : 'من تجربتي، «' + x1 + '» أصح من «' + x2 + '».'); c.click('witSubmit'); return 'كتب شهادته'; }
     if (c.has('objVote') && !mem['obj' + G.caseNo + (G.cur && G.cur.obj ? G.cur.obj.at || '' : '')]) { mem['obj' + G.caseNo + (G.cur && G.cur.obj ? G.cur.obj.at || '' : '')] = 1; c.click('objVote', null, 'rand'); return 'صوّت على الاعتراض'; }
 
     if (ph === 'perks') {
@@ -334,7 +345,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
     if (ph === 'qreview') { if (host) return hostEnd2(c, 'startAnswers', 3, 20, 'qreview'); return null; }
     if (ph === 'answers') {
       if (c.has('submitAnswers')) {
-        c.$$('[data-bind="ans"]').forEach(function (f) { if (!f.value) c.fill(f, c.pick(c.en ? ANS_EN : ANS_AR)); });
+        c.$$('[data-bind="ans"]').forEach(function (f) { if (!f.value) c.fill(f, ansFor(c, G, f.getAttribute('data-q'))); });
         c.click('submitAnswers'); return 'كتب إجاباته السرية';
       }
       if (host) return hostEnd2(c, 'answersNext', 3, 30, 'answers' + G.ansRound);
@@ -346,7 +357,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
     if (ph === 'case') {
       var cur = G.cur || {}, st = cur.stage, key = 'c' + G.caseNo + st + (cur.round || '');
       if (st === 'vote') {
-        var vkey = 'v' + G.caseNo + (cur.vote && cur.vote.kind || '') + (cur.vote && cur.vote.endsAt ? '' : '');
+        var vkey = 'v' + (cur.vote && cur.vote.key || G.caseNo);
         if (!mem[vkey]) {
           var opts = c.acts('pick');
           if (opts.length && !c.$('.vopt.on')) { var r = Math.random(); var pk = r < 0.45 ? opts[0] : r < 0.9 ? opts[1] || opts[0] : opts[opts.length - 1]; c.clickEl(pk); return '.'; }
@@ -362,7 +373,8 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
         if (host) { var w = since(c, 'H' + key); if (w > 4) { var order = ['nextCase', 'tiebreak', 'finalAppeal', 'noAppeal']; for (var i = 0; i < order.length; i++) if (c.click(order[i])) return 'المضيف: ' + order[i]; } }
         return null;
       }
-      if (st === 'tally1' || st === 'tally2') { if (host) { var w2 = since(c, 'H' + key); if (w2 > 3 && (c.click('next') || c.click('nextCase') || c.click('tiebreak') || c.click('finalAppeal') || c.click('noAppeal'))) return 'المضيف: بعد النتيجة'; } return null; }
+      if (st === 'tally1' && !host && c.has('reqAppeal') && !mem['ra' + G.caseNo] && since(c, 'ra' + key) > 2) { mem['ra' + G.caseNo] = 1; if (Math.random() < 0.4) { c.click('reqAppeal'); return 'طلب استئناف'; } }
+      if (st === 'tally1' || st === 'tally2') { if (host) { var w2 = since(c, 'H' + key); if (w2 > 3 && (c.click('next') || c.click('nextCase') || c.click('tiebreak') || c.click('finalAppeal') || c.click('confirmAppeal') || c.click('noAppeal'))) return 'المضيف: بعد النتيجة'; } return null; }
       // مرحلة الكلام: الطرفين يستخدمون مزايا أحيانًا
       var pb = c.acts('perk').filter(function (e) { return !e.classList.contains('used'); });
       if (pb.length && !mem['pp' + key] && Math.random() < 0.3) { mem['pp' + key] = 1; c.clickEl(c.pick(pb)); return 'استخدم ميزة'; }
