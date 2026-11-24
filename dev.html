@@ -31,6 +31,7 @@ h1{margin:0;font-size:1.6rem;color:#0554A4}
 .note{background:#F4F6F9;border-radius:14px;padding:10px 12px;font-size:.88rem;color:#3B4659;margin-top:16px}
 .note b{color:#12203A}
 </style>
+<link rel="icon" href="icon-192.png">
 </head>
 <body>
 <div class="wrap" id="app"></div>
@@ -72,6 +73,28 @@ h1{margin:0;font-size:1.6rem;color:#0554A4}
     render();
   });
   render();
+})();
+</script>
+<div class="card" id="fbcard"><div class="row"><b>💬 <span data-fbt>ملاحظات اللاعبين</span></b><button class="chip" id="fbload">عرض</button></div><div id="fblist" style="display:grid;gap:8px;margin-top:8px"></div></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+(function(){
+  var NAMES={murafaat:'المنصة',mazad:'المزاد',nadik:'الرئيس',azyaa:'الأزياء',aqar:'العقار'};
+  var b=document.getElementById('fbload'),L=document.getElementById('fblist');
+  function esc(t){return String(t||'').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+  b.addEventListener('click',function(){
+    L.innerHTML='<div class="note">جاري التحميل…</div>';
+    try{
+      if(!firebase.apps.length)firebase.initializeApp({apiKey:"AIzaSyByoJGFA6WSH5IXgZ4rxbNITx2Oqnjai1A",authDomain:"murafaat-1a91d.firebaseapp.com",databaseURL:"https://murafaat-1a91d-default-rtdb.europe-west1.firebasedatabase.app",projectId:"murafaat-1a91d"});
+      firebase.database().ref('docs/feedback').limitToLast(200).once('value').then(function(s){
+        var v=s.val()||{},a=Object.keys(v).map(function(k){try{return JSON.parse(v[k]);}catch(e){return null;}}).filter(Boolean).sort(function(x,y){return y.at-x.at;});
+        if(!a.length){L.innerHTML='<div class="note">ما وصلت ملاحظات للحين.</div>';return;}
+        var faces=['','😕','😐','🙂','😄','🤩'];
+        L.innerHTML=a.map(function(x){var d=new Date(x.at);return '<div class="note"><b>'+(NAMES[x.game]||esc(x.game))+'</b> '+(x.rating?faces[x.rating]:'')+' <span style="color:#8A93A6;font-size:.8rem">'+d.toLocaleDateString('ar-KW')+' '+d.toLocaleTimeString('ar-KW',{hour:'2-digit',minute:'2-digit'})+(x.lang==='en'?' · EN':'')+'</span>'+(x.text?'<div style="margin-top:4px;white-space:pre-wrap">'+esc(x.text)+'</div>':'')+'</div>';}).join('');
+      },function(){L.innerHTML='<div class="note">ما قدرنا نقرأ الملاحظات. تأكد إن النت شغال.</div>';});
+    }catch(e){L.innerHTML='<div class="note">ما قدرنا نقرأ الملاحظات.</div>';}
+  });
 })();
 </script>
 </body>
