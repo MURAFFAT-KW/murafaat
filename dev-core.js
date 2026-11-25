@@ -59,6 +59,13 @@
 
   /* ---------- منع Firebase وقاعدة بيانات محلية ---------- */
   try { Object.defineProperty(window, 'firebase', { configurable: false, writable: false, value: undefined }); } catch (e) { }
+  /* نوقف ملفات Firebase الخارجية قبل لا تشتغل: كانت تنكسر (لأن firebase مقفول) وتطلع «Script error.» مع كل شاشة */
+  try {
+    var killFb = function (n) { if (n && n.tagName === 'SCRIPT' && /gstatic\.com\/firebasejs/.test(n.src || '')) { n.type = 'javascript/blocked'; n.removeAttribute('src'); } };
+    var fbObs = new MutationObserver(function (ms) { ms.forEach(function (m) { Array.prototype.forEach.call(m.addedNodes || [], killFb); }); });
+    fbObs.observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', function () { fbObs.disconnect(); });
+  } catch (e) { }
   function snapOf(id, raw) {
     var v = null;
     if (typeof raw === 'string') { try { v = JSON.parse(raw); } catch (e) { v = null; } }
@@ -136,7 +143,10 @@
     } catch (e) { }
   }
   if (document.body) watchToasts(); else document.addEventListener('DOMContentLoaded', watchToasts);
-  window.addEventListener('error', function (e) { D.errors.push({ t: realNow(), who: WHO, m: (e.message || 'خطأ') + (e.lineno ? ' @' + e.lineno : '') }); });
+  window.addEventListener('error', function (e) {
+    /* «Script error.» بدون ملف ولا سطر = سكربت من موقع ثاني (Firebase) واحنا قاصدين نوقفه بنسخة المطوّر، مو خطأ باللعبة */
+    if ((/^Script error\.?$/i.test(e.message || '') && !e.lineno) || /gstatic\.com\/firebasejs/.test(e.filename || '')) return;
+    D.errors.push({ t: realNow(), who: WHO, m: (e.message || 'خطأ') + (e.lineno ? ' @' + e.lineno : '') }); });
   window.addEventListener('unhandledrejection', function (e) { D.errors.push({ t: realNow(), who: WHO, m: 'promise: ' + (e.reason && e.reason.message || e.reason) }); });
 
   /* ---------- أدوات البوت ---------- */
