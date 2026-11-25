@@ -44,7 +44,8 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
       if (!mineDone) {
         var mem = c.mem; since(c, 'buy' + gn);
         if (c.has('togPerk')) {
-          if (!mem.perkTried) { mem.perkTried = 1; if (Math.random() < 0.5 && c.click('togPerk', null, 'rand')) return 'اشترى ميزة'; }
+          if (mem.perkGoal == null) mem.perkGoal = c.rnd(1, 3);
+          if ((m.perks || []).length < mem.perkGoal) { var po = c.acts('togPerk').filter(function (e) { return !e.classList.contains('on'); }); if (po.length) { c.clickEl(c.pick(po)); return 'اشترى ميزة'; } mem.perkGoal = 0; }
           if (c.click('sub', null, function (l) { return l.find(function (e) { return e.dataset.v === 'mat'; }); })) return '.';
         }
         var plan = mem.plan || (mem.plan = { types: c.rnd(2, 3), fabrics: 2, colors: 2 });
@@ -97,6 +98,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
         if (!br.name && !fm['n' + gn]) { fm['n' + gn] = 1; c.fill('#bname', c.pick(c.en ? ['Noor', 'Velvet House', 'Dar Style', 'Sadu', 'Lulu'] : ['نور', 'بيت المخمل', 'دار ستايل', 'سدو', 'لولو']) + ' ' + c.rnd(1, 9)); return 'سمّى البراند'; }
         if (!br.desc && !fm['d' + gn]) { fm['d' + gn] = 1; c.fill('#bdesc', c.en ? 'Modern pieces with a Gulf touch.' : 'قطع عصرية بلمسة خليجية.'); return 'كتب وصف البراند'; }
         if (m.featured == null) { if (c.click('feat', null, 'rand')) return 'اختار القطعة المميزة'; }
+        if ((m.perks || []).indexOf('exclusive') >= 0 && m.exclusive == null) { if (c.click('excl', null, 'rand')) return 'اختار التصميم الحصري'; }
         if ((m.perks || []).indexOf('sale') >= 0 && !m.discount) { if (c.click('disc', null, function (l) { return l.find(function (e) { return e.dataset.v === '1'; }); })) return 'حط تنزيلات'; }
         if (c.click('markDone')) return 'خلص بناء المشروع';
       }
@@ -116,6 +118,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
       var sh = G.shop || {}, key = 'shop' + sh.round, w = since(c, key);
       var mem2 = c.mem; if (mem2.k2 !== key) { mem2.k2 = key; mem2.visits = c.rnd(1, 3); mem2.inStore = 0; }
       var wallet = (G.wallet && G.wallet[me.id] != null) ? G.wallet[me.id] : 50;
+      if (c.has('fine') && !c.has('closeModal') && Math.random() < 0.5) { if (c.click('fine', null, 'rand')) return 'حط مخالفة'; }
       if (c.has('buy') || c.has('closeModal')) {
         mem2.inStore++;
         if (mem2.inStore > 1 && wallet > 0 && Math.random() < 0.7) {

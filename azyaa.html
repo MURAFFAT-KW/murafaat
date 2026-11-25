@@ -101,6 +101,12 @@ h2{font-size:1.6rem;margin:14px 0 4px;font-weight:700;line-height:1.3}
 .store .sbadges{position:absolute;top:6px;inset-inline-start:6px;font-size:13px}
 .storebig{max-width:260px;margin:0 auto}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.grid .store.big{grid-column:1/-1;aspect-ratio:auto;min-height:230px;box-shadow:0 10px 26px rgba(123,47,190,.28);transform:scale(1.01)}.grid .store.big .sname{font-size:20px}.grid .store.big .sfeat svg{max-height:170px}
+.store .sloc{position:absolute;top:6px;inset-inline-end:6px;background:#FBC611;color:#1d1d1f;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:900}
+.store .sspy{font-size:11px;font-weight:800;opacity:.9;margin-top:2px}
+.allds{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;margin-top:10px}.allds div{background:#faf7fd;border-radius:12px;padding:6px;text-align:center;font-size:11px;font-weight:700}.allds svg{width:100%;height:auto;max-height:120px}
+.finebox{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}.finebox button{border:1.5px solid var(--line);background:#fff;border-radius:12px;padding:7px 12px;font:inherit;font-weight:800;cursor:pointer}
+.stk{display:block;font-size:11px;opacity:.75;font-weight:700}
 /* التصاميم */
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:10px}
 .dcard{border:2px solid var(--line);background:#fff;border-radius:18px;padding:8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
@@ -819,16 +825,16 @@ const CONFIG = {
   ]
 };
 const PERKS = [
-  { id: 'expand', icon: '🏬', name: { ar: 'توسعة المتجر', en: 'Store expansion' }, desc: { ar: 'مساحة أكبر للمتجر.', en: 'More space for your store.' } },
-  { id: 'location', icon: '📍', name: { ar: 'موقع يجذب زوارًا', en: 'Prime location' }, desc: { ar: 'مكان مميز في السوق.', en: 'A standout spot in the market.' } },
+  { id: 'expand', icon: '🏬', name: { ar: 'توسعة المتجر', en: 'Store expansion' }, desc: { ar: 'وقت ما تقنع الناس، تطلع كل تصاميمك مو بس القطعة المميزة.', en: 'When you pitch, all your designs show, not just the signature piece.' } },
+  { id: 'location', icon: '📍', name: { ar: 'موقع يجذب زوارًا', en: 'Prime location' }, desc: { ar: 'متجرك يطلع أول واحد وأكبر واحد بالسوق.', en: 'Your store shows first and biggest in the market.' } },
   { id: 'sale', icon: '🏷️', name: { ar: 'تنزيلات يحددها اللاعب', en: 'Player-set sale' }, desc: { ar: 'تحدد نسبة خصم على تصاميمك.', en: 'Set a discount on your designs.' }, live: true },
-  { id: 'fineSell', icon: '🚫', name: { ar: 'مخالفة بيع', en: 'Sales fine' }, desc: { ar: 'مخالفة على بيع منافس.', en: 'A fine on a rival’s sales.' } },
-  { id: 'fineShow', icon: '⛔', name: { ar: 'مخالفة عرض', en: 'Display fine' }, desc: { ar: 'مخالفة على عرض منافس.', en: 'A fine on a rival’s display.' } },
+  { id: 'fineSell', icon: '🚫', name: { ar: 'مخالفة بيع', en: 'Sales fine' }, desc: { ar: 'تختار منافس بجولة تسوق، ومبيعاته بهالجولة ما تنحسب (الفلوس توصله).', en: 'Pick a rival in a shopping round: their sales that round don’t count (they still get the money).' } },
+  { id: 'fineShow', icon: '⛔', name: { ar: 'مخالفة عرض', en: 'Display fine' }, desc: { ar: 'تختار منافس بجولة تسوق، وزيارات متجره بهالجولة ما تنحسب.', en: 'Pick a rival in a shopping round: their store visits that round don’t count.' } },
   { id: 'extraTime', icon: '⏱️', name: { ar: 'وقت إضافي للإقناع', en: 'Extra pitch time' }, desc: { ar: 'وقت زيادة وقت تتكلم.', en: 'More time when you speak.' }, live: true },
-  { id: 'taste', icon: '🔍', name: { ar: 'رصد ذوق الزبائن', en: 'Customer taste scan' }, desc: { ar: 'تعرف وش يحبون الزبائن.', en: 'Learn what customers like.' } },
-  { id: 'protect', icon: '🛡️', name: { ar: 'حماية المتجر', en: 'Store protection' }, desc: { ar: 'حماية من المخالفات.', en: 'Protection from fines.' } },
-  { id: 'exclusive', icon: '💎', name: { ar: 'خامة حصرية', en: 'Exclusive fabric' }, desc: { ar: 'خامة ما يملكها غيرك.', en: 'A fabric nobody else has.' } },
-  { id: 'vip', icon: '👑', name: { ar: 'زبون VIP افتراضي', en: 'Virtual VIP customer' }, desc: { ar: 'زبون افتراضي مميز.', en: 'A special virtual customer.' } }
+  { id: 'taste', icon: '🔍', name: { ar: 'رصد ذوق الزبائن', en: 'Customer taste scan' }, desc: { ar: 'بالسوق تشوف كم زيارة وكم مبيعة عند كل منافس.', en: 'In the market you see every rival’s visits and sales.' } },
+  { id: 'protect', icon: '🛡️', name: { ar: 'حماية المتجر', en: 'Store protection' }, desc: { ar: 'أي مخالفة تنحط عليك تنلغي، وصاحبها يخسرها.', en: 'Any fine on you is cancelled and its owner loses it.' } },
+  { id: 'exclusive', icon: '💎', name: { ar: 'خامة حصرية', en: 'Exclusive fabric' }, desc: { ar: 'تختار تصميم واحد يصير حصري 💎، وكل بيعة له تنحسب بيعتين.', en: 'Mark one design exclusive 💎: each sale of it counts as two.' } },
+  { id: 'vip', icon: '👑', name: { ar: 'زبون VIP افتراضي', en: 'Virtual VIP customer' }, desc: { ar: 'بآخر أول جولة تسوق، زبون وهمي يشتري قطعتك المميزة ⭐.', en: 'At the end of the first shopping round, a virtual customer buys your signature piece ⭐.' } }
 ];
 const CLOTHES = [
   { id: 'shirt', name: { ar: 'قميص', en: 'Shirt' }, zone: 'top' }, { id: 'jacket', name: { ar: 'جاكيت', en: 'Jacket' }, zone: 'outer' },
@@ -947,18 +953,23 @@ function designSVG(d) {
   [d.base, d.extra].filter(x => x && x.type && cloth(x.type)).sort((a, b) => ZORDER[cloth(a.type).zone] - ZORDER[cloth(b.type).zone]).forEach(p => { body += garment(p, defs); });
   return `<svg viewBox="0 0 100 140" class="dsvg"><defs>${defs.join('')}</defs><circle cx="50" cy="62" r="46" fill="rgba(123,47,190,.06)"/>${MANNEQUIN}${body}</svg>`;
 }
-function storeHTML(st, name, act) {
+function storeHTML(st, name, act, opt) {
+  opt = opt || {};
   const bg = st.store && st.store.bg ? colorHex(st.store.bg) : '#f6f4f8', bd = st.store && st.store.border ? colorHex(st.store.border) : '#d6d0de';
   const feat = (st.featured != null && st.designs && st.designs[st.featured]) || (st.designs || []).find(Boolean) || null;
-  return `<div class="store" style="background:${bg};border-color:${bd};color:${isLight(bg) ? '#1d1d1f' : '#fff'}" ${act || ''}>
-    ${st.discount ? `<span class="sbadges">🏷️${st.discount}%</span>` : ''}<div class="sname">${esc(st.brand && st.brand.name || L('متجر ', '') + name + L('', '’s store'))}</div>
-    <div class="sfeat">${designSVG(feat)}</div><div class="sowner">${esc(name)}</div></div>`;
+  return `<div class="store${opt.big ? ' big' : ''}" style="background:${bg};border-color:${bd};color:${isLight(bg) ? '#1d1d1f' : '#fff'}" ${act || ''}>
+    ${st.discount ? `<span class="sbadges">🏷️${st.discount}%</span>` : ''}${opt.big ? `<span class="sloc">📍 ${L('موقع مميز', 'Prime spot')}</span>` : ''}<div class="sname">${esc(st.brand && st.brand.name || L('متجر ', '') + name + L('', '’s store'))}</div>
+    <div class="sfeat">${designSVG(feat)}</div><div class="sowner">${esc(name)}</div>${opt.spy ? `<div class="sspy">🔍 🚶${opt.spy.v} · 🛍️${opt.spy.s}</div>` : ''}</div>`;
 }
 
 /* ---------- حسابات اللاعب ---------- */
 const P_ = CONFIG.prices;
 function spentOf(m) { return (m.perks || []).length * P_.perk + (m.types || []).length * P_.clothingType + (m.colors || []).length * P_.fabricColor + (m.fabrics || []).length * P_.fabricType + (m.store && m.store.bg ? P_.storeBg : 0) + (m.store && m.store.border ? P_.storeBorder : 0); }
 const stOf = id => (G.stores && G.stores[id]) || null;
+const STOCK = 2; /* كل قطعة بالمتجر منها حبتين */
+function fined(k, sid, kind) { return ((G.fines || {})[k] || []).some(f => f.t === sid && f.kind === kind); }
+function bump(b, k, sid, n) { G[b] = G[b] || {}; G[b][k] = G[b][k] || {}; G[b][k][sid] = (G[b][k][sid] || 0) + n; }
+function stockLeft(sid, i) { return STOCK - ((G.stock || {})[sid + ':' + i] || 0); }
 /* رأس المال ومحفظة التسوق يحددهم المضيف بالإعدادات */
 function CAP() { return (G && G.settings && +G.settings.capital) || 100; }
 function WAL() { return (G && G.settings && +G.settings.wallet) || 50; }
@@ -982,8 +993,8 @@ const GAME = {
       stp('capital', 50, 500, { label: L('رأس المال لكل لاعب', 'Capital per player'), fmt: money }) + stp('wallet', 10, 300, { label: L('محفظة التسوق لكل لاعب', 'Shopping wallet per player'), fmt: money });
   },
   settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · ${RND()} ${L('جولات (إقناع + تسوق)', 'rounds (pitch + shop)')} · ${L('رأس المال', 'capital')} ${money(CAP())}`; },
-  freshExtra: () => ({ stores: {}, wallet: {}, visits: {}, sales: {}, salesMoney: {}, bought: {}, votes: {}, talk: null, shop: null, results: null, extraUsed: {}, spoken: [] }),
-  resetMine(m) { Object.assign(m, { perks: [], types: [], colors: [], fabrics: [], store: { bg: null, border: null }, designs: Array(CONFIG.designsCount).fill(null), featured: null, brand: { name: '', desc: '' }, discount: 0, done: {}, vote: null }); },
+  freshExtra: () => ({ stores: {}, wallet: {}, visits: {}, sales: {}, salesMoney: {}, bought: {}, votes: {}, talk: null, shop: null, results: null, extraUsed: {}, spoken: [], stock: {}, perkUsed: {}, fines: {}, rv: {}, rs: {}, vipDone: {} }),
+  resetMine(m) { Object.assign(m, { perks: [], types: [], colors: [], fabrics: [], store: { bg: null, border: null }, designs: Array(CONFIG.designsCount).fill(null), featured: null, exclusive: null, brand: { name: '', desc: '' }, discount: 0, done: {}, vote: null }); },
   viewKey: () => (G.talk ? 't' + G.talk.round + G.talk.idx : '') + (G.shop ? 's' + G.shop.round : '') + (U.edit != null ? 'e' + U.edit : ''),
   start() {
     phaseTo(() => {
@@ -1001,16 +1012,32 @@ const GAME = {
     }
     if (G.phase !== 'shop') return;
     const k = G.shop.round;
+    if (r.type === 'fine' && (r.kind === 'fineSell' || r.kind === 'fineShow') && r.t !== id && inRoom(r.t)) {
+      const mineSt = stOf(id), tSt = stOf(r.t), uk = id + ':' + r.kind; G.perkUsed = G.perkUsed || {};
+      if (!mineSt || !(mineSt.perks || []).includes(r.kind) || G.perkUsed[uk]) return;
+      G.perkUsed[uk] = { t: r.t, round: k };
+      const nm = r.kind === 'fineSell' ? L('مخالفة بيع', 'sales fine') : L('مخالفة عرض', 'display fine');
+      if (tSt && (tSt.perks || []).includes('protect')) { addLog(L(`🛡️ ${P(r.t).name} محمي، و${nm} من ${P(id).name} انلغت`, `🛡️ ${P(r.t).name} is protected; ${P(id).name}’s ${nm} was cancelled`)); return; }
+      G.fines = G.fines || {}; G.fines[k] = (G.fines[k] || []).concat([{ kind: r.kind, t: r.t, by: id }]);
+      if (r.kind === 'fineSell') { const n = ((G.rs || {})[k] || {})[r.t] || 0; G.sales[r.t] = Math.max(0, (G.sales[r.t] || 0) - n); }
+      else { const n = ((G.rv || {})[k] || {})[r.t] || 0; G.visits[r.t] = Math.max(0, (G.visits[r.t] || 0) - n); }
+      addLog(L(`${r.kind === 'fineSell' ? '🚫' : '⛔'} ${nm} على ${P(r.t).name}`, `${r.kind === 'fineSell' ? '🚫' : '⛔'} ${nm} on ${P(r.t).name}`));
+      return;
+    }
     if (r.type === 'visit' && r.sid !== id && inRoom(r.sid)) {
       G.shop.seen = G.shop.seen || {}; const key = k + ':' + id + ':' + r.sid;
-      if (!G.shop.seen[key]) { G.shop.seen[key] = 1; G.visits[r.sid] = (G.visits[r.sid] || 0) + 1; }
+      if (!G.shop.seen[key]) { G.shop.seen[key] = 1; if (!fined(k, r.sid, 'fineShow')) { G.visits[r.sid] = (G.visits[r.sid] || 0) + 1; bump('rv', k, r.sid, 1); } }
     }
     if (r.type === 'buy' && r.sid !== id) {
       const st = stOf(r.sid), d = st && st.designs[r.i]; if (!d) return;
       const key = r.sid + ':' + r.i, price = finalPrice(st, d);
-      if ((G.bought[id] || []).includes(key) || walletOf(id) < price) return;
+      G.stock = G.stock || {};
+      if ((G.stock[key] || 0) >= STOCK || walletOf(id) < price) return;
+      G.stock[key] = (G.stock[key] || 0) + 1;
       G.wallet[id] = walletOf(id) - price; G.bought[id] = (G.bought[id] || []).concat([key]);
-      G.sales[r.sid] = (G.sales[r.sid] || 0) + 1; G.salesMoney[r.sid] = (G.salesMoney[r.sid] || 0) + price;
+      const cnt = st.exclusive === r.i ? 2 : 1;
+      if (!fined(k, r.sid, 'fineSell')) { G.sales[r.sid] = (G.sales[r.sid] || 0) + cnt; bump('rs', k, r.sid, cnt); }
+      G.salesMoney[r.sid] = (G.salesMoney[r.sid] || 0) + price;
       addLog(L(`🛍️ ${P(id).name} اشترى من ${st.brand.name}`, `🛍️ ${P(id).name} bought from ${st.brand.name}`));
     }
   },
@@ -1060,7 +1087,8 @@ ACT.next = H(() => {
         const designs = ok ? (m.designs || []).slice(0, CONFIG.designsCount) : Array(CONFIG.designsCount).fill(null);
         let feat = ok ? m.featured : null; if (feat == null || !designs[feat]) { const i = designs.findIndex(Boolean); feat = i >= 0 ? i : null; }
         G.stores[p.id] = { brand: { name: (ok && m.brand && m.brand.name.trim()) || L('متجر ', '') + p.name + L('', '’s store'), desc: ok && m.brand ? m.brand.desc : '' },
-          store: ok ? m.store : {}, designs, featured: feat, discount: ok && (m.perks || []).includes('sale') ? (m.discount || 0) : 0, perks: ok ? (m.perks || []) : [], spent: ok ? spentOf(m) : 0 };
+          store: ok ? m.store : {}, designs, featured: feat, discount: ok && (m.perks || []).includes('sale') ? (m.discount || 0) : 0, perks: ok ? (m.perks || []) : [], spent: ok ? spentOf(m) : 0,
+          exclusive: ok && (m.perks || []).includes('exclusive') && m.exclusive != null && designs[m.exclusive] ? m.exclusive : null };
       });
       G.spoken = []; startTalk(1);
     }
@@ -1084,6 +1112,17 @@ ACT.talkNext = H(() => {
 });
 ACT.shopNext = H(() => {
   phaseTo(() => {
+    G.vipDone = G.vipDone || {};
+    G.players.forEach(p => {
+      const st = stOf(p.id); if (!st || !(st.perks || []).includes('vip') || G.vipDone[p.id]) return;
+      G.vipDone[p.id] = 1; const i = st.featured, d = i != null ? st.designs[i] : null;
+      if (!d || stockLeft(p.id, i) <= 0) { addLog(L(`👑 زبون VIP جا لـ${st.brand.name} بس القطعة المميزة خلصت`, `👑 A VIP came to ${st.brand.name} but the signature piece was sold out`)); return; }
+      G.stock[p.id + ':' + i] = (G.stock[p.id + ':' + i] || 0) + 1;
+      const cnt = st.exclusive === i ? 2 : 1, price = finalPrice(st, d);
+      if (!fined(G.shop.round, p.id, 'fineSell')) G.sales[p.id] = (G.sales[p.id] || 0) + cnt;
+      G.salesMoney[p.id] = (G.salesMoney[p.id] || 0) + price;
+      addLog(L(`👑 زبون VIP اشترى «${d.name}» من ${st.brand.name}`, `👑 A VIP customer bought “${d.name}” from ${st.brand.name}`));
+    });
     if (G.shop.round < RND()) startTalk(G.shop.round + 1);
     else { G.phase = 'vote'; setTimer(G.settings.voteTime); }
   });
@@ -1184,6 +1223,7 @@ function editorView() {
   <button class="btn" data-act="saveD">${L('حفظ التصميم', 'Save design')}</button>${mine().designs[U.edit] ? `<button class="btn ghost" data-act="delD">${L('مسح التصميم', 'Delete design')}</button>` : ''}`;
 }
 ACT.feat = d => { mine().featured = +d.i; saveMe(); };
+ACT.excl = d => { mine().exclusive = +d.i; saveMe(); };
 ACT.disc = d => { const m = mine(); m.discount = Math.min(CONFIG.discountMax, Math.max(0, (m.discount || 0) + (+d.v) * 5)); saveMe(); };
 function buildView() {
   const m = mine(), done = m.designs.map((d, i) => d ? i : null).filter(i => i !== null);
@@ -1192,6 +1232,7 @@ function buildView() {
   <div class="card"><h3>${L('اسم البراند', 'Brand name')}</h3><input class="field" id="bname" data-bind="bname" maxlength="${CONFIG.brandNameMax}" value="${esc(m.brand.name)}"></div>
   <div class="card"><h3>${L('وصف البراند', 'Brand description')}</h3><textarea class="field" id="bdesc" data-bind="bdesc" rows="3" maxlength="${CONFIG.brandDescMax}">${esc(m.brand.desc)}</textarea><div class="counter"><span id="dcount">${m.brand.desc.length}</span> / ${CONFIG.brandDescMax}</div></div>
   <div class="card"><h3>⭐ ${L('القطعة المميزة', 'Signature piece')}</h3>${done.length ? `<div class="dgrid">${done.map(i => `<button class="dcard ${m.featured === i ? 'on' : ''}" data-act="feat" data-i="${i}">${designSVG(m.designs[i])}<b>${esc(m.designs[i].name)}</b></button>`).join('')}</div>` : `<div class="warn">${L('ما عندك تصاميم جاهزة.', 'No finished designs.')}</div>`}</div>
+  ${m.perks.includes('exclusive') && done.length ? `<div class="card"><h3>💎 ${L('التصميم الحصري (كل بيعة تنحسب بيعتين)', 'Exclusive design (each sale counts as two)')}</h3><div class="dgrid">${done.map(i => `<button class="dcard ${m.exclusive === i ? 'on' : ''}" data-act="excl" data-i="${i}">${designSVG(m.designs[i])}<b>${esc(m.designs[i].name)}</b></button>`).join('')}</div></div>` : ''}
   ${m.perks.includes('sale') ? `<div class="card"><div class="row"><span>🏷️ ${L('نسبة التنزيلات', 'Sale %')}</span><div class="stepper"><button data-act="disc" data-v="1">+</button><span class="v">${m.discount || 0}%</span><button data-act="disc" data-v="-1">−</button></div></div></div>` : ''}${doneBtn()}`;
 }
 function talkView() {
@@ -1201,28 +1242,37 @@ function talkView() {
   <div class="speakers">${t.speakers.map((id, i) => `<span class="spk ${i === t.idx ? 'now' : i < t.idx ? 'done' : ''}">${esc(P(id).name)}</span>`).join('')}</div>
   <div class="stage"><div class="who">${L('الحين يقنعكم', 'Now pitching')}<b>${esc(P(sp).name)}${sp === ME_ID ? L(' (أنت)', ' (you)') : ''}</b></div>
   <div class="card"><div class="ptitle">${esc(st.brand ? st.brand.name : '')}</div><div class="preview">${designSVG(feat)}</div>
-  <div>⭐ ${feat ? esc(feat.name) + ' — ' + money(finalPrice(st, feat)) : L('ما في قطعة مميزة', 'No signature piece')}</div>${st.brand && st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}</div>
+  <div>⭐ ${feat ? esc(feat.name) + ' — ' + money(finalPrice(st, feat)) : L('ما في قطعة مميزة', 'No signature piece')}</div>${st.brand && st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}
+  ${(st.perks || []).includes('expand') && (st.designs || []).filter(Boolean).length > 1 ? `<div class="tag" style="margin-top:10px">🏬 ${L('توسعة المتجر: كل التصاميم', 'Store expansion: all designs')}</div><div class="allds">${st.designs.map((d, i) => d ? `<div>${designSVG(d)}${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}<br>${money(finalPrice(st, d))}</div>` : '').join('')}</div>` : ''}</div>
   ${sp === ME_ID && (st.perks || []).includes('extraTime') && !G.extraUsed[ME_ID] ? `<button class="btn ghost" data-act="extra">⏱️ ${L('استخدم الوقت الإضافي', 'Use extra time')} (+${CONFIG.extraTimeSec}s)</button>` : ''}</div>
   ${endBtn(nxt, 'talkNext')}${waitHost()}`;
 }
 ACT.extra = () => sendReq({ type: 'extra', g: G.gameNo });
 function mallView() {
-  const others = G.players.filter(p => p.id !== ME_ID);
+  const loc = id => ((stOf(id) || {}).perks || []).includes('location') ? 1 : 0;
+  const others = G.players.filter(p => p.id !== ME_ID).sort((a, b) => loc(b.id) - loc(a.id));
+  const myPerks = (stOf(ME_ID) || {}).perks || [], spy = amPlayer() && myPerks.includes('taste');
+  const fineUI = amPlayer() ? ['fineSell', 'fineShow'].filter(kd => myPerks.includes(kd)).map(kd => {
+    const used = (G.perkUsed || {})[ME_ID + ':' + kd], nm = kd === 'fineSell' ? '🚫 ' + L('مخالفة بيع', 'Sales fine') : '⛔ ' + L('مخالفة عرض', 'Display fine');
+    if (used) return `<div class="card"><b>${nm}</b> — ${L('استخدمتها على ', 'used on ')}${esc(P(used.t).name)}</div>`;
+    return `<div class="card"><b>${nm}</b><small style="display:block">${L('اختر المنافس (مرة وحدة باللعبة):', 'Pick a rival (once per game):')}</small><div class="finebox">${others.map(p => `<button data-act="fine" data-k="${kd}" data-t="${p.id}">${esc(P(p.id).name)}</button>`).join('')}</div></div>`;
+  }).join('') : '';
   return `<span class="tag">${L('الجولة', 'Round')} ${G.shop.round} / ${RND()} · ${L('التسوق', 'Shopping')}</span><h2>${L('السوق', 'The market')}</h2>
   ${amPlayer() ? capBar() + `<div class="moneybar"><span class="money">🚶 ${L('زيارات متجرك', 'Your visits')}: ${G.visits[ME_ID] || 0}</span><span class="money">🛍️ ${L('مبيعاتك', 'Your sales')}: ${G.sales[ME_ID] || 0}</span></div>` : ''}
-  <div class="grid">${others.map(p => storeHTML(stOf(p.id) || {}, p.name, `data-act="openStore" data-id="${p.id}"`)).join('')}</div>
+  ${fineUI}<div class="grid">${others.map(p => storeHTML(stOf(p.id) || {}, p.name, `data-act="openStore" data-id="${p.id}"`, { big: loc(p.id), spy: spy ? { v: G.visits[p.id] || 0, s: G.sales[p.id] || 0 } : null })).join('')}</div>
   ${endBtn(G.shop.round < RND() ? L('الذهاب لجولة الإقناع ', 'go to pitching round ') + (G.shop.round + 1) : L('الذهاب للتصويت', 'go to Voting'), 'shopNext')}${waitHost()}`;
 }
 ACT.openStore = d => { U.modal = { type: 'store', id: d.id }; if (amPlayer()) sendReq({ type: 'visit', sid: d.id, g: G.gameNo }); };
 ACT.buy = d => { sendReq({ type: 'buy', sid: d.sid, i: +d.i, g: G.gameNo }); };
+ACT.fine = d => { if (/[?&]dev=1/.test(location.search) || confirm(L('متأكد؟ المخالفة تنستخدم مرة وحدة باللعبة.', 'Sure? The fine can be used once per game.'))) sendReq({ type: 'fine', kind: d.k, t: d.t, g: G.gameNo }); };
 function storeModal(id) {
   const st = stOf(id); if (!st) return '';
   const bg = st.store && st.store.bg ? colorHex(st.store.bg) : '#f6f4f8', bd = st.store && st.store.border ? colorHex(st.store.border) : '#d6d0de', mineB = G.bought[ME_ID] || [];
   return `<div style="border:7px solid ${bd};background:${bg};color:${isLight(bg) ? '#1d1d1f' : '#fff'};border-radius:10px;padding:12px;text-align:center"><div class="ptitle">${esc(st.brand.name)}</div><small>${esc(P(id).name)}${st.discount ? ` • 🏷️ ${st.discount}%` : ''}</small></div>
   ${st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}
   ${st.designs.map((d, i) => { if (!d) return `<div class="item">${designSVG(null)}<div class="in"><b>${L('تصميم ناقص', 'Unfinished design')}</b></div></div>`; const pr = finalPrice(st, d), owned = mineB.includes(id + ':' + i);
-    return `<div class="item">${designSVG(d)}<div class="in"><b>${st.featured === i ? '⭐ ' : ''}${esc(d.name)}</b><small>${[d.base, d.extra].filter(Boolean).map(x => N(cloth(x.type).name) + ' ' + N(byId(COLORS, x.color).name) + (x.fabric ? ' ' + N(byId(FABRICS, x.fabric).name) : '')).join(' + ')}</small><b style="color:var(--p)">${money(pr)}</b>${pr !== d.price ? `<span class="old">${money(d.price)}</span>` : ''}</div>
-    ${amPlayer() ? `<button class="buy" data-act="buy" data-sid="${id}" data-i="${i}" ${owned || walletOf(ME_ID) < pr ? 'disabled' : ''}>${owned ? '✓ ' + L('اشتريته', 'Bought') : L('اشترِ', 'Buy')}</button>` : ''}</div>`; }).join('')}
+    return `<div class="item">${designSVG(d)}<div class="in"><b>${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}</b><small>${[d.base, d.extra].filter(Boolean).map(x => N(cloth(x.type).name) + ' ' + N(byId(COLORS, x.color).name) + (x.fabric ? ' ' + N(byId(FABRICS, x.fabric).name) : '')).join(' + ')}</small><b style="color:var(--p)">${money(pr)}</b>${pr !== d.price ? `<span class="old">${money(d.price)}</span>` : ''}</div>
+    ${amPlayer() ? (() => { const left = stockLeft(id, i); return `<button class="buy" data-act="buy" data-sid="${id}" data-i="${i}" ${left <= 0 || walletOf(ME_ID) < pr ? 'disabled' : ''}>${left <= 0 ? L('خلصت', 'Sold out') : owned ? L('اشترِ مرة ثانية', 'Buy again') : L('اشترِ', 'Buy')}<span class="stk">${left > 0 ? L('باقي ', 'left: ') + left : ''}${owned ? ' · ✓' : ''}</span></button>`; })() : ''}</div>`; }).join('')}
   <button class="btn ghost" data-act="closeModal">${L('طلعة من المتجر', 'Leave store')}</button>`;
 }
 function voteView() {
