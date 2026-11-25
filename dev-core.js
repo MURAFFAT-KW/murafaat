@@ -7,7 +7,9 @@
   var qs = new URLSearchParams(location.search);
   if (!qs.has('dev')) return;
   var isBot = qs.has('bot');
-  var TOPW = isBot ? window.parent : window;
+  /* بالمعاين: الحالة تعيش في صفحة المعاين (الأب) عشان نقدر نعيد تحميل اللعبة على أي شاشة محفوظة */
+  var SHELL = null; try { if (!isBot && qs.get('inspect') && window.parent !== window && window.parent.__AQ_SHELL) SHELL = window.parent; } catch (e) { }
+  var TOPW = isBot ? window.parent : (SHELL || window);
   var file = (location.pathname.split('/').pop() || '').replace('.html', '');
   var EN = /-en$/.test(file) || file === 'en';
   var GAMEKEY = file.replace(/-en$/, '');
@@ -15,15 +17,16 @@
 
   /* ---------- الحالة المشتركة (في نافذة المضيف) ---------- */
   var realNow = Date.now.bind(Date);
-  if (!isBot) {
-    window.__DEV = {
+  if (!isBot && !(SHELL && SHELL.__DEV)) {
+    TOPW.__DEV = {
       store: {}, subs: [], speed: +(qs.get('speed') || 1), rA: realNow(), vA: realNow(),
-      auto: qs.get('auto') === '1', botsWanted: Math.max(1, Math.min(12, +(qs.get('bots') || 3))),
+      auto: qs.get('auto') === '1' || qs.get('inspect') === '1', inspect: qs.get('inspect'), freeze: false, botsWanted: Math.max(1, Math.min(12, +(qs.get('bots') || 3))),
       bots: [], log: [], errors: [], code: null, en: EN, game: GAMEKEY, prefix: PREFIX, stats: { actions: 0 }
     };
   }
   var D = TOPW.__DEV;
   if (!D) return;
+  if (!isBot) { window.__DEV = D; D.bots = []; }
 
   /* ---------- تخزين وهمي (ما يلمس تخزين المتصفح الحقيقي) ---------- */
   function memStore() {
@@ -34,11 +37,20 @@
       removeItem: function (k) { delete m[k]; },
       clear: function () { m = {}; },
       key: function (i) { return Object.keys(m)[i] || null; },
+      _dump: function () { return JSON.parse(JSON.stringify(m)); },
+      _load: function (o) { m = JSON.parse(JSON.stringify(o || {})); },
       get length() { return Object.keys(m).length; }
     };
   }
-  try { Object.defineProperty(window, 'localStorage', { configurable: true, value: memStore() }); } catch (e) { }
-  try { Object.defineProperty(window, 'sessionStorage', { configurable: true, value: memStore() }); } catch (e) { }
+  var LS_ = memStore(), SS_ = memStore();
+  try { Object.defineProperty(window, 'localStorage', { configurable: true, value: LS_ }); } catch (e) { }
+  try { Object.defineProperty(window, 'sessionStorage', { configurable: true, value: SS_ }); } catch (e) { }
+  /* المعاين: كل نافذة تسجّل تخزينها عشان نرجّعه لما ننتقل لشاشة محفوظة */
+  D.lsReg = D.lsReg || {};
+  var ROLE = isBot ? 'bot' + qs.get('bot') : 'host';
+  if (D.lsInit && D.lsInit[ROLE]) { LS_._load(D.lsInit[ROLE].l); SS_._load(D.lsInit[ROLE].s); }
+  if (D.theme) LS_.setItem('aqnieni.theme', D.theme);
+  D.lsReg[ROLE] = { l: LS_, s: SS_, w: window };
   if (EN) window.localStorage.setItem('aqnieni.lang', 'en');
 
   /* ---------- الوقت (مع التسريع) ---------- */
@@ -192,6 +204,7 @@
   /* ---------- حلقة البوت ---------- */
   var lastAct = 0;
   function tick() {
+    if (D.freeze) return;
     var auto = isBot || D.auto;
     if (!auto) return;
     var think = isBot ? 650 : 750;
@@ -200,11 +213,32 @@
     try {
       r = common();
       if (!r) {
-        var brain = (TOPW.__DEV_BRAINS || {})[GAMEKEY];
+        var brain = (window.__DEV_BRAINS || (isBot ? TOPW.__DEV_BRAINS : null) || {})[GAMEKEY];
         if (brain) r = brain(ctx, isBot);
       }
     } catch (e) { D.errors.push({ t: realNow(), who: WHO, m: 'bot: ' + (e && e.message) }); }
     if (r) { lastAct = realNow(); if (typeof r === 'string' && r.charAt(0) !== '.') log(r); }
+  }
+
+  /* المعاين: حالة الشاشة المحلية (مثل «المزايا / عقاراتك») عشان ترجع نفس الشاشة بالضبط */
+  var UI_SKIP = { splash: 1, ready: 1, notice: 1, lastKey: 1, lastHtml: 1, offline: 1, err: 1, modal: 1, view: 1, code: 1, fromLink: 1 };
+  function uiOf(w) {
+    try { var u = w.eval('typeof U !== "undefined" ? U : null'); if (!u) return null; var o = {}; Object.keys(u).forEach(function (k) { if (UI_SKIP[k]) return; var v = u[k]; if (typeof v === 'function') return; try { o[k] = JSON.parse(JSON.stringify(v)); } catch (e) { } }); return o; } catch (e) { return null; }
+  }
+  if (D.inspect && D.done && D.lsInit && D.lsInit[ROLE] && D.lsInit[ROLE].u) {
+    var uiSaved = D.lsInit[ROLE].u, uiN = 0, uiT = setInterval(function () {
+      if (++uiN > 60) return clearInterval(uiT);
+      try {
+        var ok = window.eval('typeof U !== "undefined" && U.ready && typeof G !== "undefined" && !!G && !U.splash');
+        if (!ok) return; clearInterval(uiT);
+        var u = window.eval('U'); Object.keys(uiSaved).forEach(function (k) { u[k] = uiSaved[k]; });
+        window.eval('typeof render === "function" && render()');
+      } catch (e) { clearInterval(uiT); }
+    }, 100);
+  }
+  /* المعاين: بعد الانتقال لشاشة محفوظة، نتخطى صفحة التعريف لو طلعت (بعض الألعاب تعرضها بعد إعادة التحميل) */
+  if (D.inspect && D.done) {
+    var skipN = 0, skipT = setInterval(function () { if (++skipN > 40) return clearInterval(skipT); var e = document.querySelector('[data-act="enter"]'); if (e && vis(e)) { e.click(); clearInterval(skipT); } }, 100);
   }
 
   if (isBot) {
@@ -234,6 +268,7 @@
 
   /* يضبط عدد اللاعبين بالردهة على عدد الموجودين (عشان زر البدء يشتغل) */
   function lobbyAssist() {
+    if (D.freeze) return;
     var g = ctx.G(); if (!g || g.phase !== 'lobby' || !ctx.isHost()) return;
     var st = g.settings || {}, hp = !(st.hostPlays === false || st.hostPlays === 0 || st.hostPlays === '0');
     var real = (g.players || []).length - (hp ? 0 : 1), tgt = st.players || 3;
@@ -312,11 +347,75 @@
       else if (k === 'auto') { D.auto = t.checked; }
     }, true);
     setInterval(function () {
-      if (!D.bots.length && ctx.code() && ctx.me()) spawnBots(D.botsWanted);
+      if (!D.bots.length && D.inspect !== 'start' && ctx.code() && ctx.me()) spawnBots(D.botsWanted);
       lobbyAssist();
       var p = document.getElementById('devpanel'); if (p && !p.hidden && !p.contains(document.activeElement)) renderPanel();
     }, 1000);
     setInterval(tick, 200);
+    if (D.inspect) inspectBoot();
+  }
+
+  /* ---------- المعاين: يسجّل كل شاشة وقت ما البوتات يلعبون، وبعدين تتنقل بينها ---------- */
+  function headOf(doc) {
+    try {
+      var l = doc.querySelectorAll('h1:not(.sr),h2,h3,.ptitle,.hname');
+      for (var i = 0; i < l.length; i++) { var e = l[i]; if (!e.offsetParent && e.getClientRects().length === 0) continue; var t = (e.innerText || '').replace(/\s+/g, ' ').trim(); if (t) return t.slice(0, 80); }
+    } catch (e) { }
+    return '';
+  }
+  function inspectBoot() {
+    document.documentElement.classList.add('dev-inspect');
+    var st = document.createElement('style');
+    st.textContent = '.dev-inspect #devfab{display:none!important}.dev-inspect #devbots.show{left:0!important;top:0!important;transform:none!important;width:100%!important;height:100%!important;border-radius:0!important;box-shadow:none!important}.dev-inspect #devbots.show iframe{width:100%!important;height:100%!important}';
+    document.head.appendChild(st);
+    if (!D.snaps) { D.snaps = []; D.recording = D.inspect === '1'; D.done = !D.recording; D.started = realNow(); D.seen = {}; D.lastKey = ''; D.finalAt = 0; D.view = 'host'; }
+    var I = window.__INSPECT = { get snaps() { return D.snaps; }, get recording() { return D.recording; }, get done() { return D.done; }, get cur() { return D.cur; }, get view() { return D.view; }, get timeRuns() { return !!D.timeRuns; } };
+    function dumpLS() { var o = {}; Object.keys(D.lsReg).forEach(function (k) { o[k] = { l: D.lsReg[k].l._dump(), s: D.lsReg[k].s._dump(), u: uiOf(D.lsReg[k].w) }; }); return o; }
+    function rec() {
+      if (!D.recording) return;
+      var g = ctx.G(); if (!g) return;
+      var title = headOf(document);
+      if (!title) for (var i = 0; i < D.bots.length && !title; i++) { try { title = headOf(D.bots[i].frame.contentDocument); } catch (e) { } }
+      var raw = JSON.stringify(D.store);
+      if (raw + '#' + title !== I._raw) { I._raw = raw + '#' + title; I._rawT = realNow(); return; }
+      if (realNow() - I._rawT < 130) return;
+      var key = (g.phase || '') + '|' + title.replace(/[0-9\u0660-\u0669]+/g, '#');
+      var cur = D.snaps[D.snaps.length - 1];
+      if (key === D.lastKey) { if (cur && cur.key === key && !cur.locked) { cur.store = raw; cur.ls = dumpLS(); cur.vnow = Date.now(); cur.title = title; } }
+      else {
+        if (cur) cur.locked = true;
+        if (!D.seen[key]) { D.seen[key] = 1; D.snaps.push({ key: key, phase: g.phase || '', round: g.round || g.season || null, title: title, store: raw, ls: dumpLS(), vnow: Date.now() }); }
+      }
+      D.lastKey = key;
+      if (g.phase === 'final') { if (!D.finalAt) D.finalAt = realNow(); else if (realNow() - D.finalAt > 2500) stop(); }
+      if (realNow() - D.started > 240000) stop();
+    }
+    function stop() { if (!D.recording) return; D.recording = false; D.done = true; D.freeze = true; D.auto = false; if (D.snaps.length) I.jump(D.snaps.length - 1); }
+    I.stop = stop;
+    /* الانتقال: نرجّع قاعدة البيانات وتخزين كل لاعب مثل ما كانت، ونعيد تحميل اللعبة */
+    I.jump = function (i) {
+      var sn = D.snaps[i]; if (!sn) return;
+      D.freeze = true; D.cur = i;
+      var o = JSON.parse(sn.store); Object.keys(D.store).forEach(function (k) { delete D.store[k]; }); Object.keys(o).forEach(function (k) { D.store[k] = o[k]; });
+      D.lsInit = sn.ls; D.vA = sn.vnow; D.rA = realNow(); D.speed = D.timeRuns ? 1 : 0;
+      D.subs = [];
+      /* المضيف يرجع من تخزينه (بدون رابط دعوة) عشان ما ينحسب ضيف */
+      location.replace(location.pathname + location.search);
+    };
+    I.setTime = function (on) { D.timeRuns = !!on; D.vA = Date.now(); D.rA = realNow(); D.speed = on ? 1 : 0; };
+    I.setTheme = function (v) { D.theme = v; Object.keys(D.lsReg).forEach(function (k) { try { var w = D.lsReg[k].w; w.AQTHEME && w.AQTHEME.set(v); } catch (e) { } }); };
+    I.players = function () { return D.bots.map(function (b) { return { k: b.k, name: b.name }; }); };
+    I.show = function (v) {
+      D.view = v; var box = document.getElementById('devbots');
+      if (v === 'host') { box.classList.remove('show'); D.bots.forEach(function (x) { x.frame.classList.remove('top'); }); return; }
+      D.bots.forEach(function (x) { x.frame.classList.toggle('top', x.k === v); }); box.style.removeProperty('--sc'); box.classList.add('show');
+    };
+    I.errors = function () { return D.errors.slice(); };
+    I.code = function () { return ctx.code(); };
+    I.G = function () { return ctx.G(); };
+    setInterval(rec, 45);
+    /* بعد إعادة التحميل: نرجع لنفس وجهة النظر أول ما تدخل البوتات */
+    setInterval(function () { if (D.view !== 'host' && D.bots.some(function (b) { return b.k === D.view; })) { var box = document.getElementById('devbots'); if (!box.classList.contains('show')) I.show(D.view); } }, 300);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();

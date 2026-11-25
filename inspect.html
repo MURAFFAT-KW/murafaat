@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>أقنعني | المعاين</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:#fff;color:#12203A;font:500 15px/1.45 "Readex Pro","Alexandria",system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit;cursor:pointer}
+.pick{max-width:520px;margin:0 auto;padding:max(18px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+h1{margin:0;font-size:1.6rem;color:#0554A4}
+.badge{background:#12203A;color:#fff;border-radius:99px;padding:4px 12px;font-weight:800;font-size:.85rem}
+.pill{border:1.5px solid #D5DBE5;background:#fff;border-radius:99px;padding:6px 14px;font-weight:700;font-size:.9rem}
+.sub{color:#5B6578;margin:0 0 16px;font-size:.95rem}
+.tiles{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:4px}
+.tile{width:calc((100% - 24px) / 3);aspect-ratio:1;border-radius:22px;color:#fff;border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-weight:800;font-size:1rem;box-shadow:0 6px 16px rgba(18,32,58,.12)}
+.tile .i{font-size:2rem;line-height:1}
+.note{background:#F4F6F9;border-radius:14px;padding:10px 12px;font-size:.88rem;color:#3B4659;margin-top:16px;line-height:1.7}
+.note b{color:#12203A}
+a.lnk{display:block;text-align:center;margin-top:14px;color:#0554A4;font-weight:700}
+
+/* المعاين */
+.view{position:fixed;inset:0;display:flex;flex-direction:column;background:#E9EDF3}
+.bar{background:#12203A;color:#fff;padding:max(8px,env(safe-area-inset-top)) 10px 8px;display:grid;gap:7px;box-shadow:0 4px 14px rgba(0,0,0,.18);z-index:3}
+.r{display:flex;align-items:center;gap:7px}
+.r.sc{overflow-x:auto;scrollbar-width:none;padding-bottom:1px}.r.sc::-webkit-scrollbar{display:none}
+.b{border:0;border-radius:11px;background:rgba(255,255,255,.12);color:#fff;padding:7px 10px;font-weight:800;font-size:.85rem;white-space:nowrap;flex:none}
+.b.on{background:#fff;color:#12203A}
+.b.y{background:#FBC611;color:#12203A}
+.b:disabled{opacity:.35}
+.gname{font-weight:800;font-size:1rem;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-inline-end:6px;vertical-align:middle}
+.nav{display:flex;align-items:center;gap:7px}
+.nav .cur{flex:1;min-width:0;text-align:center;background:rgba(255,255,255,.12);border:0;border-radius:11px;padding:6px 8px;color:#fff}
+.cur small{display:block;font-size:.72rem;opacity:.75;font-weight:700}
+.cur span{display:block;font-weight:800;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav .arr{width:44px;height:44px;font-size:1.2rem;flex:none}
+.stage{flex:1;position:relative;overflow:auto;display:flex;justify-content:center;align-items:flex-start}
+.fw{background:#fff;position:relative;overflow:hidden;flex:none;direction:ltr}
+.fw iframe{border:0;display:block;background:#fff;transform-origin:top left}
+.err{background:#C81E1E!important;color:#fff!important}
+.rec{position:absolute;inset:auto 10px calc(12px + env(safe-area-inset-bottom)) 10px;background:#12203A;color:#fff;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px rgba(0,0,0,.3);z-index:4}
+.rec .sp{width:22px;height:22px;border:3px solid rgba(255,255,255,.25);border-top-color:#FBC611;border-radius:50%;animation:s 1s linear infinite;flex:none}
+@keyframes s{to{transform:rotate(360deg)}}
+.rec .t{flex:1;font-weight:700;font-size:.9rem}
+.sheet{position:fixed;inset:0;background:rgba(18,32,58,.5);z-index:10;display:flex;align-items:flex-end}
+.sheet[hidden]{display:none}
+.sheet .in{background:#fff;width:100%;max-height:80vh;overflow:auto;border-radius:22px 22px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom))}
+.sheet h3{margin:14px 4px 6px;font-size:.95rem;color:#5B6578}
+.sheet h3:first-of-type{margin-top:4px}
+.it{display:flex;gap:10px;align-items:center;width:100%;text-align:start;border:1.5px solid #E6EAF0;background:#fff;border-radius:12px;padding:9px 11px;margin-bottom:6px;font-weight:700}
+.it.on{border-color:#12203A;background:#F1F4F9}
+.it .n{background:#12203A;color:#fff;border-radius:8px;min-width:28px;text-align:center;font-size:.8rem;padding:2px 4px}
+.it .rd{margin-inline-start:auto;color:#8A93A6;font-size:.78rem;white-space:nowrap}
+.shead{display:flex;justify-content:space-between;align-items:center}
+.lg{font:12px/1.5 ui-monospace,monospace;background:#FFF0F1;color:#9b0616;border-radius:10px;padding:8px;direction:ltr;text-align:left;white-space:pre-wrap}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="sheet" id="sheet" hidden><div class="in" id="sheetIn"></div></div>
+<script>
+(function () {
+  'use strict';
+  window.__AQ_SHELL = 1;
+  var qs = new URLSearchParams(location.search);
+  var S = { lang: qs.get('lang') === 'en' ? 'en' : 'ar', game: null, mode: 'pick', tv: false, dark: false, timeRuns: false };
+  try { S.dark = localStorage.getItem('aqnieni.theme') === 'dark'; } catch (e) { }
+  var GAMES = [
+    { f: 'murafaat', ar: 'المنصة', en: 'ALMANASSA', c: '#DE0921', i: '⚖️' },
+    { f: 'mazad', ar: 'المزاد', en: 'ALMAZAD', c: '#0554A4', i: '$' },
+    { f: 'nadik', ar: 'الرئيس', en: 'ALRAEES', c: '#E0A800', i: '⚽' },
+    { f: 'azyaa', ar: 'الأزياء', en: 'ALAZYAA', c: '#7B2FBE', i: '🎀' },
+    { f: 'aqar', ar: 'العقار', en: 'ALAQAR', c: '#1E8A4C', i: '🏠' }
+  ];
+  /* أسماء المراحل */
+  var PH = {
+    lobby: ['غرفة الانتظار', 'Lobby'], final: ['النتائج', 'Results'], perks: ['المزايا', 'Perks'],
+    qwrite: ['كتابة الأسئلة', 'Writing questions'], qreview: ['مراجعة الأسئلة', 'Reviewing questions'], addq: ['إضافة أسئلة', 'Adding questions'],
+    answers: ['الإجابات السرية', 'Secret answers'], case: ['المرافعات', 'Debates'], nocase: ['ما في مرافعات', 'No debates'],
+    items: ['المنتجات', 'Products'], round: ['جولات البيع', 'Selling rounds'],
+    picks: ['التشكيلات', 'Squads'], tier: ['اختيار الفئة', 'Tier pick'], reveal: ['الكشف', 'Reveal'], market: ['سوق الانتقالات', 'Transfer market'], lineup: ['خماسي الكأس', 'Cup five'], cup: ['الكأس', 'Cup'],
+    buy: ['الشراء', 'Buying'], design: ['التصميم', 'Design'], build: ['بناء المشروع', 'Building the project'], talk: ['الإقناع', 'Pitching'], shop: ['السوق', 'Market'], vote: ['التصويت', 'Voting'],
+    setup: ['التجهيز', 'Setup'], pre: ['قبل الجولة', 'Before the round'], pitch: ['العرض', 'Pitch'], deals: ['الصفقات', 'Deals'], summary: ['ملخص الجولة', 'Round summary']
+  };
+  function T(ar, en) { return S.lang === 'en' ? en : ar; }
+  function ph(k) { return PH[k] ? T(PH[k][0], PH[k][1]) : k; }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  var $ = function (id) { return document.getElementById(id); };
+  var frame = null, poll = null;
+  function I() { try { return frame && frame.contentWindow && frame.contentWindow.__INSPECT; } catch (e) { return null; } }
+  function G() { return GAMES.find(function (g) { return g.f === S.game; }); }
+
+  /* ---------- صفحة اختيار اللعبة ---------- */
+  function renderPick() {
+    S.mode = 'pick'; clearInterval(poll); frame = null; window.__DEV = null;
+    document.documentElement.lang = S.lang; document.documentElement.dir = S.lang === 'en' ? 'ltr' : 'rtl';
+    $('app').innerHTML = '<div class="pick">' +
+      '<header><h1>' + T('أقنعني', 'Aqnieni') + '</h1><span class="badge">🔍 ' + T('المعاين', 'Inspector') + '</span><button class="pill" data-a="lang">' + T('English', 'عربي') + '</button></header>' +
+      '<p class="sub">' + T('تتنقل بين كل شاشات اللعبة بدون ما تلعب. البوتات يلعبون اللعبة كاملة بسرعة (تقريبًا ٤٠ ثانية) وتنحفظ كل شاشة، وبعدها تقدر تروح لأي شاشة وتشوفها من عين المضيف أو أي لاعب.', 'Jump between every screen of a game without playing. Bots play a full game fast (about 40 s) and every screen is saved; then open any screen as the host or as any player.') + '</p>' +
+      '<div class="tiles">' + GAMES.map(function (g) { return '<button class="tile" style="background:' + g.c + '" data-a="game" data-v="' + g.f + '"><span class="i">' + g.i + '</span>' + T(g.ar, g.en) + '</button>'; }).join('') + '</div>' +
+      '<div class="note">' + T('<b>شنو تقدر تسوي:</b> ◀ ▶ تمشي على الشاشات وحدة وحدة، و«📋» تشوف قائمة كل الشاشات مقسّمة حسب المرحلة. فوق تبدّل بين شاشة المضيف (أنت) وشاشة كل لاعب. وعندك: ☀️/🌙 الوضع، 📱/📺 جوال أو تلفزيون، ⏱ تشغيل الوقت، و«🚪 البداية» لصفحات التعريف والاسم.<br><b>آمن:</b> كل شي على تلفونك بس، ما يلمس الغرف الحقيقية ولا Firebase.',
+        '<b>What you can do:</b> ◀ ▶ steps through screens, «📋» lists them all by stage. Switch between the host (you) and each player at the top. Also: ☀️/🌙 theme, 📱/📺 phone or TV, ⏱ run time, and «🚪 Start» for the intro and name pages.<br><b>Safe:</b> everything stays on your phone and never touches real rooms or Firebase.') + '</div>' +
+      '<a class="lnk" href="dev.html' + (S.lang === 'en' ? '?lang=en' : '') + '">' + T('نسخة البوتات ←', '→ Bots version') + '</a></div>';
+  }
+
+  /* ---------- المعاين ---------- */
+  function fileOf(start) {
+    var g = G(); return g.f + (S.lang === 'en' ? '-en' : '') + '.html?dev=1&inspect=' + (start ? 'start' : '1') + '&bots=3&speed=10';
+  }
+  function open(start) {
+    S.mode = start ? 'start' : 'rec'; S.view = 'host'; S.lastN = -1; S.timeRuns = false;
+    clearInterval(poll); window.__DEV = null;
+    document.documentElement.lang = S.lang; document.documentElement.dir = S.lang === 'en' ? 'ltr' : 'rtl';
+    var g = G();
+    $('app').innerHTML = '<div class="view">' +
+      '<div class="bar">' +
+      '<div class="r"><button class="b" data-a="home">' + T('→ الألعاب', '← Games') + '</button><div class="gname"><span class="dot" style="background:' + g.c + '"></span>' + T(g.ar, g.en) + '</div><button class="b err" id="errb" hidden data-a="errs"></button><button class="b" data-a="dark" id="darkb"></button><button class="b" data-a="tv" id="tvb"></button></div>' +
+      '<div class="r sc" id="who"></div>' +
+      '<div class="nav" id="nav"></div>' +
+      '</div>' +
+      '<div class="stage" id="stage"><div class="fw" id="fw"><iframe id="fr" src="' + fileOf(start) + '"></iframe></div>' +
+      (start ? '' : '<div class="rec" id="recbox"><div class="sp"></div><div class="t" id="rect">' + T('البوتات يلعبون اللعبة كاملة…', 'Bots are playing the whole game…') + '</div><button class="b y" data-a="stoprec">' + T('وقّف', 'Stop') + '</button></div>') +
+      '</div></div>';
+    frame = $('fr');
+    frame.addEventListener('load', function () { setTimeout(applyTheme, 300); });
+    layout(); renderBar();
+    poll = setInterval(tick, 300);
+  }
+  function layout() {
+    var st = $('stage'), fw = $('fw'); if (!st || !frame) return;
+    var W = st.clientWidth, H = st.clientHeight;
+    if (S.tv) {
+      var sc = Math.min(1, W / 1280);
+      frame.style.width = '1280px'; frame.style.height = '720px'; frame.style.transform = 'scale(' + sc + ')';
+      fw.style.width = (1280 * sc) + 'px'; fw.style.height = (720 * sc) + 'px'; fw.style.marginTop = '10px'; fw.style.borderRadius = '10px';
+    } else {
+      var w = Math.min(W, 430);
+      frame.style.width = w + 'px'; frame.style.height = H + 'px'; frame.style.transform = '';
+      fw.style.width = w + 'px'; fw.style.height = H + 'px'; fw.style.marginTop = '0'; fw.style.borderRadius = '0';
+    }
+  }
+  window.addEventListener('resize', layout);
+  function applyTheme() {
+    var i = I(), v = S.dark ? 'dark' : 'light';
+    try { localStorage.setItem('aqnieni.theme', v); } catch (e) { }
+    if (i && i.setTheme) i.setTheme(v);
+    else { try { frame.contentWindow.AQTHEME && frame.contentWindow.AQTHEME.set(v); } catch (e) { } }
+  }
+  function tick() {
+    var i = I(); if (!i) return;
+    var er = (i.errors && i.errors()) || [];
+    var eb = $('errb'); if (eb) { eb.hidden = !er.length; eb.textContent = '⚠️ ' + er.length; }
+    if (S.mode === 'rec') {
+      var t = $('rect'); if (t) t.textContent = T('البوتات يلعبون اللعبة كاملة… انحفظت ', 'Bots are playing the whole game… saved ') + i.snaps.length + T(' شاشة', ' screens');
+      if (i.done) { S.mode = 'view'; var rb = $('recbox'); if (rb) rb.remove(); applyTheme(); renderBar(); }
+      else if (i.snaps.length !== S.lastN) { S.lastN = i.snaps.length; renderBar(); }
+    } else if (S.mode === 'view') {
+      var n = (i.players && i.players().length) || 0;
+      if (n !== S.np) { S.np = n; renderBar(); }
+    }
+  }
+  function renderBar() {
+    var i = I(), who = $('who'), nav = $('nav'); if (!who) return;
+    $('darkb').textContent = S.dark ? '☀️' : '🌙';
+    $('tvb').textContent = S.tv ? '📱' : '📺';
+    var players = (i && i.players && i.players()) || [];
+    if (S.mode === 'start') {
+      who.innerHTML = '<span style="font-weight:700;opacity:.85;font-size:.85rem">' + T('صفحات البداية: التعريف، التنويه، الاسم. تنقّل فيها بنفسك.', 'Start pages: intro, notice, name. Move through them yourself.') + '</span>';
+      nav.innerHTML = '<button class="b y" style="flex:1;padding:11px" data-a="rec">' + T('▶ سجّل كل شاشات اللعبة', '▶ Record every game screen') + '</button>';
+      return;
+    }
+    who.innerHTML = '<button class="b ' + (S.view === 'host' ? 'on' : '') + '" data-a="who" data-v="host">👑 ' + T('أنا (المضيف)', 'Me (host)') + '</button>' +
+      players.map(function (p) { return '<button class="b ' + (S.view === p.k ? 'on' : '') + '" data-a="who" data-v="' + p.k + '">🤖 ' + esc(p.name) + '</button>'; }).join('');
+    var sn = (i && i.snaps) || [], cur = i && i.cur, rec = S.mode === 'rec';
+    var c = sn[cur];
+    nav.innerHTML = '<button class="b arr" data-a="prev" ' + (rec || !cur ? 'disabled' : '') + '>' + T('▶', '◀') + '</button>' +
+      '<button class="cur" data-a="list" ' + (rec ? 'disabled' : '') + '>' + (rec ? '<small>' + T('جاري التسجيل', 'Recording') + '</small><span>' + sn.length + T(' شاشة', ' screens') + '</span>'
+        : c ? '<small>' + (cur + 1) + ' / ' + sn.length + ' · ' + esc(ph(c.phase)) + (c.round ? ' · ' + T('جولة ', 'R') + c.round : '') + ' 📋</small><span>' + esc(c.title || ph(c.phase)) + '</span>' : '<span>📋 ' + T('الشاشات', 'Screens') + '</span>') + '</button>' +
+      '<button class="b arr" data-a="next" ' + (rec || cur == null || cur >= sn.length - 1 ? 'disabled' : '') + '>' + T('◀', '▶') + '</button>' +
+      '<button class="b ' + (S.timeRuns ? 'on' : '') + '" data-a="time" ' + (rec ? 'disabled' : '') + ' title="' + T('الوقت', 'Time') + '">⏱</button>' +
+      '<button class="b" data-a="more" ' + (rec ? 'disabled' : '') + '>⋯</button>';
+  }
+  function go(n) {
+    var i = I(); if (!i || !i.snaps[n]) return;
+    i.jump(n); setTimeout(renderBar, 50);
+  }
+  function showList() {
+    var i = I(); if (!i) return;
+    var html = '<div class="shead"><b style="font-size:1.05rem">📋 ' + T('كل الشاشات', 'All screens') + ' (' + i.snaps.length + ')</b><button class="pill" data-a="close">' + T('إغلاق', 'Close') + '</button></div>', last = null;
+    i.snaps.forEach(function (s, n) {
+      if (s.phase !== last) { html += '<h3>' + esc(ph(s.phase)) + '</h3>'; last = s.phase; }
+      html += '<button class="it ' + (n === i.cur ? 'on' : '') + '" data-a="jump" data-v="' + n + '"><span class="n">' + (n + 1) + '</span><span>' + esc(s.title || ph(s.phase)) + '</span>' + (s.round ? '<span class="rd">' + T('جولة ', 'R') + s.round + '</span>' : '') + '</button>';
+    });
+    openSheet(html);
+    var on = $('sheetIn').querySelector('.it.on'); if (on) on.scrollIntoView({ block: 'center' });
+  }
+  function showMore() {
+    openSheet('<div class="shead"><b style="font-size:1.05rem">⋯ ' + T('خيارات', 'Options') + '</b><button class="pill" data-a="close">' + T('إغلاق', 'Close') + '</button></div>' +
+      '<button class="it" style="margin-top:12px" data-a="rec">🔁 ' + T('تسجيل جديد (لعبة ثانية بنتايج مختلفة)', 'Record again (a new game, different results)') + '</button>' +
+      '<button class="it" data-a="start">🚪 ' + T('صفحات البداية (التعريف والاسم)', 'Start pages (intro and name)') + '</button>' +
+      '<button class="it" data-a="lang2">🌐 ' + T('نفس اللعبة بالإنجليزي', 'Same game in Arabic') + '</button>' +
+      '<div class="note">' + T('⏱ <b>الوقت:</b> الشاشة توقف على اللحظة اللي انحفظت فيها. شغّل الوقت إذا تبي تشوف المؤقت يمشي و«انتهى الوقت». وتقدر تضغط أزرار اللعبة عادي؛ أي شاشة ثانية تروح لها ترجع مثل ما كانت.', '⏱ <b>Time:</b> each screen is frozen at the moment it was saved. Turn time on to watch the timer run and “Time’s up”. You can tap game buttons freely; jumping to any screen restores it.') + '</div>');
+  }
+  function showErrs() {
+    var i = I(); if (!i) return;
+    openSheet('<div class="shead"><b style="font-size:1.05rem">⚠️ ' + T('الأخطاء', 'Errors') + '</b><button class="pill" data-a="close">' + T('إغلاق', 'Close') + '</button></div><div class="lg" style="margin-top:10px">' + esc(i.errors().map(function (e) { return e.who + ' ' + e.m; }).join('\n')) + '</div>');
+  }
+  function openSheet(h) { $('sheetIn').innerHTML = h; $('sheet').hidden = false; }
+  function closeSheet() { $('sheet').hidden = true; }
+  $('sheet').addEventListener('click', function (e) { if (e.target.id === 'sheet') closeSheet(); });
+
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-a]'); if (!t || t.disabled) return;
+    var a = t.dataset.a, v = t.dataset.v, i = I();
+    if (a === 'lang') { S.lang = S.lang === 'en' ? 'ar' : 'en'; renderPick(); }
+    else if (a === 'game') { S.game = v; open(false); }
+    else if (a === 'home') { closeSheet(); renderPick(); }
+    else if (a === 'stoprec') { if (i) i.stop(); }
+    else if (a === 'who') { S.view = v === 'host' ? 'host' : +v; if (i) i.show(S.view); renderBar(); }
+    else if (a === 'prev') go(i.cur - 1);
+    else if (a === 'next') go(i.cur + 1);
+    else if (a === 'list') showList();
+    else if (a === 'jump') { closeSheet(); go(+v); }
+    else if (a === 'close') closeSheet();
+    else if (a === 'more') showMore();
+    else if (a === 'errs') showErrs();
+    else if (a === 'rec') { closeSheet(); open(false); }
+    else if (a === 'start') { closeSheet(); open(true); }
+    else if (a === 'lang2') { closeSheet(); S.lang = S.lang === 'en' ? 'ar' : 'en'; open(false); }
+    else if (a === 'time') { S.timeRuns = !S.timeRuns; if (i) i.setTime(S.timeRuns); renderBar(); }
+    else if (a === 'dark') { S.dark = !S.dark; applyTheme(); renderBar(); }
+    else if (a === 'tv') { S.tv = !S.tv; if (S.tv && S.view !== 'host') { S.view = 'host'; if (i) i.show('host'); } layout(); renderBar(); }
+  });
+  renderPick();
+})();
+</script>
+</body>
+</html>
