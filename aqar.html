@@ -842,7 +842,7 @@ const CONFIG = {
   lands: [{ id: 'l400', name: { ar: '400 م²', en: '400 m²' }, price: 80 }, { id: 'l600', name: { ar: '600 م²', en: '600 m²' }, price: 120 }, { id: 'l800', name: { ar: '800 م²', en: '800 m²' }, price: 160 }, { id: 'l1000', name: { ar: '1000 م²', en: '1000 m²' }, price: 200 }],
   floorPrice: 60, maxFloors: 3, basementPrice: 50,
   styles: [{ id: 'classic', name: { ar: 'كلاسيك', en: 'Classic' }, price: 40 }, { id: 'modern', name: { ar: 'مودرن', en: 'Modern' }, price: 60 }, { id: 'heritage', name: { ar: 'تراثي', en: 'Heritage' }, price: 50 }, { id: 'minimal', name: { ar: 'أوروبي', en: 'European' }, price: 45 }],
-  colors: [{ id: 'white', hex: '#FFFFFF', name: { ar: 'أبيض', en: 'White' }, price: 0 }, { id: 'sand', hex: '#E8CFA0', name: { ar: 'رملي', en: 'Sand' }, price: 20 }, { id: 'grey', hex: '#D3D9E1', name: { ar: 'رمادي', en: 'Grey' }, price: 20 }, { id: 'blue', hex: '#CFE3F5', name: { ar: 'أزرق', en: 'Blue' }, price: 20 }, { id: 'green', hex: '#D2ECD8', name: { ar: 'أخضر', en: 'Green' }, price: 20 }, { id: 'pink', hex: '#F6D5DA', name: { ar: 'وردي', en: 'Pink' }, price: 20 }],
+  colors: [{ id: 'white', hex: '#FFFFFF', name: { ar: 'أبيض', en: 'White' }, price: 0 }, { id: 'sand', hex: '#E2BF85', name: { ar: 'رملي', en: 'Sand' }, price: 20 }, { id: 'grey', hex: '#BCC5D1', name: { ar: 'رمادي', en: 'Grey' }, price: 20 }, { id: 'blue', hex: '#A7CAEC', name: { ar: 'أزرق', en: 'Blue' }, price: 20 }, { id: 'green', hex: '#AEDBB9', name: { ar: 'أخضر', en: 'Green' }, price: 20 }, { id: 'pink', hex: '#EFB5C0', name: { ar: 'وردي', en: 'Pink' }, price: 20 }],
   extras: [{ id: 'pool', icon: '🏊', name: { ar: 'مسبح', en: 'Pool' }, price: 50 }, { id: 'garden', icon: '🌳', name: { ar: 'حديقة', en: 'Garden' }, price: 30 }, { id: 'elevator', icon: '🛗', name: { ar: 'مصعد', en: 'Elevator' }, price: 40 }, { id: 'parking', icon: '🚗', name: { ar: 'مواقف', en: 'Parking' }, price: 20 }]
 };
 const byId = (a, id) => a.find(x => x.id === id);
@@ -885,6 +885,7 @@ function houseSVG(sp) {
   /* مشهد كامل: سما وأرض والبيت كبير بالنص. الستايل وعدد الأدوار والسرداب واللون والتجهيزات كلها تبين بالرسم */
   const f = Math.max(1, Math.min(CONFIG.maxFloors, sp.floors || 1)), fh = 30, ground = 130, ex = sp.extras || [], st = sp.style;
   const wall = (byId(CONFIG.colors, sp.color) || CONFIG.colors[0]).hex, id = 'h' + (++HSV);
+  const isWhite = !sp.color || sp.color === 'white', wallG = isWhite ? '#F5F4F0' : wall;
   const glass = '#34505E', refl = '#5F7F8E', warm = '#E3B26C', warm2 = '#D9A45E', wood = '#A9744A', woodD = '#8A5A35', mull = '#EDEDE8', dark = '#2B2B2B';
   const shade = 'rgba(0,0,0,.07)';
   const pane = (px, py, pw, ph, n, o) => {
@@ -906,13 +907,13 @@ function houseSVG(sp) {
   const W = 124, X = 38, top = ground - f * fh, cx = X + W / 2;
   if (st === 'modern') {
     const gx = X, gw = W - 20, ux = X + 18, uw = W - 6;
-    s += `<rect x="${gx}" y="${ground - fh}" width="${gw}" height="${fh}" fill="#F5F4F0"/>`;
+    s += `<rect x="${gx}" y="${ground - fh}" width="${gw}" height="${fh}" fill="${wallG}"/>`;
     s += pane(gx + 6, ground - fh + 4, 56, fh - 4, 3);
     s += `<rect x="${gx + 68}" y="${ground - fh + 4}" width="${gw - 72}" height="${fh - 4}" fill="${wood}"/>` + Array.from({ length: 9 }, (_, i) => `<rect x="${gx + 70 + i * 3.6}" y="${ground - fh + 4}" width=".9" height="${fh - 4}" fill="${woodD}"/>`).join('');
     s += `<rect x="${gx + 78}" y="${ground - 17}" width="10" height="17" fill="${dark}"/><circle cx="${gx + 86}" cy="${ground - 8}" r=".8" fill="#D4AF37"/><circle cx="${gx + 74}" cy="${ground - 13}" r="1.6" fill="#F7D9A0"/><circle cx="${gx + 92}" cy="${ground - 13}" r="1.6" fill="#F7D9A0"/>`;
     for (let i = 1; i < f; i++) {
       const y = ground - (i + 1) * fh;
-      s += `<rect x="${ux}" y="${y}" width="${uw}" height="${fh}" fill="#FFFFFF"/><rect x="${ux}" y="${y + fh - 1}" width="${uw}" height="1" fill="#DADAD5"/>`;
+      s += `<rect x="${ux}" y="${y}" width="${uw}" height="${fh}" fill="${wall}"/><rect x="${ux}" y="${y + fh - 1}" width="${uw}" height="1" fill="#DADAD5"/>`;
       s += pane(ux + 6, y + 4, 70, fh - 9, 3);
       s += `<rect x="${ux + 82}" y="${y + 9}" width="${uw - 86}" height="${fh - 9}" fill="#BFD8E2" opacity=".8"/><rect x="${ux + 82}" y="${y + 9}" width="${uw - 86}" height="1.2" fill="#8FA9B4"/>`;
     }
