@@ -20,8 +20,8 @@
   if (!isBot && !(SHELL && SHELL.__DEV)) {
     TOPW.__DEV = {
       store: {}, subs: [], speed: +(qs.get('speed') || 1), rA: realNow(), vA: realNow(),
-      auto: qs.get('auto') === '1' || qs.get('inspect') === '1', inspect: qs.get('inspect'), freeze: false, botsWanted: Math.max(1, Math.min(12, +(qs.get('bots') || 3))),
-      bots: [], log: [], errors: [], code: null, theme: qs.get('theme') || null, en: EN, game: GAMEKEY, prefix: PREFIX, stats: { actions: 0 }
+      auto: qs.get('auto') === '1' || qs.get('inspect') === '1', inspect: qs.get('inspect'), freeze: false, botsWanted: Math.max(1, Math.min(24, +(qs.get('bots') || 3))),
+      bots: [], log: [], errors: [], code: null, theme: qs.get('theme') || null, hostOnly: qs.get('hostonly') === '1', en: EN, game: GAMEKEY, prefix: PREFIX, stats: { actions: 0 }
     };
   }
   var D = TOPW.__DEV;
@@ -183,7 +183,12 @@
     me: function () {
       var g = ctx.G(); if (!g) return null; var ps = g.players || [];
       if (isBot) return ps.find(function (p) { return p.name === ctx.myName; }) || null;
-      return ps.find(function (p) { return BOT_NAMES.indexOf(p.name) < 0 && !/^bot/.test(p.id); }) || null;
+      var mine = ps.find(function (p) { return BOT_NAMES.indexOf(p.name) < 0 && !/^bot/.test(p.id); });
+      if (mine) return mine;
+      /* مضيف بس (ما يلعب): مو موجود بقائمة اللاعبين، بس هو اللي يتحكم */
+      var st = g.settings || {};
+      if (g.host && (st.hostPlays === 0 || st.hostPlays === false || st.hostPlays === '0') && ctx.code()) return { id: g.host, name: ctx.myName, hostOnly: true };
+      return null;
     },
     isHost: function () { var g = ctx.G(), m = ctx.me(); return !!(g && m && g.host === m.id); },
     rnd: function (a, b) { return a + Math.floor(Math.random() * (b - a + 1)); },
@@ -193,8 +198,8 @@
   };
   window.__DEV_CTX = ctx;
 
-  var BOT_NAMES = EN ? ['Bot Sara', 'Bot Fahad', 'Bot Noura', 'Bot Khalid', 'Bot Dana', 'Bot Yousef', 'Bot Mariam', 'Bot Ali', 'Bot Hessa', 'Bot Omar', 'Bot Lulwa', 'Bot Bader']
-    : ['بوت سارة', 'بوت فهد', 'بوت نورة', 'بوت خالد', 'بوت دانة', 'بوت يوسف', 'بوت مريم', 'بوت علي', 'بوت حصة', 'بوت عمر', 'بوت لولوة', 'بوت بدر'];
+  var BOT_NAMES = EN ? ['Bot Sara', 'Bot Fahad', 'Bot Noura', 'Bot Khalid', 'Bot Dana', 'Bot Yousef', 'Bot Mariam', 'Bot Ali', 'Bot Hessa', 'Bot Omar', 'Bot Lulwa', 'Bot Bader', 'Bot Shahad', 'Bot Faisal', 'Bot Reem', 'Bot Nasser', 'Bot Ghala', 'Bot Saud', 'Bot Jana', 'Bot Turki', 'Bot Hind', 'Bot Majed', 'Bot Ruba', 'Bot Hamad']
+    : ['بوت سارة', 'بوت فهد', 'بوت نورة', 'بوت خالد', 'بوت دانة', 'بوت يوسف', 'بوت مريم', 'بوت علي', 'بوت حصة', 'بوت عمر', 'بوت لولوة', 'بوت بدر', 'بوت شهد', 'بوت فيصل', 'بوت ريم', 'بوت ناصر', 'بوت غلا', 'بوت سعود', 'بوت جنى', 'بوت تركي', 'بوت هند', 'بوت ماجد', 'بوت ربى', 'بوت حمد'];
 
   /* ---------- الخطوات العامة (دخول الغرفة) ---------- */
   function common() {
@@ -282,6 +287,7 @@
     if (D.freeze) return;
     var g = ctx.G(); if (!g || g.phase !== 'lobby' || !ctx.isHost()) return;
     var st = g.settings || {}, hp = !(st.hostPlays === false || st.hostPlays === 0 || st.hostPlays === '0');
+    if (hp && D.hostOnly) { var ho = ctx.$('[data-k="hostPlays"][data-v="0"]'); if (ho && vis(ho)) { ho.click(); return; } }
     var real = (g.players || []).length - (hp ? 0 : 1), tgt = st.players || 3;
     if (real < 3 || tgt === real) return;
     var pv = ctx.acts('step').filter(function (b) { return b.dataset.k === 'players'; });
@@ -391,6 +397,10 @@
     var W = w.innerWidth, txtAll = b.innerText || '';
     var m = txtAll.match(/(^|[^A-Za-z_])(undefined|NaN|\[object Object\]|null|Infinity)(?![A-Za-z_])/);
     if (m) { var at = m.index, sn = txtAll.slice(Math.max(0, at - 25), at + m[0].length + 25).replace(/\s+/g, ' ').trim(); out.push({ lv: 'r', m: (EN ? 'Broken text shown: “' : 'نص مكسور يبين للاعب: «') + m[2] + (EN ? '”' : '»'), d: sn }); }
+    if (EN) {
+      var ar = txtAll.replace(/(^|\s)عربي(?=\s|$)/g, ' ').match(/[\u0600-\u06FF][\u0600-\u06FF\s،]{2,}/);
+      if (ar && !/^(بوت|أنا)/.test(ar[0].trim())) { var tx2 = txtAll.replace(/(^|\s)عربي(?=\s|$)/g, ' '), ai = ar.index; out.push({ lv: 'o', m: 'Arabic text on the English page', d: tx2.slice(Math.max(0, ai - 20), ai + ar[0].length + 20).replace(/\s+/g, ' ').trim() }); }
+    }
     var cache = new Map();
     function cs(e) { var c = cache.get(e); if (!c) { c = w.getComputedStyle(e); cache.set(e, c); } return c; }
     function hiddenOrClipped(e) {

@@ -160,7 +160,7 @@ details.ts div{padding:4px 2px}
   'use strict';
   window.__AQ_SHELL = 1;
   var qs = new URLSearchParams(location.search);
-  var S = { lang: qs.get('lang') === 'en' ? 'en' : 'ar', game: null, mode: 'pick', dark: false, filter: 'all', tv: false, timeRuns: false, vi: 0, vk: 'host' };
+  var S = { bots: Math.max(1, Math.min(24, +(qs.get('bots') || 3))), hostW: +(qs.get('hostw') || 390), hostH: +(qs.get('hosth') || 844), lang: qs.get('lang') === 'en' ? 'en' : 'ar', game: null, mode: 'pick', dark: false, filter: 'all', tv: false, timeRuns: false, vi: 0, vk: 'host' };
   try { S.dark = localStorage.getItem('aqnieni.theme') === 'dark'; } catch (e) { }
   var GAMES = [
     { f: 'murafaat', ar: 'المنصة', en: 'ALMANASSA', c: '#DE0921', i: '⚖️' },
@@ -185,6 +185,11 @@ details.ts div{padding:4px 2px}
   var $ = function (id) { return document.getElementById(id); };
   var frame = null, poll = null, io = null;
   function I() { try { return frame && frame.contentWindow && frame.contentWindow.__INSPECT; } catch (e) { return null; } }
+  /* البيانات تعيش هني بصفحة المعاين، فتبقى حتى لو صفحة اللعبة قاعدة تعيد التحميل */
+  function X() {
+    var d = window.__DEV; if (!d) return null;
+    return { snaps: d.snaps || [], errors: d.errors || [], toasts: d.toasts || [], pool: d.pool || [], end: d.endReason || null, ms: d.recMs || 0, done: !!d.done };
+  }
   function G() { return GAMES.find(function (g) { return g.f === S.game; }); }
   function setDir() { document.documentElement.lang = S.lang; document.documentElement.dir = S.lang === 'en' ? 'ltr' : 'rtl'; }
   function toast(m) { var t = document.createElement('div'); t.className = 'toast'; t.textContent = m; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 1800); }
@@ -206,7 +211,7 @@ details.ts div{padding:4px 2px}
 
   /* ============ 2. التسجيل ============ */
   function killRig() { if (io) { io.disconnect(); io = null; } window.__DEV = null; frame = null; $('rig').className = ''; $('rig').removeAttribute('style'); $('rig').innerHTML = ''; }
-  function fileOf() { return G().f + (S.lang === 'en' ? '-en' : '') + '.html?dev=1&inspect=1&bots=3&speed=10&theme=' + (S.dark ? 'dark' : 'light'); }
+  function fileOf() { return G().f + (S.lang === 'en' ? '-en' : '') + '.html?dev=1&inspect=1&bots=' + S.bots + (qs.get('hostonly') === '1' ? '&hostonly=1' : '') + '&speed=10&theme=' + (S.dark ? 'dark' : 'light'); }
   function record() {
     clearInterval(poll); killRig(); setDir(); $('vw').hidden = true;
     S.mode = 'rec'; S.filter = 'all'; S.t0 = Date.now();
@@ -238,6 +243,7 @@ details.ts div{padding:4px 2px}
         frame.style.width = w + 'px'; frame.style.height = H + 'px'; frame.style.transform = '';
       }
     } else { rig.className = ''; rig.removeAttribute('style'); frame.style.transform = ''; frame.style.width = '390px'; frame.style.height = '844px'; }
+    if (S.mode !== 'live' && S.hostW !== 390) { rig.style.width = S.hostW + 'px'; rig.style.height = S.hostH + 'px'; frame.style.width = S.hostW + 'px'; frame.style.height = S.hostH + 'px'; }
   }
   addEventListener('resize', function () { placeRig(); if (!$('vw').hidden) fitViewer(); });
 
@@ -254,13 +260,14 @@ details.ts div{padding:4px 2px}
 
   /* ============ 3. تجميع المشاكل ============ */
   function whoName(w) {
-    var i = I(); if (w === '👤') return T('أنت', 'You');
-    var k = +String(w).replace(/\D/g, ''), p = i && i.players().find(function (x) { return x.k === k; });
-    return p ? p.name : w;
+    if (w === '👤') return T('أنت', 'You');
+    var k = +String(w).replace(/\D/g, ''), x = X(), nm = null;
+    if (x) x.snaps.some(function (s) { return (s.views || []).some(function (v) { if (v.k === k) { nm = v.name; return true; } }); });
+    return nm || w;
   }
   function model() {
-    var i = I(); if (!i) return { snaps: [], bad: 0 };
-    var sn = i.snaps || [], errs = i.errors(), tsts = i.toasts ? i.toasts() : [];
+    var x = X(); if (!x) return { snaps: [], bad: 0 };
+    var sn = x.snaps, errs = x.errors, tsts = x.toasts;
     var out = sn.map(function (s, n) {
       var iss = [];
       (s.views || []).forEach(function (v) { (v.c && v.c.issues || []).forEach(function (x) { iss.push({ lv: x.lv, k: v.k, who: v.k === 'host' ? T('أنت', 'You') : v.name, m: x.m, d: x.d }); }); });
@@ -274,8 +281,8 @@ details.ts div{padding:4px 2px}
 
   /* ============ 4. الألبوم ============ */
   function buildDoc(c) {
-    var pool = I().pool();
-    return c.html.replace(/<style data-p="(\d+)"><\/style>/g, function (_, id) { return '<style>' + pool[+id] + '</style>'; })
+    var pool = X().pool;
+    return c.html.replace(/<style([^>]*?) data-p="(\d+)"([^>]*)><\/style>/g, function (_, a, id, z) { return '<style' + a + z + '>' + pool[+id] + '</style>'; })
       .replace(/aq-pool:(\d+)/g, function (_, id) { return pool[+id]; })
       .replace(/<head>/i, '<head><style>html{scrollbar-width:none}::-webkit-scrollbar{display:none}</style>');
   }
@@ -288,10 +295,10 @@ details.ts div{padding:4px 2px}
   function renderAlbum(keepScroll) {
     var y = keepScroll ? scrollY : 0;
     S.mode = 'album'; setDir(); placeRig();
-    var i = I(), g = G(), M = model(), sn = M.snaps;
+    var x = X(), g = G(), M = model(), sn = M.snaps;
     var red = sn.filter(function (x) { return x.lv === 'r'; }).length, org = sn.filter(function (x) { return x.lv === 'o'; }).length;
     var nIss = M.bad, views = sn.reduce(function (a, x) { return a + (x.s.views || []).length; }, 0);
-    var end = i.endReason(), cls = red ? 'r' : org ? 'o' : 'ok';
+    var end = x.end, cls = red ? 'r' : org ? 'o' : 'ok';
     var head = red || org
       ? T(n2(nIss) + ' مشكلة في ' + n2(red + org) + ' شاشة', n2(nIss) + ' issue' + (nIss > 1 ? 's' : '') + ' on ' + (red + org) + ' screen' + (red + org > 1 ? 's' : ''))
       : T('كل الشاشات سليمة ✨', 'Every screen looks fine ✨');
@@ -303,7 +310,7 @@ details.ts div{padding:4px 2px}
       '<button class="chip bad ' + (S.filter === 'bad' ? 'on' : '') + '" data-a="filter" data-v="bad">⚠️ ' + T('المشاكل', 'Issues') + ' ' + n2(red + org) + '</button>' +
       phases.map(function (p) { return '<button class="chip" data-a="jumpto" data-v="' + seen[p].first + '">' + esc(ph(p)) + '</button>'; }).join('') + '</div></div>' +
       '<div class="sum ' + cls + '"><h2>' + (cls === 'ok' ? '✅ ' : cls === 'r' ? '🔴 ' : '🟠 ') + head + '</h2><p>' + T('البوتات لعبوا ', 'Bots played ') + esc(T(g.ar, g.en)) + T(' كاملة وانفحصت كل شاشة من عين كل لاعب.', ' in full and every screen was checked from every player\'s view.') + '</p>' +
-      '<div class="st"><span>📱 ' + n2(sn.length) + T(' شاشة', ' screens') + '</span><span>👀 ' + n2(views) + T(' منظر', ' views') + '</span><span>🔴 ' + n2(red) + '</span><span>🟠 ' + n2(org) + '</span><span>⏱ ' + n2(Math.round(i.recMs() / 1000)) + T(' ث', 's') + '</span><span>' + (S.dark ? '🌙' : '☀️') + '</span></div>' +
+      '<div class="st"><span>📱 ' + n2(sn.length) + T(' شاشة', ' screens') + '</span><span>👀 ' + n2(views) + T(' منظر', ' views') + '</span><span>🔴 ' + n2(red) + '</span><span>🟠 ' + n2(org) + '</span><span>⏱ ' + n2(Math.round(x.ms / 1000)) + T(' ث', 's') + '</span><span>' + (S.dark ? '🌙' : '☀️') + '</span></div>' +
       '<div class="ac"><button data-a="report">📋 ' + T('انسخ التقرير', 'Copy report') + '</button><button data-a="rec">🔁 ' + T('سجّل لعبة جديدة', 'Record a new game') + '</button></div></div>';
     if (end === 'timeout') { var last = sn[sn.length - 1]; html += '<div class="warn">⛔ ' + T('اللعبة ما خلصت خلال ٤ دقايق: البوتات علقوا عند «', 'The game did not finish in 4 minutes: bots got stuck at “') + esc(last ? last.s.title || ph(last.s.phase) : '') + T('». ', '”. ') + (last ? '<button data-a="jumpto" data-v="' + last.n + '">' + T('روح لها', 'Go there') + '</button>' : '') + '</div>'; }
     else if (end === 'stopped') html += '<div class="warn" style="background:#F4F6F9;border-color:#DCE2EC;color:#3B4659">⏸ ' + T('وقّفت التسجيل قبل النهاية، فهذي الشاشات اللي انحفظت للحين بس.', 'You stopped early, so these are only the screens saved so far.') + '</div>';
@@ -331,7 +338,7 @@ details.ts div{padding:4px 2px}
     if (!iss.length) return '';
     return '<ul class="iss">' + iss.map(function (x) { return '<li class="' + x.lv + '">' + (x.k === 'host' ? '👑 ' : '🤖 ') + esc(x.who) + ' · ' + esc(x.m) + (x.d ? '<small>' + esc(x.d) + '</small>' : '') + '</li>'; }).join('') + '</ul>';
   }
-  function viewOf(n, k) { var s = I().snaps[n]; return s && (s.views || []).find(function (v) { return String(v.k) === String(k); }); }
+  function viewOf(n, k) { var s = X().snaps[n]; return s && (s.views || []).find(function (v) { return String(v.k) === String(k); }); }
   function lazy() {
     if (io) io.disconnect();
     io = new IntersectionObserver(function (es) {
@@ -390,18 +397,22 @@ details.ts div{padding:4px 2px}
   }
 
   /* ============ 7. التقرير ============ */
-  function report() {
-    var M = model(), g = G(), i = I(), L = [];
+  function reportText() {
+    var M = model(), g = G(), x = X(), L = [];
     L.push('تقرير المعاين — ' + g.ar + (S.lang === 'en' ? ' (EN)' : '') + ' — ' + (S.dark ? 'مسائي' : 'صباحي') + ' — ' + new Date().toLocaleString('en-GB'));
-    L.push('الشاشات: ' + M.snaps.length + ' · النهاية: ' + ({ final: 'وصلت النتائج', timeout: 'علقت (ما خلصت)', stopped: 'وقّفتها أنا' }[i.endReason()] || '-'));
+    L.push('الشاشات: ' + M.snaps.length + ' · النهاية: ' + ({ final: 'وصلت النتائج', timeout: 'علقت (ما خلصت)', stopped: 'وقّفتها أنا' }[x.end] || '-'));
     var bad = M.snaps.filter(function (x) { return x.iss.length; });
     if (!bad.length) L.push('ما في مشاكل ✅');
     bad.forEach(function (m) {
       L.push(''); L.push('#' + (m.n + 1) + ' [' + m.s.phase + (m.s.round ? ' ج' + m.s.round : '') + '] ' + (m.s.title || ''));
       m.iss.forEach(function (x) { L.push('  ' + (x.lv === 'r' ? '🔴' : '🟠') + ' ' + x.who + ': ' + x.m + (x.d ? ' — ' + x.d : '')); });
     });
-    var ts = (i.toasts ? i.toasts() : []); if (ts.length) { L.push(''); L.push('رسايل ظهرت للاعبين:'); ts.slice(-30).forEach(function (t) { L.push('  ' + whoName(t.who) + ': ' + t.m); }); }
-    var txt = L.join('\n');
+    var ts = x.toasts; if (ts.length) { L.push(''); L.push('رسايل ظهرت للاعبين:'); ts.slice(-30).forEach(function (t) { L.push('  ' + whoName(t.who) + ': ' + t.m); }); }
+    return L.join('\n');
+  }
+  window.__REPORT = function () { return X() ? reportText() : ''; };
+  function report() {
+    var txt = reportText();
     (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject()).then(function () { toast(T('انتسخ ✓ ألصقه لي بالمحادثة', 'Copied ✓ paste it to me in chat')); }, function () {
       var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); toast(T('انتسخ ✓', 'Copied ✓')); } catch (e) { } ta.remove();
     });
@@ -448,6 +459,7 @@ details.ts div{padding:4px 2px}
     else if (a === 'tv') { S.tv = !S.tv; if (S.tv && i) i.show('host'); renderLive(true); }
   });
   renderPick();
+  if (qs.get('game') && GAMES.some(function (g) { return g.f === qs.get('game'); })) { if (qs.get('theme')) S.dark = qs.get('theme') === 'dark'; S.game = qs.get('game'); record(); }
 })();
 </script>
 </body>

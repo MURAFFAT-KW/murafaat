@@ -1,0 +1,38 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "docs": {
+      "feedback": {
+        ".read": true,
+        "$id": {
+          ".write": "!data.exists()",
+          ".validate": "newData.isString() && newData.val().length <= 4000"
+        }
+      },
+      "$game": {
+        "$code": {
+          ".read": "($game === 'rooms' || $game === 'mazad' || $game === 'nadik' || $game === 'azyaa' || $game === 'aqar') && $code.matches(/^[A-Z0-9]{3,8}$/)",
+          ".write": "($game === 'rooms' || $game === 'mazad' || $game === 'nadik' || $game === 'azyaa' || $game === 'aqar') && $code.matches(/^[A-Z0-9]{3,8}$/)",
+          "_d": {
+            ".validate": "newData.isString() && newData.val().length <= 300000"
+          },
+          "inputs": {
+            "$player": {
+              "_d": {
+                ".validate": "newData.isString() && newData.val().length <= 100000"
+              }
+            }
+          },
+          "priv": {
+            "$part": {
+              "_d": {
+                ".validate": "newData.isString() && newData.val().length <= 100000"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
