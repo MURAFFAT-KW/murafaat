@@ -21,7 +21,7 @@
     TOPW.__DEV = {
       store: {}, subs: [], speed: +(qs.get('speed') || 1), rA: realNow(), vA: realNow(),
       auto: qs.get('auto') === '1' || qs.get('inspect') === '1', inspect: qs.get('inspect'), freeze: false, botsWanted: Math.max(1, Math.min(12, +(qs.get('bots') || 3))),
-      bots: [], log: [], errors: [], code: null, en: EN, game: GAMEKEY, prefix: PREFIX, stats: { actions: 0 }
+      bots: [], log: [], errors: [], code: null, theme: qs.get('theme') || null, en: EN, game: GAMEKEY, prefix: PREFIX, stats: { actions: 0 }
     };
   }
   var D = TOPW.__DEV;
@@ -122,6 +122,7 @@
 
   /* ---------- السجل والأخطاء ---------- */
   var WHO = isBot ? ('🤖' + qs.get('bot')) : '👤';
+  function snapNow() { return D.snaps ? (D.done ? (D.cur == null ? -1 : D.cur) : D.snaps.length - 1) : -1; }
   function log(m) { D.log.push({ t: realNow(), who: WHO, m: String(m) }); if (D.log.length > 400) D.log.shift(); }
   // تنبيهات اللعبة (toast) تنحفظ بالسجل عشان تعرف وين اللاعبين يتعثرون
   var lastToast = '', lastToastT = 0;
@@ -136,7 +137,7 @@
             var t = (n.textContent || '').trim(); if (!t) return;
             if (t === lastToast && realNow() - lastToastT < 1500) return;
             lastToast = t; lastToastT = realNow();
-            D.toasts = D.toasts || []; D.toasts.push({ t: realNow(), who: WHO, m: t }); if (D.toasts.length > 200) D.toasts.shift();
+            D.toasts = D.toasts || []; D.toasts.push({ t: realNow(), who: WHO, m: t, s: snapNow() }); if (D.toasts.length > 200) D.toasts.shift();
           });
         });
       }).observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
@@ -146,8 +147,8 @@
   window.addEventListener('error', function (e) {
     /* «Script error.» بدون ملف ولا سطر = سكربت من موقع ثاني (Firebase) واحنا قاصدين نوقفه بنسخة المطوّر، مو خطأ باللعبة */
     if ((/^Script error\.?$/i.test(e.message || '') && !e.lineno) || /gstatic\.com\/firebasejs/.test(e.filename || '')) return;
-    D.errors.push({ t: realNow(), who: WHO, m: (e.message || 'خطأ') + (e.lineno ? ' @' + e.lineno : '') }); });
-  window.addEventListener('unhandledrejection', function (e) { D.errors.push({ t: realNow(), who: WHO, m: 'promise: ' + (e.reason && e.reason.message || e.reason) }); });
+    D.errors.push({ t: realNow(), who: WHO, s: snapNow(), m: (e.message || 'خطأ') + (e.lineno ? ' @' + e.lineno : '') + (e.filename ? ' ' + e.filename.split('/').pop().split('?')[0] : '') }); });
+  window.addEventListener('unhandledrejection', function (e) { D.errors.push({ t: realNow(), who: WHO, s: snapNow(), m: 'promise: ' + (e.reason && e.reason.message || e.reason) }); });
 
   /* ---------- أدوات البوت ---------- */
   function vis(el) { if (!el) return false; if (el.disabled || el.getAttribute('aria-disabled') === 'true') return false; var r = el.getBoundingClientRect(); if (r.width === 0 && r.height === 0) return false; var s = getComputedStyle(el); return s.visibility !== 'hidden' && s.display !== 'none'; }
@@ -226,7 +227,7 @@
         var brain = (window.__DEV_BRAINS || (isBot ? TOPW.__DEV_BRAINS : null) || {})[GAMEKEY];
         if (brain) r = brain(ctx, isBot);
       }
-    } catch (e) { D.errors.push({ t: realNow(), who: WHO, m: 'bot: ' + (e && e.message) }); }
+    } catch (e) { D.errors.push({ t: realNow(), who: WHO, s: snapNow(), m: 'bot: ' + (e && e.message) }); }
     if (r) { lastAct = realNow(); if (typeof r === 'string' && r.charAt(0) !== '.') log(r); }
   }
 
@@ -373,6 +374,92 @@
     } catch (e) { }
     return '';
   }
+  /* ---------- الألبوم: صورة ثابتة من كل شاشة + فحص تلقائي للمشاكل ---------- */
+  function poolId(str) {
+    D.pool = D.pool || []; D.poolMap = D.poolMap || {};
+    if (D.poolMap[str] == null) { D.poolMap[str] = D.pool.length; D.pool.push(str); }
+    return D.poolMap[str];
+  }
+  function describe(e) {
+    var t = (e.innerText || e.textContent || e.getAttribute('aria-label') || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+    var tag = e.tagName.toLowerCase();
+    var nm = { button: EN ? 'button' : 'زر', input: EN ? 'input' : 'خانة', img: EN ? 'image' : 'صورة', svg: EN ? 'drawing' : 'رسمة', table: EN ? 'table' : 'جدول' }[tag] || (EN ? 'box' : 'مربع');
+    return nm + (t ? ' «' + t + '»' : '');
+  }
+  function checks(w) {
+    var out = [], d = w.document, b = d.body; if (!b) return out;
+    var W = w.innerWidth, txtAll = b.innerText || '';
+    var m = txtAll.match(/(^|[^A-Za-z_])(undefined|NaN|\[object Object\]|null|Infinity)(?![A-Za-z_])/);
+    if (m) { var at = m.index, sn = txtAll.slice(Math.max(0, at - 25), at + m[0].length + 25).replace(/\s+/g, ' ').trim(); out.push({ lv: 'r', m: (EN ? 'Broken text shown: “' : 'نص مكسور يبين للاعب: «') + m[2] + (EN ? '”' : '»'), d: sn }); }
+    var cache = new Map();
+    function cs(e) { var c = cache.get(e); if (!c) { c = w.getComputedStyle(e); cache.set(e, c); } return c; }
+    function hiddenOrClipped(e) {
+      for (var p = e; p && p !== b && p !== d.documentElement; p = p.parentElement) {
+        var c = cs(p);
+        if (c.visibility === 'hidden' || c.display === 'none' || +c.opacity === 0) return true;
+        if (p !== e && c.overflowX !== 'visible') return true;
+        if (c.position === 'fixed') return false;
+      }
+      return false;
+    }
+    var els = b.getElementsByTagName('*'), found = [];
+    for (var i = 0; i < els.length && i < 5000 && found.length < 3; i++) {
+      var e = els[i];
+      if (e.id === 'devbots' || e.id === 'devpanel' || e.id === 'devscreen' || e.id === 'devfab') { i += e.getElementsByTagName('*').length; continue; }
+      var r = e.getBoundingClientRect(); if (r.width < 2 || r.height < 2) continue;
+      if (r.right <= W + 3 && r.left >= -3) continue;
+      if (found.some(function (f) { return f.contains(e); })) continue;
+      if (hiddenOrClipped(e)) continue;
+      if (r.left >= W || r.right <= 0) continue; /* مخفي بالكامل برا الشاشة (قائمة منزلقة مثلًا) */
+      found.push(e);
+    }
+    found.forEach(function (e) { out.push({ lv: 'o', m: (EN ? 'Sticks out of the screen: ' : 'طالع برا حدود الشاشة: ') + describe(e) }); });
+    if (!found.length && d.documentElement.scrollWidth > W + 3 && cs(d.documentElement).overflowX !== 'hidden' && cs(b).overflowX !== 'hidden') out.push({ lv: 'o', m: EN ? 'Page is wider than the screen (scrolls sideways)' : 'الصفحة أعرض من الشاشة (تتحرك يمين ويسار)' });
+    Array.prototype.forEach.call(d.images, function (im) { if (im.getAttribute('src') && im.complete && !im.naturalWidth && !im.closest('#devbots')) out.push({ lv: 'o', m: (EN ? 'Image failed to load: ' : 'صورة ما تحملت: ') + (im.getAttribute('src') || '').slice(0, 50) }); });
+    if (txtAll.replace(/\s/g, '').length < 2 && !b.querySelector('img,svg,canvas')) out.push({ lv: 'o', m: EN ? 'Empty screen' : 'الشاشة فاضية' });
+    return out;
+  }
+  function capture(w) {
+    try {
+      var d = w.document; if (!d || !d.documentElement || !d.body) return null;
+      var issues = checks(w);
+      var cl = d.documentElement.cloneNode(true);
+      var a = d.querySelectorAll('input,textarea,select'), c2 = cl.querySelectorAll('input,textarea,select');
+      for (var i = 0; i < a.length && i < c2.length; i++) {
+        var x = a[i], y = c2[i]; if (x.tagName !== y.tagName) continue;
+        if (x.tagName === 'TEXTAREA') y.textContent = x.value;
+        else if (x.tagName === 'SELECT') Array.prototype.forEach.call(y.options, function (o, k) { if (k === x.selectedIndex) o.setAttribute('selected', ''); else o.removeAttribute('selected'); });
+        else if (x.type === 'checkbox' || x.type === 'radio') { if (x.checked) y.setAttribute('checked', ''); else y.removeAttribute('checked'); }
+        else y.setAttribute('value', x.value);
+      }
+      var ca = d.querySelectorAll('canvas'), cb = cl.querySelectorAll('canvas');
+      for (var j = 0; j < ca.length && j < cb.length; j++) {
+        try { var im = d.createElement('img'), rr = ca[j].getBoundingClientRect(); im.src = ca[j].toDataURL(); im.className = ca[j].className; im.setAttribute('style', (ca[j].getAttribute('style') || '') + ';width:' + rr.width + 'px;height:' + rr.height + 'px'); cb[j].parentNode.replaceChild(im, cb[j]); } catch (e) { }
+      }
+      Array.prototype.forEach.call(cl.querySelectorAll('script,noscript,iframe,#devfab,#devpanel,#devscreen,#devbots,link[rel=manifest]'), function (n) { n.parentNode && n.parentNode.removeChild(n); });
+      Array.prototype.forEach.call(cl.querySelectorAll('[autofocus]'), function (n) { n.removeAttribute('autofocus'); });
+      var head = cl.querySelector('head');
+      if (head) { var base = d.createElement('base'); base.href = w.location.href.split('#')[0]; head.insertBefore(base, head.firstChild); }
+      Array.prototype.forEach.call(cl.querySelectorAll('style'), function (st) { var id = poolId(st.textContent); st.textContent = ''; st.setAttribute('data-p', id); });
+      var html = '<!DOCTYPE html>' + cl.outerHTML;
+      html = html.replace(/(src|href)="(data:[^"]{1500,})"/g, function (_, at, v) { return at + '="aq-pool:' + poolId(v) + '"'; });
+      return { html: html, sy: w.scrollY || 0, issues: issues, W: w.innerWidth, H: w.innerHeight };
+    } catch (e) { return null; }
+  }
+  function captureAll() {
+    var v = [{ k: 'host', name: EN ? 'Me (host)' : 'أنا (المضيف)', c: capture(window) }];
+    D.bots.forEach(function (b) { var w = null; try { w = b.frame.contentWindow; } catch (e) { } v.push({ k: b.k, name: b.name, c: w ? capture(w) : null }); });
+    return v;
+  }
+  function mergeViews(old, nu) {
+    if (!old) return nu;
+    nu.forEach(function (v) {
+      var o = old.find(function (x) { return x.k === v.k; }); if (!o || !o.c || !v.c) return;
+      o.c.issues.forEach(function (is) { if (is.lv === 'r' && !v.c.issues.some(function (z) { return z.m === is.m; })) v.c.issues.push(is); });
+    });
+    return nu;
+  }
+
   function inspectBoot() {
     document.documentElement.classList.add('dev-inspect');
     var st = document.createElement('style');
@@ -383,7 +470,7 @@
     function dumpLS() { var o = {}; Object.keys(D.lsReg).forEach(function (k) { o[k] = { l: D.lsReg[k].l._dump(), s: D.lsReg[k].s._dump(), u: uiOf(D.lsReg[k].w) }; }); return o; }
     function rec() {
       if (!D.recording) return;
-      var g = ctx.G(); if (!g) return;
+      var g = ctx.G() || { phase: 'start' };
       var title = headOf(document);
       if (!title) for (var i = 0; i < D.bots.length && !title; i++) { try { title = headOf(D.bots[i].frame.contentDocument); } catch (e) { } }
       var raw = JSON.stringify(D.store);
@@ -391,16 +478,16 @@
       if (realNow() - I._rawT < 130) return;
       var key = (g.phase || '') + '|' + title.replace(/[0-9\u0660-\u0669]+/g, '#');
       var cur = D.snaps[D.snaps.length - 1];
-      if (key === D.lastKey) { if (cur && cur.key === key && !cur.locked) { cur.store = raw; cur.ls = dumpLS(); cur.vnow = Date.now(); cur.title = title; } }
+      if (key === D.lastKey) { if (cur && cur.key === key && !cur.locked) { cur.store = raw; cur.ls = dumpLS(); cur.vnow = Date.now(); cur.title = title; cur.views = mergeViews(cur.views, captureAll()); } }
       else {
         if (cur) cur.locked = true;
-        if (!D.seen[key]) { D.seen[key] = 1; D.snaps.push({ key: key, phase: g.phase || '', round: g.round || g.season || null, title: title, store: raw, ls: dumpLS(), vnow: Date.now() }); }
+        if (!D.seen[key]) { D.seen[key] = 1; D.snaps.push({ key: key, phase: g.phase || '', round: g.round || g.season || null, title: title, store: raw, ls: dumpLS(), vnow: Date.now(), views: captureAll() }); }
       }
       D.lastKey = key;
-      if (g.phase === 'final') { if (!D.finalAt) D.finalAt = realNow(); else if (realNow() - D.finalAt > 2500) stop(); }
-      if (realNow() - D.started > 240000) stop();
+      if (g.phase === 'final') { if (!D.finalAt) D.finalAt = realNow(); else if (realNow() - D.finalAt > 2500) { D.endReason = 'final'; stop(); } }
+      if (realNow() - D.started > 240000) { D.endReason = 'timeout'; stop(); }
     }
-    function stop() { if (!D.recording) return; D.recording = false; D.done = true; D.freeze = true; D.auto = false; if (D.snaps.length) I.jump(D.snaps.length - 1); }
+    function stop() { if (!D.recording) return; if (!D.endReason) D.endReason = 'stopped'; D.recMs = realNow() - D.started; D.recording = false; D.done = true; D.freeze = true; D.auto = false; if (D.snaps.length) I.jump(D.snaps.length - 1); }
     I.stop = stop;
     /* الانتقال: نرجّع قاعدة البيانات وتخزين كل لاعب مثل ما كانت، ونعيد تحميل اللعبة */
     I.jump = function (i) {
@@ -421,6 +508,10 @@
       D.bots.forEach(function (x) { x.frame.classList.toggle('top', x.k === v); }); box.style.removeProperty('--sc'); box.classList.add('show');
     };
     I.errors = function () { return D.errors.slice(); };
+    I.toasts = function () { return (D.toasts || []).slice(); };
+    I.pool = function () { return D.pool || []; };
+    I.endReason = function () { return D.endReason || null; };
+    I.recMs = function () { return D.recMs || 0; };
     I.code = function () { return ctx.code(); };
     I.G = function () { return ctx.G(); };
     setInterval(rec, 45);
