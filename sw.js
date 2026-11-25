@@ -1,6 +1,6 @@
 /* أقنعني — يحفظ نسخة من الصفحات عشان تفتح أسرع. الصفحات تتحدث من النت أول (عشان أي تعديل ترفعه يبين على طول)، والصور والملفات المشتركة من النسخة المحفوظة */
-var C = 'aqnieni-2026-11-25e', X = 'aqnieni-ext';
-self.addEventListener('install', function (e) { self.skipWaiting(); e.waitUntil(caches.open(C).then(function (c) { return c.addAll(['aq-pro.js', 'aq-brand.js', 'aq-theme.js', 'apple-touch-icon.png', 'icon-192.png']).catch(function () { }); })); });
+var C = 'aqnieni-2026-11-25f', X = 'aqnieni-ext';
+self.addEventListener('install', function (e) { self.skipWaiting(); e.waitUntil(caches.open(C).then(function (c) { return c.addAll(['aq-pro.js', 'aq-brand.js', 'aq-theme.js', 'aq-plus.js', 'apple-touch-icon.png', 'icon-192.png']).catch(function () { }); })); });
 self.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (k) { return Promise.all(k.filter(function (x) { return x !== C && x !== X; }).map(function (x) { return caches.delete(x); })); }).then(function () { return self.clients.claim(); })); });
 self.addEventListener('fetch', function (e) {
   var r = e.request, u = new URL(r.url);

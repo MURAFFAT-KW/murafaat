@@ -1,0 +1,208 @@
+/* أقنعني — إضافات مشتركة لكل الألعاب (2026-11-25)
+   ١) سطر تلميح قصير لكل مرحلة   ٢) انتقال بين المراحل مع ٣-٢-١   ٣) صورة نتائج تنشرها
+   تعتمد على window.AQS اللي تعرّفه كل لعبة (G و U و isHost)، وما تكتب أي شي بقاعدة البيانات. */
+(function () {
+  'use strict';
+  if (window.AQPLUS) return; window.AQPLUS = 1;
+  var EN = /-en\.html/.test(location.pathname) || document.documentElement.lang === 'en';
+  var GAME = (location.pathname.split('/').pop() || '').replace(/(-en)?\.html$/, '');
+  if (!/^(murafaat|mazad|nadik|azyaa|aqar)$/.test(GAME)) return;
+  var BOT = /[?&]bot=/.test(location.search) || /[?&]inspect=1/.test(location.search);
+  function T(a, e) { return EN ? e : a; }
+  var COLOR = { murafaat: '#DE0921', mazad: '#0554A4', nadik: '#E0A800', azyaa: '#7B2FBE', aqar: '#1E8A4C' }[GAME];
+  var GNAME = { murafaat: ['المنصة', 'ALMANASSA'], mazad: ['المزاد', 'ALMAZAD'], nadik: ['الرئيس', 'ALRAEES'], azyaa: ['الأزياء', 'ALAZYAA'], aqar: ['العقار', 'ALAQAR'] }[GAME];
+
+  /* اسم المرحلة + التلميح: [عربي, English, تلميح عربي, English hint] */
+  var P = {
+    murafaat: {
+      perks: ['المزايا', 'Perks', 'اختر مزاياك بسرية. كل ميزة تنستخدم مرة وحدة باللعبة.', 'Pick your perks in secret. Each one works once per game.'],
+      qwrite: ['كتابة الأسئلة', 'Writing questions', 'اكتب أسئلة تختلف عليها الآراء، محد يشوف اللي تكتبه.', 'Write questions people disagree on. Nobody sees what you write.'],
+      qreview: ['مراجعة الأسئلة', 'Reviewing questions', 'المضيف يراجع الأسئلة قبل لا نبدأ.', 'The host reviews the questions before we start.'],
+      addq: ['أسئلة زيادة', 'More questions', 'نحتاج أسئلة زيادة، أضيفوا.', 'We need a few more questions. Add some.'],
+      answers: ['الإجابات السرية', 'Secret answers', 'جاوب بسرية، محد يعرف إجابتك.', 'Answer in secret. Nobody will know your answer.'],
+      'case': ['المرافعة', 'The debate', 'كل طرف يقنع الجمهور برأيه، وبعدها التصويت.', 'Each side convinces the crowd, then everyone votes.'],
+      nocase: ['ما في مرافعة', 'No debate', 'هالمرة الكل اتفق، نكمل للي بعده.', 'Everyone agreed this time. On to the next.']
+    },
+    mazad: {
+      perks: ['المزايا', 'Perks', 'اختر ٣ مزايا بسرية، تستخدمها وأنت بايع.', 'Pick 3 perks in secret. You use them while selling.'],
+      items: ['الأغراض', 'Products', 'جهّزوا الأغراض اللي بتنباع.', 'Get the products ready for sale.'],
+      round: ['البيعة', 'The sale', 'بايعين يقنعونكم بنفس الغرض، وأول مشتري يأكد ياخذه.', 'Two sellers pitch the same item. The first buyer to confirm gets it.']
+    },
+    nadik: {
+      picks: ['التشكيلات', 'Squads', 'اختر تشكيلتين تاريخيتين بسرية.', 'Pick two historic squads in secret.'],
+      tier: ['اختيار الفئة', 'Tier pick', 'اختر: الفريق الأقوى أو الأضعف.', 'Choose: the stronger team or the weaker one.'],
+      reveal: ['الكشف', 'Reveal', 'انكشفت التشكيلات!', 'The squads are revealed!'],
+      market: ['سوق الانتقالات', 'Transfer market', 'اشتر وبيع لاعبين بميزانيتك.', 'Buy and sell players with your budget.'],
+      lineup: ['خماسي الكأس', 'Cup five', 'اختر خماسيك للكأس.', 'Choose your five for the cup.'],
+      cup: ['الكأس', 'The cup', 'أقنع الجمهور يصوّت لفريقك.', 'Convince the crowd to vote for your team.']
+    },
+    azyaa: {
+      buy: ['الشراء', 'Buying', 'اشتر الخامات والمزايا من رأس مالك.', 'Buy materials and perks from your capital.'],
+      design: ['التصميم', 'Design', 'صمّم تشكيلتك، وشوف العارضة وأنت تختار.', 'Design your collection and watch the mannequin as you pick.'],
+      build: ['بناء المشروع', 'Building the project', 'سمّ البراند، اكتب وصفه، واختر قطعتك المميزة.', 'Name your brand, describe it and pick your signature piece.'],
+      talk: ['الإقناع', 'Pitching', 'الحين دور الإقناع: خلّ الناس يزورون متجرك.', 'Pitch time: get people to visit your store.'],
+      shop: ['السوق', 'Market', 'زر المتاجر واشتر من محفظة التسوق.', 'Visit the stores and buy with your shopping wallet.'],
+      vote: ['التصويت', 'Voting', 'صوّت لأفضل مصمم، ما تقدر تصوّت لنفسك.', 'Vote for the best designer. You can’t vote for yourself.']
+    },
+    aqar: {
+      setup: ['التجهيز', 'Setup', 'اختر مزاياك وابنِ عقاراتك بميزانيتك.', 'Pick perks and build your properties with your budget.'],
+      pre: ['قبل الجولة', 'Before the round', 'تقدر تستخدم مزاياك الحين.', 'You can use your perks now.'],
+      pitch: ['العرض', 'Pitch', 'صاحب المكتب يعرض عقاره ويقنعكم.', 'The office owner pitches their property.'],
+      deals: ['الصفقات', 'Deals', 'فاوضوا وكمّلوا الصفقات قبل لا يخلص الوقت.', 'Negotiate and close deals before time runs out.'],
+      summary: ['ملخص الجولة', 'Round summary', 'هذي نتيجة الجولة.', 'Here is how the round went.'],
+      vote: ['التصويت', 'Voting', 'صوّت لأفضل إقناع.', 'Vote for the best pitch.']
+    }
+  }[GAME] || {};
+
+  var css = document.createElement('style');
+  css.textContent =
+    '.aqhint{display:flex;align-items:center;gap:8px;margin:8px 0 2px;padding:8px 12px;border-radius:14px;background:color-mix(in srgb,' + COLOR + ' 9%,#fff);color:#12203A;font-size:.86rem;font-weight:600;line-height:1.5;border:1px solid color-mix(in srgb,' + COLOR + ' 22%,#fff)}' +
+    '.aqhint i{font-style:normal;font-size:1rem}' +
+    'html[data-theme="dark"] .aqhint{background:color-mix(in srgb,' + COLOR + ' 18%,#141C2E);color:#E8EDF5;border-color:color-mix(in srgb,' + COLOR + ' 35%,#141C2E)}' +
+    '.aqtr{position:fixed;inset:0;z-index:9998;display:grid;place-items:center;background:radial-gradient(120% 90% at 50% 20%,color-mix(in srgb,' + COLOR + ' 55%,#12203A),#0E1626);color:#fff;text-align:center;font-family:"Readex Pro","Alexandria",system-ui,sans-serif;animation:aqtrIn .25s ease both;cursor:pointer}' +
+    '.aqtr.out{animation:aqtrOut .35s ease both}' +
+    '.aqtr small{display:block;font-size:1rem;opacity:.75;font-weight:700;margin-bottom:6px}' +
+    '.aqtr h2{margin:0;font-size:clamp(2rem,9vw,3.4rem);font-weight:800}' +
+    '.aqtr .n{margin-top:18px;font:800 clamp(3.2rem,16vw,6rem)/1 "Alexandria",system-ui,sans-serif;color:#FBC611;animation:aqtrPop .5s cubic-bezier(.2,.9,.25,1.4) both}' +
+    '@keyframes aqtrIn{from{opacity:0}}@keyframes aqtrOut{to{opacity:0;transform:scale(1.04)}}@keyframes aqtrPop{from{opacity:0;transform:scale(.4)}}' +
+    '@media (prefers-reduced-motion:reduce){.aqtr,.aqtr .n{animation:none}}' +
+    '.aqshare{display:block;width:100%;margin:12px 0 0;border:0;border-radius:16px;padding:14px;font:800 1rem "Readex Pro","Alexandria",system-ui,sans-serif;background:' + COLOR + ';color:#fff;box-shadow:inset 0 -3px 0 rgba(0,0,0,.15)}' +
+    'html.aq-tv .aqhint{font-size:1rem}';
+  (document.head || document.documentElement).appendChild(css);
+
+  function S() { return window.AQS || null; }
+  function st() { var s = S(); if (!s) return null; try { return { G: s.G, U: s.U, host: s.isHost() }; } catch (e) { return null; } }
+
+  /* ---------- ١) سطر التلميح ---------- */
+  function hint(x) {
+    var app = document.getElementById('app'); if (!app) return;
+    var old = app.querySelector('.aqhint');
+    var g = x && x.G, u = x && x.U, txt = '';
+    if (g && u && u.code && !u.splash && !u.notice && !/^(home|join|kicked)$/.test(u.view || '')) {
+      if (g.phase === 'lobby') txt = x.host ? T('شارك الكود، وابدأ لما يكتمل العدد.', 'Share the code and start when everyone is in.') : T('انطر المضيف يبدأ اللعبة.', 'Wait for the host to start the game.');
+      else if (P[g.phase]) txt = EN ? P[g.phase][3] : P[g.phase][2];
+    }
+    if (!txt) { if (old) old.remove(); return; }
+    if (old && old.dataset.t === txt) return;
+    if (old) old.remove();
+    var top = app.querySelector('header.top') || app.querySelector('.top');
+    var d = document.createElement('div'); d.className = 'aqhint'; d.dataset.t = txt; d.setAttribute('role', 'note');
+    d.innerHTML = '<i>💡</i><span></span>'; d.lastChild.textContent = txt;
+    if (top && top.parentNode) top.parentNode.insertBefore(d, top.nextSibling); else app.insertBefore(d, app.firstChild);
+  }
+
+  /* ---------- ٢) الانتقال بين المراحل ---------- */
+  var lastKey = null, trT = null;
+  function phaseKey(g) { return g.phase + '|' + (g.round || g.season || g.caseNo || '') ; }
+  function transition(x) {
+    var g = x && x.G; if (!g || !x.U || !x.U.code) { lastKey = null; return; }
+    var k = phaseKey(g);
+    if (lastKey === null) { lastKey = k; return; }          /* أول مرة ندخل الصفحة: لا */
+    if (k === lastKey) return;
+    lastKey = k;
+    if (g.phase === 'lobby' || g.phase === 'final' || !P[g.phase] || BOT) return;
+    var name = EN ? P[g.phase][1] : P[g.phase][0];
+    var rd = g.round || g.season || g.caseNo;
+    var sub = rd ? T('الجولة ', 'Round ') + rd : T(GNAME[0], GNAME[1]);
+    show(name, sub);
+  }
+  function show(name, sub) {
+    var o = document.querySelector('.aqtr'); if (o) o.remove();
+    clearTimeout(trT);
+    o = document.createElement('div'); o.className = 'aqtr'; o.setAttribute('aria-live', 'polite');
+    o.innerHTML = '<div><small></small><h2></h2><div class="n">3</div></div>';
+    o.querySelector('small').textContent = sub; o.querySelector('h2').textContent = name;
+    document.body.appendChild(o);
+    var n = 3, el = o.querySelector('.n');
+    function beep() { try { if (window.AQFX && AQFX.on() && AQFX.fx.tick) AQFX.fx.tick(); } catch (e) { } }
+    beep();
+    function step() {
+      n--;
+      if (n <= 0) { close(); return; }
+      var c = el.cloneNode(); c.textContent = n; el.replaceWith(c); el = c; beep();
+      trT = setTimeout(step, 550);
+    }
+    function close() { clearTimeout(trT); if (!o.parentNode) return; o.classList.add('out'); setTimeout(function () { o.remove(); }, 350); }
+    o.addEventListener('click', close);
+    trT = setTimeout(step, 550);
+  }
+
+  /* ---------- ٣) صورة النتائج ---------- */
+  function podiumData(p) {
+    var out = [];
+    p.querySelectorAll('.pod').forEach(function (x) {
+      var n = x.querySelector('b,.pn'), blk = x.querySelector('.blk,.pb');
+      if (!n) return;
+      var r = blk ? +String(blk.textContent).replace(/[^\d]/g, '') || 0 : 0;
+      if (!r) r = x.classList.contains('p1') || x.classList.contains('g') ? 1 : x.classList.contains('p2') || x.classList.contains('s') ? 2 : 3;
+      var sc = '', all = x.querySelectorAll('*');
+      for (var i = 0; i < all.length; i++) { var e = all[i]; if (e.children.length || e === n || e === blk) continue; var t = (e.textContent || '').trim(); if (/\d/.test(t) && /[^\d\s]/.test(t) && t.length < 24) { sc = t; break; } }
+      out.push({ n: n.textContent.trim(), r: r, s: sc });
+    });
+    return out.sort(function (a, b) { return a.r - b.r; }).slice(0, 3);
+  }
+  function loadImg(src) { return new Promise(function (res) { var i = new Image(); i.onload = function () { res(i); }; i.onerror = function () { res(null); }; i.src = src; }); }
+  function drawCard(data) {
+    var W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
+    var x = c.getContext('2d');
+    var bg = x.createRadialGradient(W / 2, 260, 60, W / 2, 600, 1100);
+    bg.addColorStop(0, '#22375F'); bg.addColorStop(.55, '#12203A'); bg.addColorStop(1, '#0A1426');
+    x.fillStyle = bg; x.fillRect(0, 0, W, H);
+    x.fillStyle = COLOR; x.fillRect(0, 0, W, 16); x.fillRect(0, H - 16, W, 16);
+    return loadImg('icon-512.png').then(function (logo) {
+      if (logo) { x.save(); var s = 230; x.beginPath(); if (x.roundRect) x.roundRect(W / 2 - s / 2, 90, s, s, 52); else x.rect(W / 2 - s / 2, 90, s, s); x.clip(); x.drawImage(logo, W / 2 - s / 2, 90, s, s); x.restore(); }
+      x.direction = EN ? 'ltr' : 'rtl'; x.textAlign = 'center'; x.fillStyle = '#fff';
+      x.font = '800 92px "Alexandria","Readex Pro",system-ui,sans-serif';
+      x.fillText(T(GNAME[0], GNAME[1]), W / 2, 430);
+      x.font = '600 40px "Readex Pro",system-ui,sans-serif'; x.fillStyle = 'rgba(255,255,255,.7)';
+      x.fillText(T('نتيجة جلستنا', 'Our results'), W / 2, 495);
+      var cols = { 1: ['#FBC611'], 2: ['#C9D2E0'], 3: ['#E59B5A'] };
+      var slot, hgt = { 1: 330, 2: 250, 3: 190 }, base = 1120, med = { 1: '🥇', 2: '🥈', 3: '🥉' };
+      if (EN) slot = { 2: W / 2 - 300, 1: W / 2, 3: W / 2 + 300 }; else slot = { 2: W / 2 + 300, 1: W / 2, 3: W / 2 - 300 };
+      data.forEach(function (d) {
+        var r = Math.min(3, Math.max(1, d.r)), cx = slot[r], h = hgt[r], w = 260;
+        var grd = x.createLinearGradient(0, base - h, 0, base); grd.addColorStop(0, cols[r][0]); grd.addColorStop(1, 'rgba(255,255,255,.08)');
+        x.fillStyle = grd; x.beginPath(); if (x.roundRect) x.roundRect(cx - w / 2, base - h, w, h, [26, 26, 0, 0]); else x.rect(cx - w / 2, base - h, w, h); x.fill();
+        x.fillStyle = '#12203A'; x.font = '800 96px "Alexandria",system-ui,sans-serif'; x.fillText(String(r), cx, base - h + 110);
+        x.font = '72px system-ui'; x.fillText(med[r], cx, base - h - 150);
+        x.fillStyle = '#fff'; x.font = '800 44px "Readex Pro",system-ui,sans-serif';
+        var nm = d.n; while (x.measureText(nm).width > 290 && nm.length > 2) nm = nm.slice(0, -1); if (nm !== d.n) nm += '…';
+        x.fillText(nm, cx, base - h - 60);
+        if (d.s) { x.font = '600 30px "Readex Pro",system-ui,sans-serif'; x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText(d.s.slice(0, 20), cx, base - h - 18); }
+      });
+      x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '700 40px "Readex Pro",system-ui,sans-serif';
+      x.fillText(T('أقنعني · ألعاب جماعية', 'Aqnieni · party games'), W / 2, 1215);
+      x.fillStyle = '#FBC611'; x.font = '700 34px "Readex Pro",system-ui,sans-serif'; x.direction = 'ltr';
+      x.fillText('muraffat-kw.github.io/murafaat', W / 2, 1275);
+      return c;
+    });
+  }
+  function share(p, btn) {
+    var data = podiumData(p); if (!data.length) return;
+    btn.disabled = true; var lbl = btn.textContent; btn.textContent = T('لحظة…', 'One moment…');
+    var fontsReady = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+    fontsReady.then(function () { return drawCard(data); }).then(function (c) {
+      c.toBlob(function (b) {
+        btn.disabled = false; btn.textContent = lbl;
+        if (!b) return;
+        var f = null; try { f = new File([b], 'aqnieni-' + GAME + '.png', { type: 'image/png' }); } catch (e) { }
+        if (f && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: T('أقنعني', 'Aqnieni') }).catch(function () { }); return; }
+        var url = URL.createObjectURL(b), a = document.createElement('a'); a.href = url; a.download = 'aqnieni-' + GAME + '.png'; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      }, 'image/png');
+    });
+  }
+  function shareBtn() {
+    if (BOT) return;
+    document.querySelectorAll('.podium').forEach(function (p) {
+      var host = p.parentNode; if (!host || host.querySelector('.aqshare')) return;
+      var b = document.createElement('button'); b.type = 'button'; b.className = 'aqshare'; b.textContent = T('📸 شارك صورة النتائج', '📸 Share the results');
+      b.addEventListener('click', function () { share(p, b); });
+      p.insertAdjacentElement('afterend', b);
+    });
+  }
+
+  var pend = false;
+  function tick() { pend = false; var x = st(); hint(x); transition(x); shareBtn(); }
+  new MutationObserver(function () { if (!pend) { pend = true; requestAnimationFrame(tick); } }).observe(document.documentElement, { childList: true, subtree: true });
+})();

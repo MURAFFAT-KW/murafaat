@@ -2,6 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta property="og:type" content="website"><meta property="og:site_name" content="أقنعني"><meta property="og:title" content="أقنعني | العقار"><meta property="og:description" content="تعال العب معنا! افتح الرابط وادخل الغرفة من تلفونك."><meta property="og:image" content="https://muraffat-kw.github.io/murafaat/og.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:url" content="https://muraffat-kw.github.io/murafaat/aqar.html"><meta name="twitter:card" content="summary_large_image">
+
 <script>if(/[?&]dev(=|&|$)/.test(location.search))document.write('<script src="dev-core.js"><\/script><script src="dev-bots.js"><\/script>')</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>أقنعني! | العقار</title>
@@ -270,6 +272,7 @@ html.aqguest .backbtn.hub{display:none!important}
 <style id="aq-pro-map">.mapcard .aqmap{width:100%;height:auto;display:block;border-radius:14px;margin-top:6px}.maplg{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:8px;font-size:.82rem}.maplg span{display:inline-flex;align-items:center;gap:5px}.maplg i{width:10px;height:10px;border-radius:50%;display:inline-block}</style>
 <link rel="icon" href="icon-192.png">
 <script src="aq-theme.js"></script>
+<script src="aq-plus.js" defer></script>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -681,7 +684,7 @@ function render() {
 }
 
 /* ---------- الأفعال ---------- */
-const ACT = {};
+const ACT = {}; window.AQS = { get G() { return G; }, get U() { return U; }, isHost: () => isHost() };
 const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
 ACT.tPause = H(() => {
   if (!G || !G.endsAt) return false;
@@ -708,7 +711,7 @@ app.addEventListener('input', e => {
   else if (GAME.bind) GAME.bind(b, el);
 });
 ACT.enter = () => { U.splash = false; };
-ACT.noticeOk = () => { U.notice = false; try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
+ACT.noticeOk = () => { U.notice = false; try { localStorage.setItem('aq.notice.ok', '1'); } catch (e) { } try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
 ACT.closeModal = () => { U.modal = null; U.err = ''; };
 ACT.ovClose = (d, el, ev) => { if (ev.target !== el) return false; U.modal = null; U.err = ''; };
 ACT.menu = () => { U.modal = { type: 'menu' }; };
@@ -816,6 +819,7 @@ async function init() {
   U.name = saved.name || '';
   const h = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/);
   if (h) { U.draft.code = h[1].toUpperCase(); U.fromLink = true; markGuest(); try { U.notice = !sessionStorage.getItem('aq.notice.' + h[1].toUpperCase()); } catch (e) { U.notice = true; } }
+  if (h) { U.splash = false; try { if (localStorage.getItem('aq.notice.ok')) U.notice = false; } catch (e) { } } /* دخول بخطوة وحدة من رابط الدعوة */
   render();
   if (window.__MZ_DB) db = window.__MZ_DB;
   let id = saved.uid; if (!id) { id = 'l' + Math.random().toString(36).slice(2, 12); lsSet({ uid: id }); }
