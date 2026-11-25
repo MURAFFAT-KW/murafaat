@@ -653,6 +653,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     }
     const d = s.data();
     if (!d || d.code !== U.code) return;
+  if (d.closed) { if (d.host !== ME_ID) { leaveLocal(); U.err = 'The host ended the game and closed the room.'; render(); } return; }
     if (s.metadata && !s.metadata.fromCache && !s.metadata.hasPendingWrites && d.sentAt && d.host !== ME_ID) {
       const o = Date.now() - d.sentAt;
       if (skew === null || o < skew) skew = o;
@@ -1330,7 +1331,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     } else if (m.type === 'hand') {
       body = '<h2>Choose the new host</h2><div class="cands">' + G.players.filter(p => p.id !== ME_ID).map(p => '<button class="cand" data-act="handTo" data-id="' + p.id + '">' + avatar(p, 40) + '<b>' + esc(p.name) + '</b></button>').join('') + '</div><button class="btn ghost" data-act="closeModal">Cancel</button>';
     } else if (m.type === 'leave') {
-      const warn = isHost() && G && G.players.length > 1 ? 'You’re the host. We’ll pass hosting to another player automatically.' : 'You can come back with the same code.';
+      const warn = isHost() && G ? 'You’re the host. If you leave, the game ends and closes for everyone.' : 'You can come back with the same code.';
       body = '<h2>Leave the room?</h2><p class="muted">' + warn + '</p><div class="btn-row"><button class="btn danger" data-act="leave">Leave</button><button class="btn" data-act="closeModal">Cancel</button></div>';
     }
     return '<div class="ov" data-act="ovClose"><div class="dlg" role="dialog" aria-modal="true">' + body + '</div></div>';
@@ -1426,9 +1427,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   ACT.leave = async () => {
     U.modal = null;
     if (isHost() && G) {
-      const next = G.players.find(p => p.id !== ME_ID);
-      if (G.phase === 'lobby') G.players = G.players.filter(p => p.id !== ME_ID);
-      if (next) { G.host = next.id; hostOn = false; await flushDirect(); }
+      G.closed = true; G.closedAt = Date.now(); hostOn = false; stopHost(); await flushDirect();
     } else if (G && G.phase === 'lobby' && ME) { ME.room = ''; ME.name = ''; await saveMe(); }
     leaveLocal(); render();
   };
@@ -1437,7 +1436,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   ACT.takeHost = async () => {
     U.modal = null;
     try { const s = await db.doc(roomPath(U.code)).get(); if (s.exists) G = clone(s.data()); } catch (e) { }
-    if (!G || !inRoom(ME_ID)) return;
+    if (!G || G.closed || !inRoom(ME_ID)) return;
     G.host = ME_ID; await flushDirect(); becomeHost(); toast('You’re the host now.'); render();
   };
 

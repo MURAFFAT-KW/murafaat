@@ -436,6 +436,7 @@ function onRoomSnap(s) {
   if (!s || !s.exists) { if (!G) { U.err = L('ما لقينا غرفة بهذا الرمز. تأكد من الرمز.', 'No room with that code. Check the code.'); leaveLocal(); render(); } return; }
   const d = s.data();
   if (!d || d.code !== U.code) return;
+  if (d.closed) { if (d.host !== ME_ID) { leaveLocal(); U.err = L('المضيف أنهى اللعبة وسكّر الغرفة.', 'The host ended the game and closed the room.'); render(); } return; }
   if (d.sentAt && d.host !== ME_ID) { const o = Date.now() - d.sentAt; if (skew === null || o < skew) skew = o; }
   if (hostOn && G && G.host === ME_ID) {
     if (d.host !== ME_ID && d.rev > G.rev) { hostOn = false; G = clone(d); stopHost(); } else return;
@@ -643,7 +644,7 @@ function modalView() {
   if (m.type === 'menu') body = menuModal();
   else if (m.type === 'take') body = `<h3>${L('استلام الاستضافة؟', 'Take over hosting?')}</h3><p class="sub">${L('استخدمها فقط إذا المضيف طلع أو تلفونه فصل.', 'Only if the host left or their phone disconnected.')}</p><button class="btn" data-act="takeHost">${L('استلام', 'Take over')}</button><button class="btn ghost" data-act="closeModal">${L('إلغاء', 'Cancel')}</button>`;
   else if (m.type === 'hand') body = `<h3>${L('اختر المضيف الجديد', 'Pick the new host')}</h3>${G.players.filter(p => p.id !== ME_ID).map(p => `<button class="votebtn" data-act="handTo" data-id="${p.id}">${esc(p.name)}</button>`).join('')}<button class="btn ghost" data-act="closeModal">${L('إلغاء', 'Cancel')}</button>`;
-  else if (m.type === 'leave') body = `<h3>${L('الخروج من الغرفة؟', 'Leave the room?')}</h3><p class="sub">${isHost() && G && G.players.length > 1 ? L('أنت المضيف. بننقل الاستضافة تلقائيًا للاعب ثاني.', 'You’re the host. Hosting will pass to another player.') : L('تقدر ترجع للغرفة بنفس الرمز.', 'You can come back with the same code.')}</p><button class="btn danger" data-act="leave">${L('خروج', 'Leave')}</button><button class="btn ghost" data-act="closeModal">${L('إلغاء', 'Cancel')}</button>`;
+  else if (m.type === 'leave') body = `<h3>${L('الخروج من الغرفة؟', 'Leave the room?')}</h3><p class="sub">${isHost() && G ? L('أنت المضيف. إذا طلعت، اللعبة بتنتهي وتتسكر عند الكل.', 'You’re the host. If you leave, the game ends and closes for everyone.') : L('تقدر ترجع للغرفة بنفس الرمز.', 'You can come back with the same code.')}</p><button class="btn danger" data-act="leave">${L('خروج', 'Leave')}</button><button class="btn ghost" data-act="closeModal">${L('إلغاء', 'Cancel')}</button>`;
   else if (m.type === 'back') body = `<h3>${L('ترجع للمرحلة السابقة؟', 'Go back to the previous stage?')}</h3><p class="sub">${L('كل اللي في الغرفة بيرجعون معاك للمرحلة اللي قبل.', 'Everyone in the room goes back with you.')}</p><button class="btn" data-act="doBack">${L('إيه، رجّع', 'Yes, go back')}</button><button class="btn ghost" data-act="closeModal">${L('لا', 'No')}</button>`;
   else if (m.type === 'assume') body = `<h3>📝 ${L('افتراضات وقرارات تحتاج اعتماد', 'Assumptions & open decisions')}</h3><ol>${GAME.assumptions[LANG].map(a => `<li>${a}</li>`).join('')}</ol><button class="btn" data-act="closeModal">${L('تمام', 'OK')}</button>`;
   else body = GAME.modalView(m);
@@ -724,9 +725,7 @@ ACT.leaveNow = () => { leaveLocal(); U.err = ''; };
 ACT.leave = async () => {
   U.modal = null;
   if (isHost() && G) {
-    const next = G.players.find(p => p.id !== ME_ID);
-    if (G.phase === 'lobby') G.players = G.players.filter(p => p.id !== ME_ID);
-    if (next) { G.host = next.id; hostOn = false; await flushDirect(); }
+    G.closed = true; G.closedAt = Date.now(); hostOn = false; stopHost(); await flushDirect();
   } else if (G && G.phase === 'lobby' && ME) { ME.room = ''; ME.name = ''; await saveMe(); }
   leaveLocal(); render();
 };
@@ -734,7 +733,7 @@ ACT.handTo = async d => { if (!isHost()) return; U.modal = null; G.host = d.id; 
 ACT.takeHost = async () => {
   U.modal = null;
   try { const s = await db.doc(roomPath(U.code)).get(); if (s.exists) G = clone(s.data()); } catch (e) { }
-  if (!G || !inRoom(ME_ID)) return;
+  if (!G || G.closed || !inRoom(ME_ID)) return;
   G.host = ME_ID; await flushDirect(); becomeHost(); toast(L('صرت المضيف.', 'You’re now the host.'));
 };
 ACT.create = async () => {

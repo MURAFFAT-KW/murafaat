@@ -76,7 +76,12 @@
     if (pending) return; pending = true;
     TOPW.setTimeout(function () {
       pending = false;
-      D.subs = D.subs.filter(function (s) { try { if (s.dead()) return false; s.fn(); return true; } catch (e) { return false; } });
+      /* نسخة من القائمة: لو أحد ألغى اشتراكه وهو داخل التنبيه (مثل خروج لما المضيف يسكر الغرفة) ما ينقز اللي بعده */
+      D.subs.slice().forEach(function (s) {
+        if (D.subs.indexOf(s) < 0) return;
+        var ok = false; try { if (!s.dead()) { s.fn(); ok = true; } } catch (e) { }
+        if (!ok) { var i = D.subs.indexOf(s); if (i >= 0) D.subs.splice(i, 1); }
+      });
     }, 0);
   }
   var myWin = window;
