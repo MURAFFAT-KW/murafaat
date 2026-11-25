@@ -71,6 +71,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
         if (c.has('saveD')) {
           var mm = c.mem; if (!mm.ed) mm.ed = { n: 0 };
           var ed = mm.ed;
+          var ms = c.acts('setM'); if (ms.length && !ms.some(function (e) { return e.classList.contains('on'); })) { if (c.clickEl(c.pick(ms))) return 'اختار العارضة'; }
           if (ed.n < 3) {
             var opt = c.acts('setD').filter(function (e) { return !e.classList.contains('on') && !(e.dataset.part === 'extra' && e.dataset.key !== 'type' && Math.random() < 0.3); });
             ed.n++;

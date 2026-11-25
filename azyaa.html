@@ -202,7 +202,7 @@ html.aqguest .backbtn.hub{display:none!important}
 .edopts{min-width:0}.edopts .card{padding:10px 10px 12px;margin-bottom:10px}.edopts h3{font-size:15px;margin:0 0 8px}
 .edopts .chips{gap:6px}.edopts .chip{font-size:13px;padding:6px 10px;min-height:34px}.edopts .swatches{gap:6px}
 .edprev{position:sticky;top:calc(72px + env(safe-area-inset-top,0px));min-width:0;align-self:start}
-.edprev .preview{margin:0 0 8px;padding:6px}.edprev .preview svg{height:min(46vh,320px)!important;width:100%!important;max-width:100%}
+.preview.hasbg{background:var(--sbg)!important;box-shadow:none}.edprev .preview .mpick{display:flex;gap:2px;width:100%;align-items:stretch}.edprev .preview .mpick button{flex:1;min-width:0;background:none;border:0;padding:4px 0;display:flex;flex-direction:column;align-items:center;gap:4px;font:inherit;color:var(--p,#7b2fbe);cursor:pointer;border-radius:16px}.edprev .preview .mpick button:active{background:rgba(123,47,190,.08)}.edprev .preview .mpick svg{width:100%!important;height:min(40vh,290px)!important}.edprev .preview{margin:0 0 8px;padding:6px}.edprev .preview svg{height:min(46vh,320px)!important;width:100%!important;max-width:100%}
 .edprice{padding:8px!important;display:grid;gap:6px;justify-items:center;text-align:center}.edprice>span{font-weight:800;font-size:14px}
 .edprice .stepper{gap:6px}.edprice .stepper button{width:38px;height:38px;min-height:38px;font-size:18px}.edprice .stepper .v{min-width:56px;font-size:15px}
 @media (min-width:760px){.edsplit{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}.edprev .preview svg{height:420px!important}}
@@ -546,8 +546,8 @@ function noticeView() {
     `<button class="nbtn" data-act="noticeOk">${L('أوعدك، يلا نلعب', 'I promise, let’s play')}</button></div></section>`;
 }
 function introArt() {
-  const d = (t, c, fb, e, ec, ef) => ({ base: { type: t, color: c, fabric: fb, pattern: 'plain' }, extra: e ? { type: e, color: ec, fabric: ef, pattern: 'plain' } : null });
-  return `<div class="intro-art fig">${designSVG(d('pants', 'black', 'leather', 'jacket', 'red', 'leather'))}${designSVG(d('dress', 'purple', 'velvet', 'bag', 'gold', 'leather'))}${designSVG(d('abaya', 'black', 'silk', 'scarf', 'gold', 'silk'))}</div>`;
+  const d = (t, c, fb, e, ec, ef, mo) => ({ model: mo || 'f', base: { type: t, color: c, fabric: fb, pattern: 'plain' }, extra: e ? { type: e, color: ec, fabric: ef, pattern: 'plain' } : null });
+  return `<div class="intro-art fig">${designSVG(d('pants', 'black', 'wool', 'jacket', 'navy', 'wool', 'm'))}${designSVG(d('dress', 'purple', 'velvet', 'bag', 'gold', 'leather'))}${designSVG(d('abaya', 'black', 'silk', 'scarf', 'gold', 'silk'))}</div>`;
 }
 function splashView() {
   return `<a class="backbtn aqfix" href="${HUB}">${BACK}</a><div class="intro"><div class="logo">${LOGO}</div><div class="gname">${N(GAME.name)}</div>
@@ -865,92 +865,274 @@ const cloth = id => byId(CLOTHES, id);
 const pts = v => String(Math.round(v * 10) / 10);
 const finalPrice = (st, d) => st.discount ? Math.max(1, Math.round(d.price * (1 - st.discount / 100))) : d.price;
 
-/* ---------- رسم الأزياء ---------- */
-const SHAPES = {
-  shirt: 'M37 27.5 L45 25.4 Q50 30.5 55 25.4 L63 27.5 L73.5 45 L66.8 49.2 L62 40.5 L62.6 73.5 Q50 75 37.4 73.5 L38 40.5 L33.2 49.2 L26.5 45 Z',
-  jacket: 'M36.4 27 L45 24.4 L50 38.5 L55 24.4 L63.6 27 L69.2 44 L72.8 70.5 L66.6 72 L63.6 48.5 L64.2 84.5 L52 84.5 L50 45 L48 84.5 L35.8 84.5 L36.4 48.5 L33.4 72 L27.2 70.5 L30.8 44 Z',
-  pants: 'M38.4 70.5 L61.6 70.5 L61 88 L60.2 104 L59.2 131.5 L52.4 131.5 L50.6 87 L49.4 87 L47.6 131.5 L40.8 131.5 L39.8 104 L39 88 Z',
-  skirt: 'M39.4 69.5 L60.6 69.5 Q68 94 73.4 117 Q50 121.5 26.6 117 Q32 94 39.4 69.5 Z',
-  dress: 'M39.6 28.5 Q44.5 26.5 50 31 Q55.5 26.5 60.4 28.5 L61.4 44 Q58.6 51.5 58.6 58 Q68.5 92 79.5 126.5 Q50 131.5 20.5 126.5 Q31.5 92 41.4 58 Q41.4 51.5 38.6 44 Z',
-  abaya: 'M38 25.4 Q50 29.4 62 25.4 L69.4 31 Q75.4 50 77.2 72.4 L71.2 73.8 L66.6 48.4 Q72.4 95 76.4 134.2 Q50 137.6 23.6 134.2 Q27.6 95 33.4 48.4 L28.8 73.8 L22.8 72.4 Q24.6 50 30.6 31 Z',
-  scarf: 'M41.6 22.6 Q50 31.4 58.4 22.6 L60.4 28.6 Q50 38.6 39.6 28.6 Z M53.6 30.6 L59.2 56.4 L53 57.6 L51.2 32.4 Z',
-  bag: 'M64.2 78.4 L80.2 78.4 L82.4 97.6 L62 97.6 Z',
-  daraa: 'M38 25.4 Q50 30 62 25.4 L72.4 33 Q80.2 48 82.4 64.4 L71.2 66.4 L65.6 46 Q70.6 90 73.4 133.6 Q50 136.8 26.6 133.6 Q29.4 90 34.4 46 L28.8 66.4 L17.6 64.4 Q19.8 48 27.6 33 Z',
-  maxi: 'M39.4 69.5 L60.6 69.5 Q66.4 100 70.4 132.4 Q50 135.6 29.6 132.4 Q33.6 100 39.4 69.5 Z',
-  hat: 'M31.6 9.8 Q50 4.4 68.4 9.8 Q50 13.6 31.6 9.8 Z M43.2 8.6 Q42.8 0.6 50 0.4 Q57.2 0.6 56.8 8.6 Q50 10 43.2 8.6 Z',
-  belt: 'M40.6 56.4 Q50 58.4 59.4 56.4 L59.8 60.8 Q50 62.8 40.2 60.8 Z',
-  necklace: 'M43.4 24.6 Q50 34.6 56.6 24.6 L57.6 25.4 Q50 36.8 42.4 25.4 Z M48.4 34.6 L51.6 34.6 L50 39 Z'
+/* ---------- رسم الأزياء: عارضة بنت أو ولد، والقطع تنرسم على مقاس جسمها ---------- */
+const BODIES = {
+  /* بنت: جسم رياضي ممشوق — صدر، خصر نحيف، ورك واضح، فخذ وساق مشدودة، أرجل طويلة مثل عارضات الأزياء */
+  f: {
+    head: { cx: 50, cy: 11.4, rx: 5.3, ry: 6.7 }, neck: [1.9, 17.4, 24], shY: 24.4, sh: 11.2, pitY: 28.6,
+    side: [[24.8, 10.9], [28.6, 10.2], [32, 10.1], [34.6, 10.5], [37.4, 9.8], [41, 8.0], [45.6, 7.0], [50, 8.2], [55, 10.3], [59.5, 11.3], [64.6, 10.9]],
+    waistY: 45.6, hipY: 59.5, crotchY: 64.8, kneeY: 98,
+    legO: [[59.5, 11.3], [64, 11.0], [70, 10.3], [78, 9.2], [87, 7.9], [94, 6.7], [98, 6.3], [103, 6.7], [108, 6.9], [114, 6.0], [121, 4.4], [127, 3.9]],
+    legI: [[66, .7], [72, 1.3], [80, 2.0], [90, 2.7], [97, 3.0], [101, 2.8], [106, 2.2], [112, 2.4], [120, 2.8], [127, 3.0]],
+    arm: [[10.6, 26.2], [12.2, 35.6], [13.4, 45.4], [14.2, 55.6], [14.7, 65.6]], armW: 3.9, hand: 1.95,
+    feetY: 127.6, shoe: 'f'
+  },
+  /* ولد: جسم رياضي — كتوف عريضة، صدر بارز، خصر ضيق (شكل V)، أذرع وفخوذ عضلية */
+  m: {
+    head: { cx: 50, cy: 11.4, rx: 5.6, ry: 7.0 }, neck: [2.6, 17.4, 24], shY: 24.4, sh: 14.6, pitY: 28.8,
+    side: [[24.8, 14.2], [28.8, 13.6], [32.4, 13.3], [35.6, 12.9], [40, 11.7], [44.6, 10.4], [49, 9.8], [54, 10.0], [59.5, 10.4], [65.6, 10.2]],
+    waistY: 49, hipY: 59.5, crotchY: 66, kneeY: 98.5,
+    legO: [[59.5, 10.4], [65, 10.4], [71, 10.3], [79, 9.6], [88, 8.4], [95, 7.2], [98.5, 6.9], [103, 7.6], [108, 7.7], [114, 6.6], [121, 5.2], [127, 4.7]],
+    legI: [[67.5, .8], [73, 1.3], [81, 2.1], [91, 3.0], [97, 3.4], [101, 3.2], [106, 2.4], [112, 2.6], [120, 3.0], [127, 3.2]],
+    arm: [[13.5, 26.2], [15.4, 35.6], [16.5, 45.4], [17.3, 55.6], [17.8, 65.6]], armW: 5.1, hand: 2.3,
+    feetY: 127.6, shoe: 'm'
+  }
 };
-const DETAILS = {
-  shirt: { fold: 'M44 46 Q45 60 43.6 72 M56 46 Q55 60 56.6 72 M37 33 Q40 36 38.6 40', seam: 'M50 30.5 L50 73.5', dots: [[51.4, 38], [51.4, 47], [51.4, 56], [51.4, 65]], trim: 'M45 25.4 Q50 30.5 55 25.4' },
-  jacket: { fold: 'M42 52 Q43 68 41.4 83 M58 52 Q57 68 58.6 83 M30 50 Q31.4 60 30.2 69 M70 50 Q68.6 60 69.8 69', seam: 'M45 24.4 L50 38.5 L55 24.4 M41 60 L46.6 60 M53.4 60 L59 60', lapel: 'M45 24.4 L50 38.5 L46.2 44 L42.6 30 Z M55 24.4 L50 38.5 L53.8 44 L57.4 30 Z', dots: [[48.6, 58], [48.6, 67], [48.6, 76]] },
-  pants: { fold: 'M44.4 76 L44.2 130 M55.6 76 L55.8 130 M41 100 Q43.6 103 46.6 100.6 M53.4 100.6 Q56.4 103 59 100', seam: 'M38.6 74.2 L61.4 74.2 M50 74.2 L50 86' },
-  skirt: { fold: 'M45 72 Q40 96 35.4 118.6 M50 72 L50 120.4 M55 72 Q60 96 64.6 118.6', seam: 'M39 73.4 L61 73.4' },
-  dress: { fold: 'M46 60 Q39 92 32.4 128 M50 60 Q50 95 50.6 130 M54 60 Q61 92 67.6 128 M43.6 33 Q44.6 40 43.6 46', seam: 'M41.4 58 Q50 60.6 58.6 58', trim: 'M39.6 28.5 Q44.5 26.5 50 31 Q55.5 26.5 60.4 28.5' },
-  abaya: { fold: 'M42 50 Q37.6 92 33 133 M58 50 Q62.4 92 67 133 M29 46 Q27.4 60 26.6 72 M71 46 Q72.6 60 73.4 72', seam: 'M50 29 L50 136', trim: 'M38 25.4 Q50 29.4 62 25.4 M50 29 L50 136 M23.6 134.2 Q50 137.6 76.4 134.2' },
-  scarf: { fold: 'M45 27 Q50 33 55 27 M55 38 L57 54' },
-  bag: { seam: 'M63.4 84 L81 84', dots: [[72.2, 87.6]] },
-  daraa: { fold: 'M42 50 Q37 92 32 132 M58 50 Q63 92 68 132 M50 52 L50 134 M28 40 Q24 52 22 63 M72 40 Q76 52 78 63', trim: 'M43.6 26.6 Q50 34 56.4 26.6 M50 31.6 L50 48 M22 63.6 L28.6 65.8 M78 63.6 L71.4 65.8 M26.6 133.6 Q50 136.8 73.4 133.6', dots: [[50, 36], [50, 41], [50, 46]] },
-  maxi: { fold: 'M45 73 Q41 100 37 131 M50 73 L50 133 M55 73 Q59 100 63 131', seam: 'M39 73.2 L61 73.2' },
-  hat: { seam: 'M43.4 7.4 Q50 8.8 56.6 7.4', trim: 'M43.4 7.4 Q50 8.8 56.6 7.4' },
-  belt: { dots: [[50, 59.6]], trim: 'M47.6 57.6 L52.4 57.6 L52.4 61.6 L47.6 61.6 Z' },
-  necklace: { dots: [[45.4, 28.6], [47.4, 31.4], [52.6, 31.4], [54.6, 28.6]] }
-};
-const MANNEQUIN = '<ellipse cx="50" cy="135.4" rx="21" ry="2.6" fill="rgba(60,30,90,.12)"/>' +
-  '<path d="M37.6 29.4 Q31.2 50 30.2 72.6" stroke="#E3D3C3" stroke-width="4.4" fill="none" stroke-linecap="round"/><path d="M62.4 29.4 Q68.8 50 69.8 72.6" stroke="#D8C5B3" stroke-width="4.4" fill="none" stroke-linecap="round"/>' +
-  '<circle cx="30.2" cy="74" r="2.3" fill="#E3D3C3"/><circle cx="69.8" cy="74" r="2.3" fill="#D8C5B3"/>' +
-  '<path d="M40.2 73 L49.4 73 L47.6 104 L46.6 130.4 L42.6 130.4 L41.2 104 Z" fill="#E3D3C3"/><path d="M50.6 73 L59.8 73 L58.8 104 L57.4 130.4 L53.4 130.4 L52.4 104 Z" fill="#D8C5B3"/>' +
-  '<path d="M41.4 130 L47.4 130 L48 133.6 L40.6 133.6 Z M52.6 130 L58.6 130 L59.4 133.6 L52 133.6 Z" fill="#2A2230"/>' +
-  '<path d="M37 28 Q50 25 63 28 L61 44 Q58 52 58.6 58 Q62 66 62.6 74 L37.4 74 Q38 66 41.4 58 Q42 52 39 44 Z" fill="#E7D8C9"/><path d="M50 26.4 Q57 26.4 63 28 L61 44 Q58 52 58.6 58 Q62 66 62.6 74 L50 74 Z" fill="#DBC8B6"/>' +
-  '<rect x="47.4" y="19.6" width="5.2" height="7.6" rx="1.4" fill="#DBC8B6"/>' +
-  '<ellipse cx="50" cy="13" rx="6.6" ry="8" fill="#E7D8C9"/><path d="M50 5 Q56.6 5.4 56.6 13 Q56.2 19.6 50.6 21 Q54.4 15 53.6 9 Z" fill="#DBC8B6"/>' +
-  '<path d="M43.2 13.4 Q42.6 4 50.6 4 Q57.8 4.4 56.8 13.4 Q55.2 7.6 50 7.6 Q45 8 43.2 13.4 Z" fill="#2B1D24"/><circle cx="55.4" cy="4.4" r="3.4" fill="#2B1D24"/>';
-let SVGN = 0;
-function garment(p, defs) {
-  const hex = colorHex(p.color), shp = SHAPES[p.type], dt = DETAILS[p.type] || {}, id = 'g' + (++SVGN) + 'x' + (++PID), lt = isLight(hex);
-  const line = lt ? 'rgba(40,25,50,.28)' : 'rgba(0,0,0,.42)', hi = lt ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.22)';
-  defs.push(`<clipPath id="c${id}"><path d="${shp}"/></clipPath>`);
-  let o = '';
-  if (p.type === 'bag') o += `<path d="M66.6 78.6 Q71.2 67.4 77.8 78.6" fill="none" stroke="${hex}" stroke-width="2.2" stroke-linecap="round"/><path d="M66.6 78.6 Q71.2 67.4 77.8 78.6" fill="none" stroke="${line}" stroke-width=".5"/>`;
-  o += `<path d="${shp}" fill="${fillFor(hex, p.pattern, defs)}"/>`;
-  const tx = textureFor(p.fabric, defs); if (tx) o += `<path d="${shp}" fill="${tx}"/>`;
-  o += `<g clip-path="url(#c${id})"><rect x="51" y="0" width="60" height="140" fill="rgba(0,0,0,${lt ? .07 : .16})"/><rect x="0" y="0" width="45" height="140" fill="rgba(255,255,255,${lt ? .16 : .07})"/>`;
-  if (dt.lapel) o += `<path d="${dt.lapel}" fill="rgba(0,0,0,.16)"/>`;
-  if (dt.fold) o += `<path d="${dt.fold}" fill="none" stroke="${line}" stroke-width=".7" stroke-linecap="round" opacity=".75"/><path d="${dt.fold}" fill="none" stroke="${hi}" stroke-width=".5" stroke-linecap="round" transform="translate(-1.1 0)" opacity=".8"/>`;
-  if (dt.seam) o += `<path d="${dt.seam}" fill="none" stroke="${line}" stroke-width=".55" stroke-dasharray="1.4 1.1"/>`;
-  o += `</g>`;
-  if (dt.trim) o += `<path d="${dt.trim}" fill="none" stroke="${lt ? 'rgba(0,0,0,.18)' : 'rgba(255,255,255,.35)'}" stroke-width="1.1" stroke-linecap="round"/>`;
-  if (dt.dots) o += dt.dots.map(d => `<circle cx="${d[0]}" cy="${d[1]}" r="1" fill="${lt ? '#7a6a58' : '#e9d9a6'}"/>`).join('');
-  o += `<path d="${shp}" fill="none" stroke="${line}" stroke-width=".7" stroke-linejoin="round"/>`;
+/* سماكة الذراع على طوله: كتف وعضلة، كوع أنحف، ساعد، رسغ */
+const ARMPROF = [[0, 1.16], [.16, 1.12], [.3, 1.04], [.44, .84], [.52, .82], [.62, .92], [.78, .84], [1, .64]];
+const SKIN = '#E6D6C6', SKIN2 = '#D9C6B4', HAIR = '#2B1D24';
+const CLOTH_FOR = { m: ['shirt', 'jacket', 'pants', 'scarf', 'bag', 'hat', 'belt'] };
+const fits = (type, model) => !CLOTH_FOR[model] || CLOTH_FOR[model].includes(type);
+const r1 = v => Math.round(v * 10) / 10;
+const mx = x => r1(100 - x);
+/* نعومة المنحنى: نقاط → منحنى بيزيه */
+function curve(p) {
+  let s = '';
+  for (let i = 0; i < p.length - 1; i++) {
+    const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], d = p[i + 2] || c;
+    s += ` C${r1(b[0] + (c[0] - a[0]) / 6)} ${r1(b[1] + (c[1] - a[1]) / 6)} ${r1(c[0] - (d[0] - b[0]) / 6)} ${r1(c[1] - (d[1] - b[1]) / 6)} ${r1(c[0])} ${r1(c[1])}`;
+  }
+  return s;
+}
+const lerp = (a, b, t) => a + (b - a) * t;
+function halfAt(tab, y) {
+  if (y <= tab[0][0]) return tab[0][1];
+  for (let i = 1; i < tab.length; i++) if (y <= tab[i][0]) { const t = (y - tab[i - 1][0]) / (tab[i][0] - tab[i - 1][0]); return lerp(tab[i - 1][1], tab[i][1], t); }
+  return tab[tab.length - 1][1];
+}
+/* الجانب الأيسر للجسم بين y0 و y1 مع وسع (ease) وانسدال (flare) */
+function sidePts(B, y0, y1, ease, flare, tab) {
+  tab = tab || B.side; const n = Math.max(3, Math.round((y1 - y0) / 4)), o = [];
+  for (let i = 0; i <= n; i++) { const y = lerp(y0, y1, i / n); o.push([50 - halfAt(tab, y) - ease - (flare ? flare(y) : 0), y]); }
   return o;
 }
-let PID = 0;
+/* شكل متناظر: نقاط الجانب الأيسر من فوق لتحت، والطرف السفلي منحني */
+function symShape(top, left, hemDip) {
+  const right = left.slice().reverse().map(p => [mx(p[0]), p[1]]);
+  const a = left[left.length - 1], b = right[0];
+  return `M${top} L${r1(left[0][0])} ${r1(left[0][1])}${curve(left)} Q50 ${r1(a[1] + (hemDip || 0) * 2)} ${r1(b[0])} ${r1(b[1])} L${r1(right[0][0])} ${r1(right[0][1])}${curve(right)} Z`;
+}
+/* خط الذراع (يسار)، ونقطة عليه عند نسبة t */
+function armAt(B, t) {
+  const a = B.arm, seg = t * (a.length - 1), i = Math.min(a.length - 2, Math.floor(seg)), f = seg - i;
+  return [lerp(a[i][0], a[i + 1][0], f), lerp(a[i][1], a[i + 1][1], f)];
+}
+/* كم أو ذراع: مضلع حول خط الذراع من t0 إلى t1، عرضه من w0 إلى w1 */
+let capOn = false;
+function armPoly(B, t0, t1, w0, w1, side) {
+  const n = 8, L = [], R = [];
+  for (let i = 0; i <= n; i++) {
+    const t = lerp(t0, t1, i / n), p = armAt(B, t), q = armAt(B, Math.min(1, t + .02)), p0 = armAt(B, Math.max(0, t - .02));
+    let dx = q[0] - p0[0], dy = q[1] - p0[1]; const l = Math.hypot(dx, dy) || 1; dx /= l; dy /= l;
+    const u = i / n, cap = capOn && t0 < .1 ? Math.min(1, .8 + u * 2) : 1, w = (B.armW * halfAt(ARMPROF, t) + lerp(w0, w1, u) - B.armW) / 2 * cap, x = 50 - p[0] + (cap < 1 ? (1 - cap) * w0 * .45 : 0);
+    L.push([x - dy * w, p[1] + dx * w]); R.push([x + dy * w, p[1] - dx * w]);
+  }
+  const e1 = L[n], e2 = R[n], end = armAt(B, t1), ex = 50 - end[0];
+  let pts;
+  pts = `M${r1(L[0][0])} ${r1(L[0][1])}${curve(L)} Q${r1(ex + (e1[0] + e2[0] - 2 * ex) * .2)} ${r1(end[1] + 1.2)} ${r1(e2[0])} ${r1(e2[1])}${curve(R.slice().reverse())} Z`;
+  return side === 'r' ? mirrorPath(pts) : pts;
+}
+function mirrorPath(d) { return d.replace(/(-?\d+(?:\.\d+)?) (-?\d+(?:\.\d+)?)/g, (m, x, y) => `${mx(+x)} ${y}`); }
+/* حذا */
+function shoes(B) {
+  const y = B.feetY, l = 50 - halfAt(B.legI, y), o = 50 - halfAt(B.legO, y);
+  const one = B.shoe === 'f' ? `M${r1(o - .4)} ${y} L${r1(l + .2)} ${y} L${r1(l + .4)} ${y + 3.2} Q${r1((o + l) / 2 - 1)} ${y + 4.4} ${r1(o - 1.6)} ${y + 4} Z` : `M${r1(o - .4)} ${y} L${r1(l + .3)} ${y} L${r1(l + .5)} ${y + 3.6} L${r1(o - 2.4)} ${y + 3.6} Q${r1(o - 2.6)} ${y + 1.4} ${r1(o - .4)} ${y} Z`;
+  return `<path d="${one}" fill="#2A2230"/><path d="${mirrorPath(one)}" fill="#2A2230"/>`;
+}
+function legPath(B, ease, y0, y1, flare) {
+  const oL = sidePts(B, y0, y1, ease, flare, B.legO), iy0 = Math.max(B.crotchY + 1.5, y0 + 2);
+  const iL = []; const n = Math.max(3, Math.round((y1 - iy0) / 5));
+  for (let i = 0; i <= n; i++) { const y = lerp(iy0, y1, i / n); iL.push([50 - halfAt(B.legI, y) + ease * .6, y]); }
+  const bot = [oL[oL.length - 1], iL[iL.length - 1]];
+  return `M${r1(oL[0][0])} ${r1(oL[0][1])}${curve(oL)} L${r1(bot[1][0])} ${r1(bot[1][1])}${curve(iL.slice().reverse())} Z`;
+}
+function bodySVG(B, ghost) {
+  const h = B.head, fem = B.shoe === 'f';
+  let o = `<ellipse cx="50" cy="${B.feetY + 6.4}" rx="20" ry="2.4" fill="rgba(60,30,90,.12)"/>`;
+  if (fem) o += `<path d="M${50 - h.rx - 1.4} ${h.cy - 1} Q${50 - h.rx - 2.6} ${h.cy + 12} ${50 - h.rx - .6} ${h.cy + 20} Q50 ${h.cy + 23} ${50 + h.rx + .6} ${h.cy + 20} Q${50 + h.rx + 2.6} ${h.cy + 12} ${50 + h.rx + 1.4} ${h.cy - 1} Z" fill="${HAIR}"/>`;
+  o += `<path d="${armPoly(B, .06, 1, B.armW, B.armW)}" fill="${SKIN}"/><path d="${armPoly(B, .06, 1, B.armW, B.armW, 'r')}" fill="${SKIN2}"/>`;
+  o += `<path d="${legPath(B, 0, B.hipY, B.feetY + .4)}" fill="${SKIN}"/><path d="${mirrorPath(legPath(B, 0, B.hipY, B.feetY + .4))}" fill="${SKIN2}"/>`;
+  const ov = d => CUR.cy ? `<path d="${d}" fill="url(#${CUR.cy})" opacity=".55"/>` : '';
+  o += ov(armPoly(B, .06, 1, B.armW, B.armW)) + ov(armPoly(B, .06, 1, B.armW, B.armW, 'r')) + ov(legPath(B, 0, B.hipY, B.feetY + .4)) + ov(mirrorPath(legPath(B, 0, B.hipY, B.feetY + .4)));
+  o += shoes(B);
+  o += `<path d="M${50 - B.neck[0]} ${B.shY - 1.4} L${r1(50 - B.sh + .8)} ${B.shY + .2} Q${r1(50 - B.sh - .8)} ${B.shY + 1} ${r1(50 - halfAt(B.side, B.pitY))} ${B.pitY}${curve(sidePts(B, B.pitY, B.crotchY + 1, 0))} Q50 ${B.crotchY + 3} ${r1(50 + halfAt(B.side, B.crotchY + 1))} ${B.crotchY + 1}${curve(sidePts(B, B.pitY, B.crotchY + 1, 0).reverse().map(p => [mx(p[0]), p[1]]))} Q${r1(50 + B.sh + .8)} ${B.shY + 1} ${r1(50 + B.sh - .8)} ${B.shY + .2} L${50 + B.neck[0]} ${B.shY - 1.4} Z" fill="${SKIN}"/>`;
+  o += `<path d="M50 ${B.shY - .6} L${r1(50 + B.sh - .8)} ${B.shY + .2} Q${r1(50 + B.sh + .8)} ${B.shY + 1} ${r1(50 + halfAt(B.side, B.pitY))} ${B.pitY}${curve(sidePts(B, B.pitY, B.crotchY + 1, 0).map(p => [mx(p[0]), p[1]]))} Q52 ${B.crotchY + 2.6} 50 ${B.crotchY + 2.6} Z" fill="${SKIN2}"/>`;
+  o += `<rect x="${50 - B.neck[0]}" y="${B.neck[1]}" width="${B.neck[0] * 2}" height="${B.neck[2] - B.neck[1] + 1}" rx="1.2" fill="${SKIN2}"/>`;
+  { const sY = B.shY, W = B.waistY, k = B.kneeY, mm = d => d + ' ' + mirrorPath(d), ln = d => `<path d="${d}" fill="none" stroke="rgba(110,78,60,.24)" stroke-width=".42" stroke-linecap="round"/>`;
+    const kx = (50 - halfAt(B.legO, k) + 50 - halfAt(B.legI, k)) / 2;
+    let m = mm(`M${50 - B.neck[0] - .4} ${sY + .8} Q${50 - 6} ${sY + .2} ${r1(50 - B.sh + 2.4)} ${sY + 1.6}`) + ' ' + mm(`M${r1(kx - 1.3)} ${k - .4} Q${r1(kx)} ${k + 1} ${r1(kx + 1.3)} ${k - .4}`);
+    if (fem) m += ' ' + mm(`M${50 - 6.6} ${r1(W + 7)} Q${50 - 4} ${r1(W + 11)} ${50 - 1.6} ${r1(W + 14)}`);
+    else m += ' ' + mm(`M${50 - 11.6} ${r1(B.pitY + 6.6)} Q${50 - 6} ${r1(B.pitY + 9.6)} ${50 - .5} ${r1(B.pitY + 7.4)}`) + ` M50 ${r1(B.pitY + 1)} L50 ${r1(W + 3)}` + [40.6, 44.2, 47.8].map(y => ' ' + mm(`M${50 - 3.8} ${y} Q${50 - 1.9} ${y + .7} 50 ${y + .2}`)).join('') + ' ' + mm(`M${50 - 8.6} ${r1(W + 2)} Q${50 - 5.2} ${r1(W + 8)} ${50 - 1.6} ${r1(W + 12.4)}`) + ' ' + mm(`M${r1(50 - B.sh + .6)} ${sY + 2.4} Q${r1(50 - B.sh - .4)} ${sY + 6} ${r1(50 - B.sh + 1.8)} ${sY + 9}`);
+    o += ln(m); }
+  o += `<ellipse cx="50" cy="${h.cy}" rx="${h.rx}" ry="${h.ry}" fill="${SKIN}"/><path d="M50 ${h.cy - h.ry} Q${50 + h.rx} ${h.cy - h.ry + .4} ${50 + h.rx} ${h.cy} Q${50 + h.rx - .4} ${h.cy + h.ry - 1} 50.6 ${h.cy + h.ry} Q${50 + h.rx - 2.4} ${h.cy + 2} ${50 + h.rx - 3} ${h.cy - h.ry + 3} Z" fill="${SKIN2}"/>`;
+  if (fem) o += `<path d="M${50 - h.rx - .6} ${h.cy + 1.2} Q${50 - h.rx - 1} ${h.cy - h.ry - 1.2} 50.4 ${h.cy - h.ry - .8} Q${50 + h.rx + 1} ${h.cy - h.ry - .6} ${50 + h.rx + .6} ${h.cy + 1.2} Q${50 + h.rx - .4} ${h.cy - h.ry + 2.4} 52 ${h.cy - h.ry + 2} Q47 ${h.cy - h.ry + 1.4} ${50 - h.rx - .6} ${h.cy + 1.2} Z" fill="${HAIR}"/>`;
+  else o += `<path d="M${50 - h.rx - .3} ${h.cy - .4} Q${50 - h.rx - .8} ${h.cy - h.ry - 1.4} 50 ${h.cy - h.ry - 1} Q${50 + h.rx + .8} ${h.cy - h.ry - 1.4} ${50 + h.rx + .3} ${h.cy - .4} Q${50 + h.rx - .3} ${h.cy - h.ry + 2.6} 50 ${h.cy - h.ry + 2.4} Q${50 - h.rx + .3} ${h.cy - h.ry + 2.6} ${50 - h.rx - .3} ${h.cy - .4} Z" fill="${HAIR}"/>`;
+  return o;
+}
+function hands(B) {
+  const w = armAt(B, 1);
+  return `<ellipse cx="${r1(50 - w[0])}" cy="${r1(w[1] + B.hand * .8)}" rx="${B.hand * .85}" ry="${B.hand * 1.15}" fill="${SKIN}"/><ellipse cx="${r1(50 + w[0])}" cy="${r1(w[1] + B.hand * .8)}" rx="${B.hand * .85}" ry="${B.hand * 1.15}" fill="${SKIN2}"/>`;
+}
+/* القطع: كل قطعة ترجع { main, sleeves, folds, seam, trim, dots, lapel } محسوبة من مقاس العارضة */
+function shapeOf(type, B, opt) {
+  const f = B.shoe === 'f', nw = B.neck[0], sY = B.shY, W = B.waistY, H = B.hipY, sh = B.sh;
+  const shoulderTop = (e, nk) => `${r1(50 - nk)} ${r1(sY - 1.6)} Q${r1(50 - nk - 3.4)} ${r1(sY - 1.4)} ${r1(50 - sh - e + .8)} ${r1(sY + .2)} Q${r1(50 - sh - e - 1.1)} ${r1(sY + 1)} ${r1(50 - halfAt(B.side, B.pitY) - e)} ${B.pitY}`;
+  const torso = (e, y1, flare, dip, nk, neckDip) => {
+    const L = sidePts(B, B.pitY, y1, e, flare), R = L.slice().reverse().map(p => [mx(p[0]), p[1]]), a = L[L.length - 1];
+    nk = nk == null ? nw + 1 : nk;
+    return `M${r1(50 + nk)} ${r1(sY - 1.6)} Q50 ${r1(sY + (neckDip || 2.4))} ${shoulderTop(e, nk)}${curve(L)} Q50 ${r1(a[1] + (dip || 0) * 2)} ${r1(mx(a[0]))} ${r1(a[1])}${curve(R)} Q${r1(50 + sh + e + 1.1)} ${r1(sY + 1)} ${r1(50 + sh + e - .8)} ${r1(sY + .2)} Q${r1(50 + nk + 3.4)} ${r1(sY - 1.4)} ${r1(50 + nk)} ${r1(sY - 1.6)} Z`;
+  };
+  const both = d => [d, mirrorPath(d)];
+  const sl = (a, b, c, e) => { capOn = true; const d = armPoly(B, a, b, c, e); capOn = false; return both(d); };
+  const w = B.armW;
+  switch (type) {
+    case 'shirt': {
+      const tk = opt.tuck, e = f ? .6 : 1, hem = tk ? W + (f ? 4 : 3.4) : H + (f ? 1 : 3);
+      const el = armAt(B, .38);
+      return { main: torso(e, hem, null, tk ? 0 : .6, nw + .9, 3.6), sleeves: sl(0, .42, w + 2.5, w + 1.9), sfold: `M${r1(50 - el[0] - 1.6)} ${r1(el[1] - 1)} Q${r1(50 - el[0])} ${r1(el[1] + .6)} ${r1(50 - el[0] + 1.6)} ${r1(el[1] - 1.4)} M${r1(50 - el[0] - 1.8)} ${r1(el[1] + 3.6)} L${r1(50 - el[0] + 1.6)} ${r1(el[1] + 3.2)}`, seam: `M50 ${sY + 2} L50 ${hem + 1}`, trim: `M${50 - nw - .9} ${sY - 1.6} L${50 - .4} ${sY + 3.4} L${50 - nw - 2.6} ${sY + 2.4} Z M${50 + nw + .9} ${sY - 1.6} L${50 + .4} ${sY + 3.4} L${50 + nw + 2.6} ${sY + 2.4} Z`, dots: [7, 13, 19, 25, 31].map(d => [51.3, sY + d]).filter(p => p[1] < hem - 1.5), folds: f ? `M${50 - 8} ${sY + 9} Q${50 - 6} ${W - 5} ${50 - 3} ${W} M${50 + 8} ${sY + 9} Q${50 + 6} ${W - 5} ${50 + 3} ${W} M${50 - 6} ${W - 1} L${50 - 4} ${hem - .5} M${50 + 6} ${W - 1} L${50 + 4} ${hem - .5}` : `M${50 - 9} ${sY + 6} Q${50 - 8} ${W - 4} ${50 - 6} ${hem - 1} M${50 + 9} ${sY + 6} Q${50 + 8} ${W - 4} ${50 + 6} ${hem - 1} M${50 - 4} ${W + 2} L${50 - 2.4} ${hem - .6}` };
+    }
+    case 'jacket': {
+      const hem = H + (f ? 4 : 7), vy = W - (f ? 3 : 4), e = f ? 1.3 : 1.6, el = armAt(B, .5);
+      return { main: torso(e, hem, f ? (y => y > W ? (y - W) * .12 : 0) : null, .4, nw + 1.2, 1.4), sleeves: sl(0, .97, w + 2.7, w + 1.9), sfold: `M${r1(50 - el[0] - 2)} ${r1(el[1] - 1.2)} Q${r1(50 - el[0])} ${r1(el[1] + .8)} ${r1(50 - el[0] + 2)} ${r1(el[1] - 1.6)} M${r1(50 - el[0] - 2)} ${r1(el[1] + 1.6)} Q${r1(50 - el[0])} ${r1(el[1] + 3.2)} ${r1(50 - el[0] + 2)} ${r1(el[1] + 1.2)} M${r1(50 - armAt(B, .9)[0] - 2.2)} ${r1(armAt(B, .9)[1])} L${r1(50 - armAt(B, .9)[0] + 2.2)} ${r1(armAt(B, .9)[1] - .4)}`, lapel: `M${50 - nw - 1.2} ${sY - 1.4} L50 ${vy} L${50 - 3.4} ${vy - 3} L${50 - nw - 3.6} ${sY + 6} Z M${50 + nw + 1.2} ${sY - 1.4} L50 ${vy} L${50 + 3.4} ${vy - 3} L${50 + nw + 3.6} ${sY + 6} Z`, seam: `M50 ${vy} L50 ${hem + 1} M${r1(50 - halfAt(B.side, W) + 1.2)} ${W + 4} L${50 - 3.4} ${W + 4} M${r1(50 + halfAt(B.side, W) - 1.2)} ${W + 4} L${50 + 3.4} ${W + 4} M${50 - 6} ${sY + 6} Q${50 - 5.4} ${W} ${50 - 6.4} ${hem - .5} M${50 + 6} ${sY + 6} Q${50 + 5.4} ${W} ${50 + 6.4} ${hem - .5}`, dots: [[48.4, vy + 3], [48.4, vy + 9]], folds: `M${50 - 3} ${W - 2} L${50 - 1} ${W + 1} M${50 + 3} ${W - 2} L${50 + 1} ${W + 1}`, v: `M${50 - nw - 1.2} ${sY - 1.4} L50 ${vy} L${50 + nw + 1.2} ${sY - 1.4} Z` };
+    }
+    case 'pants': {
+      const top = f ? W + 1.5 : W + 1, e = .8;
+      /* بنطلون البنت ضيق يبين الفخذ والساق، وبنطلون الولد مستقيم من الفخذ لتحت مثل البنطلون الرجالي المفصّل */
+      const ty = B.crotchY + 6, fy = B.feetY - .5, oT = halfAt(B.legO, ty), oF = halfAt(B.legO, fy) + (f ? .3 : 1.6), iT = halfAt(B.legI, ty), iF = halfAt(B.legI, fy) - (f ? 0 : .9);
+      const oH = y => f ? halfAt(B.legO, y) : Math.max(halfAt(B.legO, y) + .3, lerp(oT, oF, (y - ty) / (fy - ty)));
+      const iH = y => f ? halfAt(B.legI, y) : Math.min(halfAt(B.legI, y) - .2, lerp(iT, iF, (y - ty) / (fy - ty)));
+      const OT = []; for (let y = B.crotchY + 4; y <= fy + .01; y += (fy - B.crotchY - 4) / 9) OT.push([y, oH(y)]);
+      const L = sidePts(B, top, B.crotchY, e).concat(sidePts(B, B.crotchY + 4, fy, e + .3, null, OT));
+      const iy = B.crotchY + 2.2, iL = []; for (let y = iy; y <= fy + .01; y += (fy - iy) / 6) iL.push([50 - iH(y) + .9, y]);
+      const R = L.slice().reverse().map(p => [mx(p[0]), p[1]]), iR = iL.map(p => [mx(p[0]), p[1]]);
+      const main = `M${r1(L[0][0])} ${r1(L[0][1])}${curve(L)} L${r1(iL[iL.length - 1][0])} ${r1(iL[iL.length - 1][1])}${curve(iL.slice().reverse())} Q50 ${r1(iy - 1)} ${r1(iR[0][0])} ${r1(iR[0][1])}${curve(iR)} L${r1(R[0][0])} ${r1(R[0][1])}${curve(R)} Q50 ${r1(top + .8)} ${r1(L[0][0])} ${r1(L[0][1])} Z`;
+      const k = (50 - halfAt(B.legO, B.kneeY) + 50 - halfAt(B.legI, B.kneeY)) / 2, ky = B.kneeY;
+      return { main, trim: `M${r1(L[0][0] + .2)} ${top + 2.4} Q50 ${top + 3.2} ${r1(mx(L[0][0]) - .2)} ${top + 2.4}`, seam: `M51 ${top + 3} Q51.6 ${B.crotchY - 3} 50 ${B.crotchY} M${r1(L[0][0] + 1.6)} ${top + 3.2} Q${r1(L[0][0] + 4)} ${top + 4} ${r1(L[0][0] + 4.6)} ${top + 8} M${r1(mx(L[0][0]) - 1.6)} ${top + 3.2} Q${r1(mx(L[0][0]) - 4)} ${top + 4} ${r1(mx(L[0][0]) - 4.6)} ${top + 8}`, folds: `M${r1(k)} ${B.crotchY + 5} L${r1(k + .3)} ${B.feetY - 2} M${r1(mx(k))} ${B.crotchY + 5} L${r1(mx(k) - .3)} ${B.feetY - 2} M${r1(k - 2.4)} ${ky - 1} Q${r1(k)} ${ky + .6} ${r1(k + 2.2)} ${ky - 1.4} M${r1(mx(k) + 2.4)} ${ky - 1} Q${r1(mx(k))} ${ky + .6} ${r1(mx(k) - 2.2)} ${ky - 1.4} M${r1(k - 2)} ${B.feetY - 4} Q${r1(k)} ${B.feetY - 2.8} ${r1(k + 2)} ${B.feetY - 4.2} M${r1(mx(k) + 2)} ${B.feetY - 4} Q${r1(mx(k))} ${B.feetY - 2.8} ${r1(mx(k) - 2)} ${B.feetY - 4.2}` };
+    }
+    case 'skirt': case 'maxi': {
+      const hem = type === 'maxi' ? B.feetY - 1 : B.kneeY + 1, top = W + .2;
+      const L = sidePts(B, top, H, .9).concat([[50 - halfAt(B.side, H) - .9 - (hem - H) * (type === 'maxi' ? .09 : .16), hem]]);
+      return { main: symShape(`${r1(mx(L[0][0]))} ${r1(top)}`, L, 1.4) + '', seam: `M${r1(L[0][0] + .3)} ${top + 2.6} Q50 ${top + 3.4} ${r1(mx(L[0][0]) - .3)} ${top + 2.6}`, folds: `M46 ${H} Q44 ${(H + hem) / 2} ${r1(50 - (hem - H) * .1)} ${hem - .6} M50 ${H + 2} L50 ${hem + .6} M54 ${H} Q56 ${(H + hem) / 2} ${r1(50 + (hem - H) * .1)} ${hem - .6}` };
+    }
+    case 'dress': {
+      const hem = B.feetY - 7, st = nw + 2.8;
+      const L = sidePts(B, B.pitY, H - 2, .5, y => y > W ? (y - W) * .25 : 0);
+      L.push([50 - halfAt(B.side, H) - 3.4, H + 6], [50 - halfAt(B.side, H) - (hem - H) * .26, hem]);
+      const R = L.slice().reverse().map(p => [mx(p[0]), p[1]]), a = L[L.length - 1];
+      const main = `M${r1(50 + st)} ${sY - .6} L${r1(50 + st + 2.6)} ${sY - .2} L${r1(mx(L[0][0]))} ${B.pitY} Q50 ${sY + 2} ${r1(L[0][0])} ${B.pitY} L${r1(50 - st - 2.6)} ${sY - .2} L${r1(50 - st)} ${sY - .6} Q${50 - 3} ${sY + 4.6} 50 ${sY + 5.4} Q${50 + 3} ${sY + 4.6} ${r1(50 + st)} ${sY - .6} Z M${r1(L[0][0])} ${B.pitY}${curve(L)} Q50 ${r1(a[1] + 3)} ${r1(R[0][0])} ${r1(R[0][1])}${curve(R)} Q50 ${sY + 6} ${r1(L[0][0])} ${B.pitY} Z`;
+      return { main, seam: `M${r1(50 - halfAt(B.side, W) - .5)} ${W} Q50 ${W + 1.6} ${r1(50 + halfAt(B.side, W) + .5)} ${W}`, folds: `M46 ${W + 3} Q41 ${(W + hem) / 2} ${r1(50 - (hem - W) * .2)} ${hem - .4} M50 ${W + 4} L50 ${hem + 1} M54 ${W + 3} Q59 ${(W + hem) / 2} ${r1(50 + (hem - W) * .2)} ${hem - .4}`, trim: `M${50 - st} ${sY - .6} Q${50 - 3} ${sY + 4.6} 50 ${sY + 5.4} Q${50 + 3} ${sY + 4.6} ${50 + st} ${sY - .6}` };
+    }
+    case 'abaya': case 'daraa': {
+      const ab = type === 'abaya', hem = B.feetY + (ab ? 2.2 : 1), e = ab ? 2.4 : 2.8;
+      const main = torso(e, hem, y => Math.max(0, y - 40) * (ab ? .085 : .075), 1.2, nw + 1.2, ab ? 1.6 : 2);
+      const sleeves = ab ? sl(0, .99, w + 3.2, w + 6.6) : sl(0, .64, w + 3.4, w + 7.2);
+      return ab ? { main, sleeves, seam: `M50 ${sY + 1} L50 ${hem + 2}`, trim: `M50 ${sY + 1} L50 ${hem + 2.4} M${50 - nw - 1.2} ${sY - 1.6} Q50 ${sY + 1.6} ${50 + nw + 1.2} ${sY - 1.6}`, folds: `M44 ${W} Q41 ${(W + hem) / 2} 37 ${hem - 1} M56 ${W} Q59 ${(W + hem) / 2} 63 ${hem - 1}` }
+        : { main, sleeves, trim: `M${50 - nw - 1.2} ${sY - 1.6} Q50 ${sY + 2} ${50 + nw + 1.2} ${sY - 1.6} M50 ${sY + 2} L50 ${sY + 16} M${r1(50 - 13.6)} ${hem - 4} Q50 ${hem - 2.4} ${r1(50 + 13.6)} ${hem - 4} M${r1(50 - 13.8)} ${hem - 2.4} Q50 ${hem - .8} ${r1(50 + 13.8)} ${hem - 2.4}`, dots: [[50, sY + 5], [50, sY + 9], [50, sY + 13]], folds: `M44 ${W} Q40 ${(W + hem) / 2} 36 ${hem - 1} M56 ${W} Q60 ${(W + hem) / 2} 64 ${hem - 1}` };
+    }
+    case 'scarf': {
+      const y = sY - 1.2, n = nw + 2.4;
+      return { main: `M${50 - n} ${y - 2.4} Q50 ${y + 3.6} ${50 + n} ${y - 2.4} L${50 + n + 1} ${y + 1} Q50 ${y + 8} ${50 - n - 1} ${y + 1} Z M${50 + 2} ${y + 3.6} L${50 + 6.4} ${y + 30} L${50 + 2.2} ${y + 31} L${50 - .4} ${y + 4.4} Z`, folds: `M${50 - n + 1} ${y} Q50 ${y + 5} ${50 + n - 1} ${y}`, trim: `M${50 + 6.4} ${y + 30} L${50 + 2.2} ${y + 31}` };
+    }
+    case 'bag': {
+      const p = armAt(B, 1), x = 50 + p[0], y = p[1] + B.hand * 1.6;
+      return { main: `M${r1(x - 6.4)} ${r1(y + 5)} L${r1(x + 6.4)} ${r1(y + 5)} L${r1(x + 7.6)} ${r1(y + 17)} Q${r1(x)} ${r1(y + 18)} ${r1(x - 7.6)} ${r1(y + 17)} Z`, handle: `M${r1(x - 3.6)} ${r1(y + 5)} Q${r1(x)} ${r1(y - 4)} ${r1(x + 3.6)} ${r1(y + 5)}`, seam: `M${r1(x - 6.8)} ${r1(y + 9)} L${r1(x + 6.8)} ${r1(y + 9)}`, dots: [[r1(x), r1(y + 11)]] };
+    }
+    case 'hat': {
+      const h = B.head, t = h.cy - h.ry + 1.6;
+      return { main: `M${50 - h.rx - 7} ${t + 1.6} Q50 ${t - 2.6} ${50 + h.rx + 7} ${t + 1.6} Q50 ${t + 4.2} ${50 - h.rx - 7} ${t + 1.6} Z M${50 - h.rx + .4} ${t + .4} Q${50 - h.rx} ${t - 7} 50 ${t - 7.2} Q${50 + h.rx} ${t - 7} ${50 + h.rx - .4} ${t + .4} Q50 ${t + 1.4} ${50 - h.rx + .4} ${t + .4} Z`, trim: `M${50 - h.rx + .2} ${t - 1} Q50 ${t + .2} ${50 + h.rx - .2} ${t - 1}` };
+    }
+    case 'belt': {
+      const y = f ? W : W + 1, hw = halfAt(B.side, y) + 1.4;
+      return { main: `M${r1(50 - hw)} ${y - 1.6} Q50 ${y - .6} ${r1(50 + hw)} ${y - 1.6} L${r1(50 + hw)} ${y + 1.6} Q50 ${y + 2.6} ${r1(50 - hw)} ${y + 1.6} Z`, trim: `M47.6 ${y - 1.6} L52.4 ${y - 1.6} L52.4 ${y + 2.2} L47.6 ${y + 2.2} Z`, dots: [[50, y + .3]] };
+    }
+    case 'necklace': {
+      const y = sY - 1;
+      return { main: `M${50 - nw - 1.4} ${y} Q50 ${y + 9.6} ${50 + nw + 1.4} ${y} L${50 + nw + 2.2} ${y + .6} Q50 ${y + 11.6} ${50 - nw - 2.2} ${y + .6} Z M48.4 ${y + 9.8} L51.6 ${y + 9.8} L50 ${y + 14} Z`, dots: [[50 - nw, y + 3.2], [50 - 2.4, y + 6.6], [50 + 2.4, y + 6.6], [50 + nw, y + 3.2]] };
+    }
+  }
+  return null;
+}
+let SVGN = 0, PID = 0, CUR = { cy: '', sf: '' };
+function sharedDefs(defs) {
+  const n = ++SVGN; CUR = { cy: 'cy' + n, sf: 'sf' + n, ln: 'ln' + n, sp: 'sp' + n, fl: 'fl' + n };
+  defs.push(`<radialGradient id="${CUR.sp}" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f7f2fb"/><stop offset="1" stop-color="#ece2f5"/></radialGradient><radialGradient id="${CUR.sp}c" cx=".5" cy=".36" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="${CUR.sp}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="${CUR.fl}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b2fbe" stop-opacity=".13"/><stop offset="1" stop-color="#7b2fbe" stop-opacity=".03"/></linearGradient>`);
+  defs.push(`<linearGradient id="${CUR.cy}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a0f24" stop-opacity=".34"/><stop offset=".14" stop-color="#1a0f24" stop-opacity=".08"/><stop offset=".34" stop-color="#fff" stop-opacity=".16"/><stop offset=".52" stop-color="#fff" stop-opacity="0"/><stop offset=".84" stop-color="#1a0f24" stop-opacity=".14"/><stop offset="1" stop-color="#1a0f24" stop-opacity=".36"/></linearGradient><linearGradient id="${CUR.ln}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#1a0f24" stop-opacity=".12"/></linearGradient><filter id="${CUR.sf}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".7"/></filter>`);
+}
+function garment(p, B, defs, opt) {
+  const hex = colorHex(p.color), S = shapeOf(p.type, B, opt || {}), id = 'g' + SVGN + 'x' + (++PID), lt = isLight(hex);
+  if (!S) return '';
+  const line = lt ? 'rgba(40,25,50,.3)' : 'rgba(0,0,0,.45)', hi = lt ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.22)';
+  const fill = fillFor(hex, p.pattern, defs), tx = textureFor(p.fabric, defs);
+  const shade = (d, cid) => `<clipPath id="${cid}"><path d="${d}"/></clipPath>` ;
+  const paint = (d, k) => {
+    const cid = 'c' + id + k; defs.push(shade(d, cid));
+    let o = `<path d="${d}" fill="rgba(35,18,50,.28)" filter="url(#${CUR.sf})" transform="translate(.35 .9)"/><path d="${d}" fill="${fill}"/>`;
+    if (tx) o += `<path d="${d}" fill="${tx}"/>`;
+    o += `<path d="${d}" fill="url(#${CUR.cy})" opacity="${lt ? .75 : 1}"/><path d="${d}" fill="url(#${CUR.ln})"/>`;
+    return o;
+  };
+  let o = '';
+  if (S.handle) o += `<path d="${S.handle}" fill="none" stroke="${hex}" stroke-width="1.6" stroke-linecap="round"/><path d="${S.handle}" fill="none" stroke="${line}" stroke-width=".4"/>`;
+  if (S.sleeves) S.sleeves.forEach((sl, k) => { o += paint(sl, 's' + k) + (S.sfold ? `<g clip-path="url(#c${id}s${k})"><path d="${k ? mirrorPath(S.sfold) : S.sfold}" fill="none" stroke="${line}" stroke-width=".55" stroke-linecap="round" opacity=".7"/></g>` : '') + `<path d="${sl}" fill="none" stroke="${line}" stroke-width=".55" stroke-linejoin="round"/>`; });
+  o += paint(S.main, 'm');
+  const cid = 'c' + id + 'm';
+  o += `<g clip-path="url(#${cid})">`;
+  if (S.v) o += `<path d="${S.v}" fill="rgba(0,0,0,.28)"/>`;
+  if (S.lapel) o += `<path d="${S.lapel}" fill="rgba(0,0,0,.16)" stroke="${line}" stroke-width=".4"/>`;
+  if (S.folds) o += `<path d="${S.folds}" fill="none" stroke="${line}" stroke-width=".6" stroke-linecap="round" opacity=".7"/><path d="${S.folds}" fill="none" stroke="${hi}" stroke-width=".45" stroke-linecap="round" transform="translate(-1 0)" opacity=".7"/>`;
+  if (S.seam) o += `<path d="${S.seam}" fill="none" stroke="${line}" stroke-width=".5" stroke-dasharray="1.3 1"/>`;
+  o += `</g><path d="${S.main}" fill="none" stroke="${line}" stroke-width=".6" stroke-linejoin="round"/>`;
+  if (S.trim) o += `<path d="${S.trim}" fill="${p.type === 'belt' || p.type === 'shirt' ? (lt ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.1)') : 'none'}" stroke="${lt ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.4)'}" stroke-width=".8" stroke-linecap="round" stroke-linejoin="round"/>`;
+  if (S.dots) o += S.dots.map(d => `<circle cx="${d[0]}" cy="${d[1]}" r=".85" fill="${lt ? '#7a6a58' : '#e9d9a6'}"/>`).join('');
+  return o;
+}
 function fillFor(hex, pattern, defs) {
   if (!pattern || pattern === 'plain') return hex;
   const id = 'pt' + (++PID), c = isLight(hex) ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.38)';
   let inner = '';
-  if (pattern === 'stripe') inner = `<rect width="3" height="8" fill="${c}"/>`;
-  if (pattern === 'dots') inner = `<circle cx="4" cy="4" r="1.6" fill="${c}"/>`;
-  if (pattern === 'check') inner = `<rect width="4" height="4" fill="${c}"/><rect x="4" y="4" width="4" height="4" fill="${c}"/>`;
-  defs.push(`<pattern id="${id}" width="8" height="8" patternUnits="userSpaceOnUse"><rect width="8" height="8" fill="${hex}"/>${inner}</pattern>`);
+  if (pattern === 'stripe') inner = `<rect width="2.4" height="6" fill="${c}"/>`;
+  if (pattern === 'dots') inner = `<circle cx="3" cy="3" r="1.1" fill="${c}"/>`;
+  if (pattern === 'check') inner = `<rect width="3" height="3" fill="${c}"/><rect x="3" y="3" width="3" height="3" fill="${c}"/>`;
+  defs.push(`<pattern id="${id}" width="6" height="6" patternUnits="userSpaceOnUse"><rect width="6" height="6" fill="${hex}"/>${inner}</pattern>`);
   return `url(#${id})`;
 }
 function textureFor(f, defs) {
   if (!f) return null;
   const id = 'tx' + (++PID);
-  if (f === 'leather' || f === 'silk') defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="${f === 'leather' ? .42 : .3}"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${f === 'leather' ? .18 : 0}"/></linearGradient>`);
+  if (f === 'leather' || f === 'silk') defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="${f === 'leather' ? .38 : .28}"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${f === 'leather' ? .18 : 0}"/></linearGradient>`);
   else if (f === 'velvet') defs.push(`<radialGradient id="${id}" cx=".5" cy=".4" r=".7"><stop offset=".3" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></radialGradient>`);
-  else if (f === 'denim') defs.push(`<pattern id="${id}" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="1" height="3" fill="#fff" fill-opacity=".16"/></pattern>`);
-  else if (f === 'wool') defs.push(`<pattern id="${id}" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".7" fill="#fff" fill-opacity=".22"/><circle cx="3" cy="3" r=".7" fill="#000" fill-opacity=".1"/></pattern>`);
+  else if (f === 'denim') defs.push(`<pattern id="${id}" width="2.4" height="2.4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width=".8" height="2.4" fill="#fff" fill-opacity=".16"/></pattern>`);
+  else if (f === 'wool') defs.push(`<pattern id="${id}" width="3" height="3" patternUnits="userSpaceOnUse"><circle cx=".8" cy=".8" r=".55" fill="#fff" fill-opacity=".22"/><circle cx="2.3" cy="2.3" r=".55" fill="#000" fill-opacity=".1"/></pattern>`);
   else if (f === 'chiffon') defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity=".05"/></linearGradient>`);
+  else if (f === 'linen') defs.push(`<pattern id="${id}" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="2" height=".5" fill="#fff" fill-opacity=".12"/></pattern>`);
   else return null;
   return `url(#${id})`;
 }
-function designSVG(d) {
-  if (!d) return `<svg viewBox="0 0 100 140" class="dsvg empty"><g opacity=".5">${MANNEQUIN}</g><text x="50" y="102" text-anchor="middle" font-size="9" font-weight="700" fill="#9a8fae">${L('فاضي', 'Empty')}</text></svg>`;
-  const defs = []; let body = '';
-  [d.base, d.extra].filter(x => x && x.type && cloth(x.type)).sort((a, b) => ZORDER[cloth(a.type).zone] - ZORDER[cloth(b.type).zone]).forEach(p => { body += garment(p, defs); });
-  return `<svg viewBox="0 0 100 140" class="dsvg"><defs>${defs.join('')}</defs><circle cx="50" cy="62" r="46" fill="rgba(123,47,190,.06)"/>${MANNEQUIN}${body}</svg>`;
+/* منصة عرض الأزياء: ضوء من فوق وممشى تحت العارضة */
+const stage = bg => bg ? `<rect x="-20" y="-10" width="140" height="160" fill="${bg}"/><rect x="-20" y="-10" width="140" height="160" fill="url(#${CUR.sp}c)"/><path d="M41 -2 L59 -2 L76 124 L24 124 Z" fill="url(#${CUR.sp}b)" opacity="${isLight(bg) ? .45 : .22}"/><path d="M38 121 L62 121 L82 140 L18 140 Z" fill="${isLight(bg) ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.1)'}"/>` : `<rect x="-20" y="-10" width="140" height="160" fill="url(#${CUR.sp})"/><path d="M41 -2 L59 -2 L76 124 L24 124 Z" fill="url(#${CUR.sp}b)" opacity=".7"/><path d="M38 121 L62 121 L82 140 L18 140 Z" fill="url(#${CUR.fl})"/><path d="M50 121 L50 140 M41.6 121 L31 140 M58.4 121 L69 140" stroke="rgba(123,47,190,.08)" stroke-width=".4"/>`;
+const bgOf = st => st && st.store && st.store.bg ? colorHex(st.store.bg) : null;
+const bdStyle = st => { const b = bgOf(st), d = st && st.store && st.store.border ? colorHex(st.store.border) : null; return b || d ? ` style="${b ? `--sbg:${b};` : ''}${d ? `border:3px solid ${d};` : ''}"` : ''; };
+const modelOf = d => (d && d.model === 'm') ? 'm' : 'f';
+function designSVG(d, model, bg) {
+  const B = BODIES[model || modelOf(d)];
+  if (!d) { const df = []; sharedDefs(df); return `<svg viewBox="0 0 100 140" class="dsvg empty"><defs>${df.join('')}</defs>${bg ? stage(bg) : ''}<g opacity=".5">${bodySVG(B)}${hands(B)}</g><text x="50" y="104" text-anchor="middle" font-size="9" font-weight="700" fill="#9a8fae">${L('فاضي', 'Empty')}</text></svg>`; }
+  const defs = []; let body = ''; sharedDefs(defs);
+  const ps = [d.base, d.extra].filter(x => x && x.type && cloth(x.type)), ty = ps.map(x => x.type);
+  /* القميص مع بنطلون أو تنورة: ينحشر داخلها عشان يبين التفصيل على الخصر */
+  const tuck = ty.includes('shirt') && ty.some(t => t === 'pants' || t === 'skirt' || t === 'maxi');
+  const z = x => tuck && x.type === 'shirt' ? .5 : ZORDER[cloth(x.type).zone];
+  ps.sort((a, b) => z(a) - z(b)).forEach(p => { body += garment(p, B, defs, { tuck }); });
+  return `<svg viewBox="0 0 100 140" class="dsvg"><defs>${defs.join('')}</defs>${stage(bg)}${bodySVG(B)}${body}${hands(B)}</svg>`;
 }
 function storeHTML(st, name, act, opt) {
   opt = opt || {};
@@ -958,7 +1140,7 @@ function storeHTML(st, name, act, opt) {
   const feat = (st.featured != null && st.designs && st.designs[st.featured]) || (st.designs || []).find(Boolean) || null;
   return `<div class="store${opt.big ? ' big' : ''}" style="background:${bg};border-color:${bd};color:${isLight(bg) ? '#1d1d1f' : '#fff'}" ${act || ''}>
     ${st.discount ? `<span class="sbadges">🏷️${st.discount}%</span>` : ''}${opt.big ? `<span class="sloc">📍 ${L('موقع مميز', 'Prime spot')}</span>` : ''}<div class="sname">${esc(st.brand && st.brand.name || L('متجر ', '') + name + L('', '’s store'))}</div>
-    <div class="sfeat">${designSVG(feat)}</div><div class="sowner">${esc(name)}</div>${opt.spy ? `<div class="sspy">🔍 🚶${opt.spy.v} · 🛍️${opt.spy.s}</div>` : ''}</div>`;
+    <div class="sfeat">${designSVG(feat, null, bgOf(st))}</div><div class="sowner">${esc(name)}</div>${opt.spy ? `<div class="sspy">🔍 🚶${opt.spy.v} · 🛍️${opt.spy.s}</div>` : ''}</div>`;
 }
 
 /* ---------- حسابات اللاعب ---------- */
@@ -1182,13 +1364,22 @@ function designView() {
   const m = mine(), ok = m.types.length && m.colors.length && m.fabrics.length;
   return `<h2>${L('تصميم التشكيلة', 'Design your collection')}</h2><p class="sub">${L(`جهّز ${CONFIG.designsCount} تصاميم من الخامات اللي اشتريتها.`, `Make ${CONFIG.designsCount} designs from what you bought.`)}</p>
   ${ok ? '' : `<div class="warn">${L('ما اشتريت نوع ملابس ونوع خامة ولون خامة.', 'You didn’t buy a clothing type, fabric type and colour.')}</div>`}
-  <div class="dgrid">${m.designs.map((d, i) => `<button class="dcard" data-act="edit" data-i="${i}">${designSVG(d)}<b>${d ? esc(d.name) : L('تصميم ', 'Design ') + (i + 1)}</b><small>${d ? money(d.price) : L('اضغط للتصميم', 'Tap to design')}</small></button>`).join('')}</div>${doneBtn()}`;
+  <div class="dgrid">${m.designs.map((d, i) => `<button class="dcard" data-act="edit" data-i="${i}">${designSVG(d, null, bgOf(m))}<b>${d ? esc(d.name) : L('تصميم ', 'Design ') + (i + 1)}</b><small>${d ? money(d.price) : L('اضغط للتصميم', 'Tap to design')}</small></button>`).join('')}</div>${doneBtn()}`;
 }
 ACT.edit = d => {
   const m = mine(); if (!(m.types.length && m.colors.length && m.fabrics.length)) { toast(L('اشترِ نوع ملابس ونوع خامة ولون خامة أول', 'Buy a clothing type, fabric type and colour first')); return false; }
   const i = +d.i; U.edit = i;
-  U.dd = m.designs[i] ? clone(m.designs[i]) : { name: L('تصميم ', 'Design ') + (i + 1), base: { type: m.types[0], color: m.colors[0], fabric: m.fabrics[0], pattern: 'plain' }, extra: null, price: CONFIG.salePrice.def };
+  U.dd = m.designs[i] ? clone(m.designs[i]) : { name: L('تصميم ', 'Design ') + (i + 1), model: null, base: { type: m.types[0], color: m.colors[0], fabric: m.fabrics[0], pattern: 'plain' }, extra: null, price: CONFIG.salePrice.def };
+  if (m.designs[i] && !U.dd.model) U.dd.model = 'f';
   U.draft.name = U.dd.name;
+};
+/* العارضة: بنت أو ولد. لو القطعة ما تناسب العارضة نبدلها بأول قطعة تناسبها */
+ACT.setM = d => {
+  const x = U.dd, ok = mine().types.filter(t => fits(t, d.v));
+  if (!ok.length) { toast(L('ما عندك قطع تناسب الولد. اشترِ قميص أو جاكيت أو بنطلون.', 'You have no pieces for a boy. Buy a shirt, jacket or trousers.')); return false; }
+  x.model = d.v;
+  if (!fits(x.base.type, d.v)) x.base.type = ok[0];
+  if (x.extra && !fits(x.extra.type, d.v)) x.extra = null;
 };
 ACT.setD = d => {
   const x = U.dd;
@@ -1196,12 +1387,12 @@ ACT.setD = d => {
   x[d.part][d.key] = d.v;
 };
 ACT.price = d => { U.dd.price = Math.min(CONFIG.salePrice.max, Math.max(CONFIG.salePrice.min, U.dd.price + (+d.v))); };
-ACT.saveD = () => { U.dd.name = (U.draft.name || '').trim() || U.dd.name; mine().designs[U.edit] = clone(U.dd); U.edit = null; saveMe(); toast(L('انحفظ التصميم ✓', 'Design saved ✓')); };
+ACT.saveD = () => { if (!U.dd.model) { toast(L('اختر العارضة أول: بنت ولا ولد؟', 'Pick the model first: girl or boy?')); return false; } U.dd.name = (U.draft.name || '').trim() || U.dd.name; mine().designs[U.edit] = clone(U.dd); U.edit = null; saveMe(); toast(L('انحفظ التصميم ✓', 'Design saved ✓')); };
 ACT.delD = () => { const m = mine(); m.designs[U.edit] = null; if (m.featured === U.edit) m.featured = null; U.edit = null; saveMe(); };
 ACT.cancelD = () => { U.edit = null; };
 function pieceEd(part) {
   const m = mine(), x = U.dd[part];
-  return `<div class="chips" style="margin-bottom:10px">${part === 'extra' ? `<button class="chip ${!x ? 'on' : ''}" data-act="setD" data-part="extra" data-key="type" data-v="none">${L('بدون', 'None')}</button>` : ''}${m.types.map(t => `<button class="chip ${x && x.type === t ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="type" data-v="${t}">${N(cloth(t).name)}</button>`).join('')}</div>
+  return `<div class="chips" style="margin-bottom:10px">${part === 'extra' ? `<button class="chip ${!x ? 'on' : ''}" data-act="setD" data-part="extra" data-key="type" data-v="none">${L('بدون', 'None')}</button>` : ''}${m.types.filter(t => fits(t, U.dd.model || 'f')).map(t => `<button class="chip ${x && x.type === t ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="type" data-v="${t}">${N(cloth(t).name)}</button>`).join('')}</div>
   ${x ? `<div class="chips" style="margin-bottom:10px">${m.fabrics.map(f => `<button class="chip ${x.fabric === f ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="fabric" data-v="${f}">🧵 ${N(byId(FABRICS, f).name)}</button>`).join('')}</div>
   <div class="swatches" style="margin-bottom:10px">${m.colors.map(c => swatch(byId(COLORS, c), x.color === c, `data-act="setD" data-part="${part}" data-key="color" data-v="${c}"`)).join('')}</div>
   <div class="chips">${PATTERNS.map(p => `<button class="chip ${x.pattern === p.id ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="pattern" data-v="${p.id}">${N(p.name)}</button>`).join('')}</div>` : ''}`;
@@ -1213,11 +1404,12 @@ function editorView() {
   <div class="edsplit">
   <div class="edopts">
   <div class="card"><h3>${L('اسم التصميم', 'Design name')}</h3><input class="field" id="dname" data-bind="dname" maxlength="20" value="${esc(U.draft.name || '')}"></div>
+  <div class="card"><h3>${L('العارضة', 'Model')}</h3><div class="chips">${[['f', L('👩 بنت', '👩 Girl')], ['m', L('👨 ولد', '👨 Boy')]].map(([v, t]) => `<button class="chip ${U.dd.model === v ? 'on' : ''}" data-act="setM" data-v="${v}">${t}</button>`).join('')}</div>${U.dd.model ? '' : `<p class="sub" style="margin:8px 0 0">${L('اختر مين بيلبس التصميم.', 'Choose who wears this design.')}</p>`}</div>
   <div class="card"><h3>${L('القطعة الأساسية', 'Main piece')}</h3>${pieceEd('base')}</div>
   <div class="card"><h3>${L('قطعة إضافية', 'Extra piece')} <span class="assume">${L('اختيارية', 'optional')}</span></h3>${pieceEd('extra')}</div>
   </div>
-  <div class="edprev"><div class="preview">${designSVG(U.dd)}</div>
-  <div class="card edprice"><span>${L('سعر البيع', 'Price')}</span><div class="stepper"><button data-act="price" data-v="1">+</button><span class="v">${money(U.dd.price)}</span><button data-act="price" data-v="-1">−</button></div></div></div>
+  <div class="edprev"><div class="preview${bgOf(mine()) ? ' hasbg' : ''}"${bdStyle(mine())}>${U.dd.model ? designSVG(U.dd, null, bgOf(mine())) : `<div class="mpick">${[['f', L('بنت', 'Girl')], ['m', L('ولد', 'Boy')]].map(([v, t]) => `<button data-act="setM" data-v="${v}"><svg viewBox="22 -2 56 144" class="dsvg">${bodySVG(BODIES[v])}${hands(BODIES[v])}</svg><b>${t}</b></button>`).join('')}</div>`}</div>
+  ${bgOf(mine()) ? '' : `<p class="sub" style="margin:0 0 8px;text-align:center;font-size:12px">${L('ما اخترت خلفية للمتجر، فتطلع الخلفية الافتراضية.', 'No store background chosen, so the default shows.')}</p>`}<div class="card edprice"><span>${L('سعر البيع', 'Price')}</span><div class="stepper"><button data-act="price" data-v="1">+</button><span class="v">${money(U.dd.price)}</span><button data-act="price" data-v="-1">−</button></div></div></div>
   </div>
   <button class="btn" data-act="saveD">${L('حفظ التصميم', 'Save design')}</button>${mine().designs[U.edit] ? `<button class="btn ghost" data-act="delD">${L('مسح التصميم', 'Delete design')}</button>` : ''}`;
 }
@@ -1230,8 +1422,8 @@ function buildView() {
   <div class="storebig">${storeHTML({ store: m.store, designs: m.designs, featured: m.featured, brand: m.brand, discount: m.perks.includes('sale') ? m.discount : 0 }, P(ME_ID).name)}</div>
   <div class="card"><h3>${L('اسم البراند', 'Brand name')}</h3><input class="field" id="bname" data-bind="bname" maxlength="${CONFIG.brandNameMax}" value="${esc(m.brand.name)}"></div>
   <div class="card"><h3>${L('وصف البراند', 'Brand description')}</h3><textarea class="field" id="bdesc" data-bind="bdesc" rows="3" maxlength="${CONFIG.brandDescMax}">${esc(m.brand.desc)}</textarea><div class="counter"><span id="dcount">${m.brand.desc.length}</span> / ${CONFIG.brandDescMax}</div></div>
-  <div class="card"><h3>⭐ ${L('القطعة المميزة', 'Signature piece')}</h3>${done.length ? `<div class="dgrid">${done.map(i => `<button class="dcard ${m.featured === i ? 'on' : ''}" data-act="feat" data-i="${i}">${designSVG(m.designs[i])}<b>${esc(m.designs[i].name)}</b></button>`).join('')}</div>` : `<div class="warn">${L('ما عندك تصاميم جاهزة.', 'No finished designs.')}</div>`}</div>
-  ${m.perks.includes('exclusive') && done.length ? `<div class="card"><h3>💎 ${L('التصميم الحصري (كل بيعة تنحسب بيعتين)', 'Exclusive design (each sale counts as two)')}</h3><div class="dgrid">${done.map(i => `<button class="dcard ${m.exclusive === i ? 'on' : ''}" data-act="excl" data-i="${i}">${designSVG(m.designs[i])}<b>${esc(m.designs[i].name)}</b></button>`).join('')}</div></div>` : ''}
+  <div class="card"><h3>⭐ ${L('القطعة المميزة', 'Signature piece')}</h3>${done.length ? `<div class="dgrid">${done.map(i => `<button class="dcard ${m.featured === i ? 'on' : ''}" data-act="feat" data-i="${i}">${designSVG(m.designs[i], null, bgOf(m))}<b>${esc(m.designs[i].name)}</b></button>`).join('')}</div>` : `<div class="warn">${L('ما عندك تصاميم جاهزة.', 'No finished designs.')}</div>`}</div>
+  ${m.perks.includes('exclusive') && done.length ? `<div class="card"><h3>💎 ${L('التصميم الحصري (كل بيعة تنحسب بيعتين)', 'Exclusive design (each sale counts as two)')}</h3><div class="dgrid">${done.map(i => `<button class="dcard ${m.exclusive === i ? 'on' : ''}" data-act="excl" data-i="${i}">${designSVG(m.designs[i], null, bgOf(m))}<b>${esc(m.designs[i].name)}</b></button>`).join('')}</div></div>` : ''}
   ${m.perks.includes('sale') ? `<div class="card"><div class="row"><span>🏷️ ${L('نسبة التنزيلات', 'Sale %')}</span><div class="stepper"><button data-act="disc" data-v="1">+</button><span class="v">${m.discount || 0}%</span><button data-act="disc" data-v="-1">−</button></div></div></div>` : ''}${doneBtn()}`;
 }
 function talkView() {
@@ -1240,9 +1432,9 @@ function talkView() {
   return `<span class="tag">${L('الجولة', 'Round')} ${t.round} / ${RND()} · ${L('الإقناع', 'Pitching')}</span>
   <div class="speakers">${t.speakers.map((id, i) => `<span class="spk ${i === t.idx ? 'now' : i < t.idx ? 'done' : ''}">${esc(P(id).name)}</span>`).join('')}</div>
   <div class="stage"><div class="who">${L('الحين يقنعكم', 'Now pitching')}<b>${esc(P(sp).name)}${sp === ME_ID ? L(' (أنت)', ' (you)') : ''}</b></div>
-  <div class="card"><div class="ptitle">${esc(st.brand ? st.brand.name : '')}</div><div class="preview">${designSVG(feat)}</div>
+  <div class="card"><div class="ptitle">${esc(st.brand ? st.brand.name : '')}</div><div class="preview${bgOf(st) ? ' hasbg' : ''}"${bdStyle(st)}>${designSVG(feat, null, bgOf(st))}</div>
   <div>⭐ ${feat ? esc(feat.name) + ' — ' + money(finalPrice(st, feat)) : L('ما في قطعة مميزة', 'No signature piece')}</div>${st.brand && st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}
-  ${(st.perks || []).includes('expand') && (st.designs || []).filter(Boolean).length > 1 ? `<div class="tag" style="margin-top:10px">🏬 ${L('توسعة المتجر: كل التصاميم', 'Store expansion: all designs')}</div><div class="allds">${st.designs.map((d, i) => d ? `<div>${designSVG(d)}${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}<br>${money(finalPrice(st, d))}</div>` : '').join('')}</div>` : ''}</div>
+  ${(st.perks || []).includes('expand') && (st.designs || []).filter(Boolean).length > 1 ? `<div class="tag" style="margin-top:10px">🏬 ${L('توسعة المتجر: كل التصاميم', 'Store expansion: all designs')}</div><div class="allds">${st.designs.map((d, i) => d ? `<div>${designSVG(d, null, bgOf(st))}${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}<br>${money(finalPrice(st, d))}</div>` : '').join('')}</div>` : ''}</div>
   ${sp === ME_ID && (st.perks || []).includes('extraTime') && !G.extraUsed[ME_ID] ? `<button class="btn ghost" data-act="extra">⏱️ ${L('استخدم الوقت الإضافي', 'Use extra time')} (+${CONFIG.extraTimeSec}s)</button>` : ''}</div>
   ${endBtn(nxt, 'talkNext')}${waitHost()}`;
 }
@@ -1269,15 +1461,15 @@ function storeModal(id) {
   const bg = st.store && st.store.bg ? colorHex(st.store.bg) : '#f6f4f8', bd = st.store && st.store.border ? colorHex(st.store.border) : '#d6d0de', mineB = G.bought[ME_ID] || [];
   return `<div style="border:7px solid ${bd};background:${bg};color:${isLight(bg) ? '#1d1d1f' : '#fff'};border-radius:10px;padding:12px;text-align:center"><div class="ptitle">${esc(st.brand.name)}</div><small>${esc(P(id).name)}${st.discount ? ` • 🏷️ ${st.discount}%` : ''}</small></div>
   ${st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}
-  ${st.designs.map((d, i) => { if (!d) return `<div class="item">${designSVG(null)}<div class="in"><b>${L('تصميم ناقص', 'Unfinished design')}</b></div></div>`; const pr = finalPrice(st, d), owned = mineB.includes(id + ':' + i);
-    return `<div class="item">${designSVG(d)}<div class="in"><b>${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}</b><small>${[d.base, d.extra].filter(Boolean).map(x => N(cloth(x.type).name) + ' ' + N(byId(COLORS, x.color).name) + (x.fabric ? ' ' + N(byId(FABRICS, x.fabric).name) : '')).join(' + ')}</small><b style="color:var(--p)">${money(pr)}</b>${pr !== d.price ? `<span class="old">${money(d.price)}</span>` : ''}</div>
+  ${st.designs.map((d, i) => { if (!d) return `<div class="item">${designSVG(null, null, bgOf(st))}<div class="in"><b>${L('تصميم ناقص', 'Unfinished design')}</b></div></div>`; const pr = finalPrice(st, d), owned = mineB.includes(id + ':' + i);
+    return `<div class="item">${designSVG(d, null, bgOf(st))}<div class="in"><b>${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}</b><small>${[d.base, d.extra].filter(Boolean).map(x => N(cloth(x.type).name) + ' ' + N(byId(COLORS, x.color).name) + (x.fabric ? ' ' + N(byId(FABRICS, x.fabric).name) : '')).join(' + ')}</small><b style="color:var(--p)">${money(pr)}</b>${pr !== d.price ? `<span class="old">${money(d.price)}</span>` : ''}</div>
     ${amPlayer() ? (() => { const left = stockLeft(id, i); return `<button class="buy" data-act="buy" data-sid="${id}" data-i="${i}" ${left <= 0 || walletOf(ME_ID) < pr ? 'disabled' : ''}>${left <= 0 ? L('خلصت', 'Sold out') : owned ? L('اشترِ مرة ثانية', 'Buy again') : L('اشترِ', 'Buy')}<span class="stk">${left > 0 ? L('باقي ', 'left: ') + left : ''}${owned ? ' · ✓' : ''}</span></button>`; })() : ''}</div>`; }).join('')}
   <button class="btn ghost" data-act="closeModal">${L('طلعة من المتجر', 'Leave store')}</button>`;
 }
 function voteView() {
   const v = mine().vote, done = G.players.filter(p => { const x = inp(p.id).vote; return x && x.g === G.gameNo; }).map(p => p.id);
   return `<h2>✨ ${L('صوّت للإبداع', 'Vote for creativity')}</h2><p class="sub">${L('مين أكثر مصمم مبدع على التشكيلة كاملة وأفضل تصميم؟ صوت واحد، وما تقدر تصوت لنفسك.', 'Who is the most creative designer overall? One vote, not for yourself.')}</p>
-  ${amPlayer() ? G.players.filter(p => p.id !== ME_ID).map(p => { const st = stOf(p.id) || { designs: [] }, on = v && v.g === G.gameNo && v.v === p.id; return `<div class="card votecard ${on ? 'on' : ''}" data-act="vote" data-id="${p.id}"><div class="row" style="border:0;padding:0 0 6px"><b>${esc(st.brand ? st.brand.name : p.name)} <small>— ${esc(p.name)}</small></b><span>${on ? '✓ ' + L('صوتك', 'Your vote') : ''}</span></div><div class="dgrid">${st.designs.map(d => `<div class="dcard">${designSVG(d)}</div>`).join('')}</div></div>`; }).join('') : ''}
+  ${amPlayer() ? G.players.filter(p => p.id !== ME_ID).map(p => { const st = stOf(p.id) || { designs: [] }, on = v && v.g === G.gameNo && v.v === p.id; return `<div class="card votecard ${on ? 'on' : ''}" data-act="vote" data-id="${p.id}"><div class="row" style="border:0;padding:0 0 6px"><b>${esc(st.brand ? st.brand.name : p.name)} <small>— ${esc(p.name)}</small></b><span>${on ? '✓ ' + L('صوتك', 'Your vote') : ''}</span></div><div class="dgrid">${st.designs.map(d => `<div class="dcard">${designSVG(d, null, bgOf(st))}</div>`).join('')}</div></div>`; }).join('') : ''}
   ${isHost() ? progBox(L('مين صوّت', 'Who voted'), done) : ''}${endBtn(L('الذهاب للنتائج', 'go to Results'), 'voteEnd')}${waitHost()}`;
 }
 ACT.vote = d => { mine().vote = { g: G.gameNo, v: d.id }; saveMe(); };
