@@ -73,6 +73,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
 
 <title>أقنعني! | المنصة</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="preconnect" href="https://www.gstatic.com"><link rel="preconnect" href="https://murafaat-1a91d-default-rtdb.europe-west1.firebasedatabase.app">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alexandria:wght@500;600;700;800;900&family=Readex+Pro:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: one centred column; the two parties sit side by side from 720px; every phase is a single focused screen. */
@@ -274,7 +275,7 @@ textarea.field{min-height:92px;resize:vertical}
 .rank .pts{font-family:var(--font-d);font-size:1.4rem;color:var(--gold);font-variant-numeric:tabular-nums}
 .winner{text-align:center;padding:26px 16px;border:1px solid var(--gold);border-radius:var(--r);background:rgba(222,9,33,.09);display:flex;flex-direction:column;align-items:center;gap:8px}
 .winner h2{font-size:clamp(1.8rem,6vw,2.6rem);color:var(--gold)}
-.cases{display:grid;gap:12px}
+.cases{display:grid;gap:12px;grid-template-columns:minmax(0,1fr)}.cases .chip{white-space:normal}
 .cr{border:1px solid var(--line-soft);border-radius:14px;background:var(--bg-2);padding:14px 16px;display:grid;gap:6px}
 .cr .q{font-weight:700}
 .cr .v{display:flex;flex-wrap:wrap;gap:8px}
@@ -799,6 +800,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   /* ---------- storage ---------- */
   const roomPath = c => 'rooms/' + c;
   const inpPath = (c, id) => 'rooms/' + c + '/inputs/' + id;
+  const ptsAr = n => n === 1 ? 'نقطة' : n === 2 ? 'نقطتين' : n + (n >= 3 && n <= 10 ? ' نقاط' : ' نقطة');
   const ansPath = c => 'rooms/' + c + '/priv/ans';
 
   let pubBusy = false, pubDirty = false, pubT = null;
@@ -1633,7 +1635,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const last = G.caseNo + 1 >= G.order.length;
     return '<div class="verdict"><p class="muted">حكم السؤال ' + (G.caseNo + 1) + '</p><h2>' + outcomeText(f.outcome, A, B) + '</h2>' +
       '<p>' + (f.by === 'appeal' ? 'انتهت بتصويت الاستئناف (الحكم النهائي).' : 'انتهت بالتصويت الأول.') + '</p>' +
-      '<p style="margin-top:8px">' + (f.pts ? '<span class="chip gold">' + f.pts + ' نقاط' + (f.doubled ? ' (مضاعفة)' : '') + '</span>' : '<span class="chip">لا نقاط في هذا السؤال</span>') + '</p></div>' +
+      '<p style="margin-top:8px">' + (f.pts ? '<span class="chip gold">' + ptsAr(f.pts) + (f.doubled ? ' (مضاعفة)' : '') + '</span>' : '<span class="chip">لا نقاط في هذا السؤال</span>') + '</p></div>' +
       '<section class="card" style="display:grid;gap:10px"><h3>الترتيب الحالي</h3>' + scoreMini() + '</section>' +
       (isHost() ? '<button class="btn xl primary" data-act="nextCase">' + (last ? 'عرض النتيجة النهائية' : 'السؤال التالي') + '</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف.</p>');
   }
@@ -1655,7 +1657,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const rows = ps.map((p, i) => { if (p.score !== prev) { pos = i + 1; prev = p.score; } return { p, pos }; });
     const winners = ps.filter(p => p.score === top && top > 0);
     const head = !winners.length ? '<div class="winner"><h2>لا فائز</h2><p class="muted">انتهت الأسئلة بلا نقاط.</p></div>' :
-      '<div class="winner">' + (winners.length === 1 ? avatar(winners[0], 84) : '') + '<span class="chip gold">' + (winners.length === 1 ? 'الفائز بالمباراة' : 'تعادل في الصدارة') + '</span><h2>' + winners.map(w => esc(w.name)).join(' و ') + '</h2><p class="muted num">' + top + ' نقاط</p></div>';
+      '<div class="winner">' + (winners.length === 1 ? avatar(winners[0], 84) : '') + '<span class="chip gold">' + (winners.length === 1 ? 'الفائز بالمباراة' : 'تعادل في الصدارة') + '</span><h2>' + winners.map(w => esc(w.name)).join(' و ') + '</h2><p class="muted num">' + ptsAr(top) + '</p></div>';
     const cases = G.results.map(r => {
       if (r.skipped) return '<div class="cr"><div class="q">السؤال ' + r.no + ': ' + esc(r.qText) + '</div><span class="muted small">أُلغيت لعدم وجود إجابتين مختلفتين.</span></div>';
       const v1 = r.v1;
@@ -1664,7 +1666,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
         '<div>' + esc(r.A.name) + ' <span class="muted">ضد</span> ' + esc(r.B.name) + (r.helperA || r.helperB ? ' <span class="muted small">· فريق: ' + [r.helperA, r.helperB].filter(Boolean).map(esc).join('، ') + '</span>' : '') + '</div>' +
         '<div class="v"><span class="chip">التصويت الأول: ' + esc(r.A.name) + ' ' + v1.A + ' · ' + esc(r.B.name) + ' ' + v1.B + ' · لا أحد ' + v1.none + '</span>' +
         r.rounds.map(x => '<span class="chip gold">' + (x.kind === 'appeal' ? 'الاستئناف' : 'جولة فاصلة') + ': ' + x.A + ' - ' + x.B + '</span>').join('') + '</div>' +
-        '<div class="v"><span class="chip ' + (r.pts ? 'ok' : '') + '">' + oc + '</span><span class="chip">' + (r.by === 'appeal' ? 'انتهت بالاستئناف' : 'انتهت بالتصويت الأول') + '</span>' + (r.pts ? '<span class="chip gold">' + r.pts + ' نقاط' + (r.doubled ? ' (مضاعفة)' : '') + '</span>' : '') + '</div></div>';
+        '<div class="v"><span class="chip ' + (r.pts ? 'ok' : '') + '">' + oc + '</span><span class="chip">' + (r.by === 'appeal' ? 'انتهت بالاستئناف' : 'انتهت بالتصويت الأول') + '</span>' + (r.pts ? '<span class="chip gold">' + ptsAr(r.pts) + (r.doubled ? ' (مضاعفة)' : '') + '</span>' : '') + '</div></div>';
     }).join('');
     return podiumCard(ps.map(p => ({ name: esc(p.name), pts: p.score }))) +
       '<section class="card" style="display:grid;gap:12px"><h2>نتائج الأسئلة</h2><div class="cases">' + (cases || '<p class="muted">لا توجد أسئلة.</p>') + '</div></section>' +
