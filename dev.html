@@ -41,18 +41,18 @@ h1{margin:0;font-size:1.6rem;color:#0554A4}
   var qs = new URLSearchParams(location.search);
   var S = { lang: qs.get('lang') === 'en' ? 'en' : 'ar', bots: 3, speed: 2, auto: false };
   var GAMES = [
-    { f: 'murafaat', ar: 'المنصة', en: 'ALMANASSA', c: '#DE0921', i: '⚖️' },
-    { f: 'mazad', ar: 'المزاد', en: 'ALMAZAD', c: '#0554A4', i: '$' },
-    { f: 'nadik', ar: 'الرئيس', en: 'ALRAEES', c: '#E0A800', i: '⚽' },
-    { f: 'azyaa', ar: 'الأزياء', en: 'ALAZYAA', c: '#7B2FBE', i: '🎀' },
-    { f: 'aqar', ar: 'العقار', en: 'ALAQAR', c: '#1E8A4C', i: '🏠' }
+    { f: 'murafaat', ar: 'المنصة', en: 'MANASSA', c: '#DE0921', i: '⚖️' },
+    { f: 'mazad', ar: 'المزاد', en: 'MAZAD', c: '#0554A4', i: '$' },
+    { f: 'nadik', ar: 'الرئيس', en: 'RAEES', c: '#E0A800', i: '⚽' },
+    { f: 'azyaa', ar: 'الأزياء', en: 'AZYAA', c: '#7B2FBE', i: '🎀' },
+    { f: 'aqar', ar: 'العقار', en: 'AQAR', c: '#1E8A4C', i: '🏠' }
   ];
   function T(ar, en) { return S.lang === 'en' ? en : ar; }
   function url(g) { return g.f + (S.lang === 'en' ? '-en' : '') + '.html?dev=1&bots=' + S.bots + '&speed=' + S.speed + (S.auto ? '&auto=1' : ''); }
   function render() {
     document.documentElement.lang = S.lang; document.documentElement.dir = S.lang === 'en' ? 'ltr' : 'rtl';
     document.getElementById('app').innerHTML =
-      '<header><h1>' + T('أقنعني', 'Aqnieni') + '</h1><span class="badge">🛠️ ' + T('نسخة المطوّر', 'Developer') + '</span><button class="lang" data-a="lang">' + T('English', 'عربي') + '</button></header>' +
+      '<header><h1>' + T('أقنعني', 'AQNINI') + '</h1><span class="badge">🛠️ ' + T('نسخة المطوّر', 'Developer') + '</span><button class="lang" data-a="lang">' + T('English', 'عربي') + '</button></header>' +
       '<p class="sub">' + T('العب مع بوتات عشان تلقى العيوب وشنو ناقص. كل شي على تلفونك بس، وما يأثر على الغرف الحقيقية.', 'Play with bots to find bugs and gaps. Everything stays on your phone and never touches real rooms.') + '</p>' +
       '<div class="card">' +
       '<div class="row"><span>🤖 ' + T('عدد البوتات', 'Bots') + '</span><div class="stepper"><button data-a="bots" data-v="-1">−</button><span class="v">' + S.bots + '</span><button data-a="bots" data-v="1">+</button></div></div>' +
