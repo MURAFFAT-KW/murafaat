@@ -1389,7 +1389,7 @@ window.AQQR={svg:function(text,fg,bg){var q=new QRCode(-1,EC.M);q.addData(text);
     var rec = { game: GAME, lang: EN ? 'en' : 'ar', rating: draft.r || null, text: t, name: name, at: Date.now(), ua: navigator.userAgent.slice(0, 120) };
     var done = function () { try { sessionStorage.setItem(sentKey, '1'); } catch (x) { } rerender(); };
     var share = function () {
-      var msg = T('ملاحظة على أقنعني', 'Aqnieni feedback') + ' (' + GAME + ')' + (draft.r ? ' — ' + draft.r + '/5' : '') + '\n' + t;
+      var msg = T('ملاحظة على أقنعني', 'AQNINI feedback') + ' (' + GAME + ')' + (draft.r ? ' — ' + draft.r + '/5' : '') + '\n' + t;
       if (navigator.share) navigator.share({ text: msg }).then(done, function () { });
       else { try { navigator.clipboard.writeText(msg); } catch (x) { } var er = document.getElementById('aqfbe'); if (er) er.textContent = T('ما قدرنا نرسلها، نسخناها لك عشان ترسلها لصاحب اللعبة.', 'Couldn’t send it; copied so you can send it to the game owner.'); }
     };
@@ -1548,7 +1548,7 @@ window.AQQR={svg:function(text,fg,bg){var q=new QRCode(-1,EC.M);q.addData(text);
   var T = function (a, e) { return EN ? e : a; };
   var FILE = (location.pathname.split('/').pop() || 'index.html').replace('.html', '');
   var GAME = FILE.replace(/-en$/, '');
-  var GN = { murafaat: ['المنصة', 'ALMANASSA', '⚖️'], mazad: ['المزاد', 'ALMAZAD', '💰'], nadik: ['الرئيس', 'ALRAEES', '⚽'], azyaa: ['الأزياء', 'ALAZYAA', '🎀'], aqar: ['العقار', 'ALAQAR', '🏠'] };
+  var GN = { murafaat: ['المنصة', 'MANASSA', '⚖️'], mazad: ['المزاد', 'MAZAD', '💰'], nadik: ['الرئيس', 'RAEES', '⚽'], azyaa: ['الأزياء', 'AZYAA', '🎀'], aqar: ['العقار', 'AQAR', '🏠'] };
   var B = [
     ['first', '🎉', 'أول لعبة', 'First game', 'لعبت أول لعبة أقنعني', 'Played your first Aqnieni game'],
     ['five', '🔥', 'متحمس', 'On fire', 'لعبت ٥ ألعاب', 'Played 5 games'],
@@ -1558,11 +1558,11 @@ window.AQQR={svg:function(text,fg,bg){var q=new QRCode(-1,EC.M);q.addData(text);
     ['pod3', '🏅', 'وجه المنصة', 'Podium regular', 'طلعت على المنصة ٣ مرات', 'Made the podium 3 times'],
     ['all5', '🌟', 'جربتها كلها', 'Tried them all', 'لعبت الألعاب الخمس', 'Played all five games'],
     ['big', '🎊', 'لمّة كبيرة', 'Big crowd', 'لعبت مع ٨ لاعبين أو أكثر', 'Played with 8 or more players'],
-    ['w_murafaat', '⚖️', 'أقوى مقنع', 'Master persuader', 'فزت بالمنصة', 'Won ALMANASSA'],
-    ['w_mazad', '💰', 'ملك المزاد', 'Auction king', 'فزت بالمزاد', 'Won ALMAZAD'],
-    ['w_nadik', '⚽', 'رئيس الموسم', 'President of the season', 'فزت بالرئيس', 'Won ALRAEES'],
-    ['w_azyaa', '🎀', 'أيقونة الموضة', 'Fashion icon', 'فزت بالأزياء', 'Won ALAZYAA'],
-    ['w_aqar', '🏠', 'سمسار الموسم', 'Broker of the season', 'فزت بالعقار', 'Won ALAQAR']
+    ['w_murafaat', '⚖️', 'أقوى مقنع', 'Master persuader', 'فزت بالمنصة', 'Won MANASSA'],
+    ['w_mazad', '💰', 'ملك المزاد', 'Auction king', 'فزت بالمزاد', 'Won MAZAD'],
+    ['w_nadik', '⚽', 'رئيس الموسم', 'President of the season', 'فزت بالرئيس', 'Won RAEES'],
+    ['w_azyaa', '🎀', 'أيقونة الموضة', 'Fashion icon', 'فزت بالأزياء', 'Won AZYAA'],
+    ['w_aqar', '🏠', 'سمسار الموسم', 'Broker of the season', 'فزت بالعقار', 'Won AQAR']
   ];
   function load() { try { return JSON.parse(localStorage.getItem('aq.stats') || '') || null; } catch (e) { return null; } }
   function save(s) { try { localStorage.setItem('aq.stats', JSON.stringify(s)); } catch (e) { } }
@@ -1640,8 +1640,8 @@ window.AQQR={svg:function(text,fg,bg){var q=new QRCode(-1,EC.M);q.addData(text);
   var EN = (document.documentElement.lang || '').slice(0, 2) === 'en';
   var T = function (a, e) { return EN ? e : a; };
   var GAME = (location.pathname.split('/').pop() || '').replace('.html', '').replace(/-en$/, '');
-  var GN = { murafaat: ['المنصة', 'ALMANASSA', '#DE0921'], mazad: ['المزاد', 'ALMAZAD', '#0554A4'], nadik: ['الرئيس', 'ALRAEES', '#E0A800'], azyaa: ['الأزياء', 'ALAZYAA', '#7B2FBE'], aqar: ['العقار', 'ALAQAR', '#1E8A4C'] };
-  var g = GN[GAME] || ['أقنعني', 'Aqnieni', '#0554A4'];
+  var GN = { murafaat: ['المنصة', 'MANASSA', '#DE0921'], mazad: ['المزاد', 'MAZAD', '#0554A4'], nadik: ['الرئيس', 'RAEES', '#E0A800'], azyaa: ['الأزياء', 'AZYAA', '#7B2FBE'], aqar: ['العقار', 'AQAR', '#1E8A4C'] };
+  var g = GN[GAME] || ['أقنعني', 'AQNINI', '#0554A4'];
   var cache = {};
   function qr(link) { return cache[link] || (cache[link] = AQQR.svg(link, '#12203A', '#FFFFFF')); }
   function codeOf(link) { var m = String(link).match(/#room-([A-Za-z0-9]{4,6})/); return m ? m[1].toUpperCase() : ''; }
@@ -1657,7 +1657,7 @@ window.AQQR={svg:function(text,fg,bg){var q=new QRCode(-1,EC.M);q.addData(text);
   }
   function big(link) {
     var code = codeOf(link), ov = document.createElement('div'); ov.className = 'aqinv-ov'; ov.style.setProperty('--gc', g[2]);
-    ov.innerHTML = '<div class="aqinv-full"><div class="aqinv-top"><span class="dot"></span>' + T('أقنعني', 'Aqnieni') + ' · <b>' + (EN ? g[1] : g[0]) + '</b></div>' +
+    ov.innerHTML = '<div class="aqinv-full"><div class="aqinv-top"><span class="dot"></span>' + T('أقنعني', 'AQNINI') + ' · <b>' + (EN ? g[1] : g[0]) + '</b></div>' +
       '<div class="aqinv-bigqr">' + qr(link) + '</div>' +
       '<h2>' + T('صوّر الكود بكاميرا تلفونك وادخل الغرفة', 'Scan with your phone camera to join') + '</h2>' +
       (code ? '<div class="aqinv-bigcode" dir="ltr">' + code + '</div>' : '') +
@@ -1676,7 +1676,7 @@ window.AQQR={svg:function(text,fg,bg){var q=new QRCode(-1,EC.M);q.addData(text);
     if (!t) return;
     var inp = document.getElementById('lnk'), link = inp ? inp.value : location.href;
     if (t.hasAttribute('data-aqinv-big')) { e.stopPropagation(); big(link); }
-    else if (t.hasAttribute('data-aqinv-share')) { e.stopPropagation(); try { navigator.share({ title: T('أقنعني', 'Aqnieni'), text: T('تعال العب معنا ', 'Come play ') + (EN ? g[1] : g[0]), url: link }).catch(function () { }); } catch (x) { } }
+    else if (t.hasAttribute('data-aqinv-share')) { e.stopPropagation(); try { navigator.share({ title: T('أقنعني', 'AQNINI'), text: T('تعال العب معنا ', 'Come play ') + (EN ? g[1] : g[0]), url: link }).catch(function () { }); } catch (x) { } }
     else if (t.hasAttribute('data-aqinv-close') || t.classList.contains('aqinv-ov')) { e.stopPropagation(); var o = document.querySelector('.aqinv-ov'); if (o) o.remove(); }
   }, true);
   new MutationObserver(place).observe(document.documentElement, { childList: true, subtree: true });

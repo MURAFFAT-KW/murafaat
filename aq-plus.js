@@ -10,7 +10,7 @@
   var BOT = /[?&]bot=/.test(location.search) || /[?&]inspect=1/.test(location.search);
   function T(a, e) { return EN ? e : a; }
   var COLOR = { murafaat: '#DE0921', mazad: '#0554A4', nadik: '#E0A800', azyaa: '#7B2FBE', aqar: '#1E8A4C' }[GAME];
-  var GNAME = { murafaat: ['المنصة', 'ALMANASSA'], mazad: ['المزاد', 'ALMAZAD'], nadik: ['الرئيس', 'ALRAEES'], azyaa: ['الأزياء', 'ALAZYAA'], aqar: ['العقار', 'ALAQAR'] }[GAME];
+  var GNAME = { murafaat: ['المنصة', 'MANASSA'], mazad: ['المزاد', 'MAZAD'], nadik: ['الرئيس', 'RAEES'], azyaa: ['الأزياء', 'AZYAA'], aqar: ['العقار', 'AQAR'] }[GAME];
 
   /* اسم المرحلة + التلميح: [عربي, English, تلميح عربي, English hint] */
   var P = {
@@ -171,7 +171,7 @@
         if (d.s) { x.font = '600 30px "Readex Pro",system-ui,sans-serif'; x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText(d.s.slice(0, 20), cx, base - h - 18); }
       });
       x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '700 40px "Readex Pro",system-ui,sans-serif';
-      x.fillText(T('أقنعني · ألعاب جماعية', 'Aqnieni · party games'), W / 2, 1215);
+      x.fillText(T('أقنعني · ألعاب جماعية', 'AQNINI · party games'), W / 2, 1215);
       x.fillStyle = '#FBC611'; x.font = '700 34px "Readex Pro",system-ui,sans-serif'; x.direction = 'ltr';
       x.fillText('muraffat-kw.github.io/murafaat', W / 2, 1275);
       return c;
@@ -186,7 +186,7 @@
         btn.disabled = false; btn.textContent = lbl;
         if (!b) return;
         var f = null; try { f = new File([b], 'aqnieni-' + GAME + '.png', { type: 'image/png' }); } catch (e) { }
-        if (f && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: T('أقنعني', 'Aqnieni') }).catch(function () { }); return; }
+        if (f && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: T('أقنعني', 'AQNINI') }).catch(function () { }); return; }
         var url = URL.createObjectURL(b), a = document.createElement('a'); a.href = url; a.download = 'aqnieni-' + GAME + '.png'; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
       }, 'image/png');
@@ -205,4 +205,133 @@
   var pend = false;
   function tick() { pend = false; var x = st(); hint(x); transition(x); shareBtn(); }
   new MutationObserver(function () { if (!pend) { pend = true; requestAnimationFrame(tick); } }).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+/* أقنعني — بلاغ وطرد (2026-11-26): زر 🚩 بكل الألعاب
+   أي لاعب يقدر يبلّغ عن لاعب أو محتوى، والمضيف يقدر يطرد أي لاعب بأي وقت (ما يقدر يرجع لنفس الغرفة).
+   البلاغات تنحفظ في docs/feedback بنوع report. الإيميل الرسمي: عبّه في AQ_CONTACT_EMAIL لما يجهز. */
+(function () {
+  'use strict';
+  if (window.AQREPORT) return; window.AQREPORT = 1;
+  var AQ_CONTACT_EMAIL = ''; // ← الإيميل الرسمي للتواصل والبلاغات (فاضي لين يجهز)
+  var EN = /-en\.html/.test(location.pathname) || document.documentElement.lang === 'en';
+  var GAME = (location.pathname.split('/').pop() || '').replace(/(-en)?\.html$/, '');
+  if (!/^(murafaat|mazad|nadik|azyaa|aqar)$/.test(GAME)) return;
+  if (/[?&]bot=/.test(location.search)) return;
+  var DEV = /[?&](dev|inspect)=/.test(location.search);
+  function T(a, e) { return EN ? e : a; }
+  function S() { return window.AQS || null; }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  var REASONS = [['name', 'اسم مسيء', 'Offensive name'], ['talk', 'كلام أو محتوى مسيء', 'Offensive words or content'], ['cheat', 'غش أو تخريب', 'Cheating or trolling'], ['other', 'شي ثاني', 'Something else']];
+  var st = { open: false, step: 'list', target: null, reason: '', note: '', sent: {}, confirm: null, err: '' };
+
+  var css = document.createElement('style');
+  css.textContent =
+    '#aqrep{position:fixed;left:12px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:70;width:44px;height:44px;border-radius:50%;background:#fff;border:1.5px solid #D5DBE5;display:grid;place-items:center;font-size:19px;line-height:1;box-shadow:0 4px 14px rgba(18,32,58,.14);cursor:pointer}' +
+    '#aqrep[hidden]{display:none}' +
+    '#aqrepov{position:fixed;inset:0;z-index:9990;background:rgba(14,22,48,.55);display:flex;align-items:flex-end;justify-content:center}' +
+    '#aqrepov .sh{background:#fff;color:#12203A;width:100%;max-width:560px;max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;padding:20px 18px calc(22px + env(safe-area-inset-bottom));font:500 15px/1.6 "Readex Pro","Alexandria",system-ui,sans-serif;direction:' + (EN ? 'ltr' : 'rtl') + '}' +
+    '#aqrepov h3{margin:0 0 4px;font-size:1.15rem}#aqrepov .mu{color:#5B6678;font-size:.88rem;margin:0 0 12px}' +
+    '#aqrepov .row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #EEF1F5}#aqrepov .row b{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '#aqrepov button{font:700 14px "Readex Pro","Alexandria",system-ui,sans-serif;border-radius:12px;padding:8px 12px;border:1.5px solid #D5DBE5;background:#fff;color:#12203A;cursor:pointer}' +
+    '#aqrepov button.red{background:#DE0921;border-color:#DE0921;color:#fff}#aqrepov button.pri{background:#12203A;border-color:#12203A;color:#fff}#aqrepov button.wide{width:100%;padding:13px;margin-top:10px;font-size:15px}' +
+    '#aqrepov .chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 10px}#aqrepov .chips button.on{background:#12203A;color:#fff;border-color:#12203A}' +
+    '#aqrepov textarea{width:100%;box-sizing:border-box;border:1.5px solid #D5DBE5;border-radius:12px;padding:10px;font:inherit;resize:vertical}' +
+    '#aqrepov .tag{font-size:.78rem;color:#5B6678;background:#F4F6F9;border-radius:99px;padding:2px 9px}' +
+    '#aqrepov .ok{background:#ECFDF3;color:#067647;border-radius:12px;padding:10px 12px;font-weight:700;margin:8px 0}' +
+    '#aqrepov .er{color:#C81E1E;font-size:.86rem;min-height:1em}#aqrepov .ct{margin-top:14px;font-size:.82rem;color:#5B6678;text-align:center}';
+  document.head.appendChild(css);
+
+  var btn = document.createElement('button');
+  btn.id = 'aqrep'; btn.type = 'button'; btn.hidden = true; btn.textContent = '🚩';
+  btn.setAttribute('aria-label', T('بلاغ وإدارة اللاعبين', 'Report & players'));
+  btn.addEventListener('click', function () { st.open = true; st.step = 'list'; st.confirm = null; draw(); });
+  function mount() { if (!document.body.contains(btn)) document.body.appendChild(btn); }
+
+  function ctx() {
+    var s = S(); if (!s) return null;
+    var G = s.G, U = s.U; if (!G || !U || !G.code) return null;
+    return { s: s, G: G, U: U, me: s.me ? s.me() : null, host: s.isHost && s.isHost() };
+  }
+  function tick() {
+    mount();
+    var c = ctx();
+    var show = !!(c && /^(game|wait|spect)$/.test(c.U.view || '') && !document.querySelector('.splash'));
+    btn.hidden = !show;
+    if (!show && st.open) close();
+  }
+  setInterval(tick, 700);
+
+  function close() { st.open = false; var o = document.getElementById('aqrepov'); if (o) o.remove(); }
+  function contact() {
+    return '<div class="ct">' + T('للتواصل مع فريق أقنعني: ', 'Contact the AQNINI team: ') + (AQ_CONTACT_EMAIL ? '<a href="mailto:' + esc(AQ_CONTACT_EMAIL) + '">' + esc(AQ_CONTACT_EMAIL) + '</a>' : T('الإيميل الرسمي قريبًا', 'official email coming soon')) + '</div>';
+  }
+  function draw() {
+    var o = document.getElementById('aqrepov');
+    if (!st.open) { if (o) o.remove(); return; }
+    var c = ctx(); if (!c) { close(); return; }
+    var kicked = c.G.kicked || {}, h = '';
+    if (st.step === 'list') {
+      var others = (c.G.players || []).filter(function (p) { return p.id !== c.me; });
+      h = '<h3>🚩 ' + T('بلاغ وإدارة اللاعبين', 'Report & players') + '</h3><p class="mu">' +
+        (c.host ? T('تقدر تطرد أي لاعب يسيء، وما يقدر يرجع لنفس الغرفة. وتقدر تبلّغنا عنه بعد.', 'You can remove anyone who misbehaves; they can’t rejoin this room. You can also report them to us.')
+          : T('إذا أحد أساء أو كتب شي مو زين، بلّغنا. المضيف يقدر يطرده من الغرفة.', 'If someone is abusive or writes something offensive, report it. The host can remove them from the room.')) + '</p>';
+      h += others.map(function (p) {
+        var k = !!kicked[p.id];
+        return '<div class="row"><b>' + esc(p.name) + '</b>' + (k ? '<span class="tag">' + T('مطرود', 'Removed') + '</span>' : '') +
+          (st.sent[p.id] ? '<span class="tag">' + T('تم البلاغ ✓', 'Reported ✓') + '</span>' : '<button type="button" data-rp="rep" data-id="' + esc(p.id) + '">' + T('بلاغ', 'Report') + '</button>') +
+          (c.host && !k ? '<button type="button" class="red" data-rp="kick" data-id="' + esc(p.id) + '">' + T('طرد', 'Remove') + '</button>' : '') + '</div>';
+      }).join('') || '<p class="mu">' + T('ما في لاعبين ثانيين للحين.', 'No other players yet.') + '</p>';
+      h += (st.sent._content ? '<div class="ok">' + T('وصل بلاغك عن المحتوى، شكرًا.', 'Your content report was sent, thanks.') + '</div>' : '<button type="button" class="wide" data-rp="rep" data-id="_content">' + T('بلاغ عن سؤال أو منتج أو محتوى مسيء', 'Report an offensive question, product or content') + '</button>');
+      if (st.confirm) {
+        var tp = (c.G.players || []).filter(function (p) { return p.id === st.confirm; })[0];
+        h += '<div class="ok" style="background:#FEF3F2;color:#B42318">' + T('متأكد تطرد ', 'Remove ') + esc(tp ? tp.name : '') + T('؟ ما يقدر يرجع لهالغرفة.', '? They can’t rejoin this room.') +
+          '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="red" data-rp="kickok">' + T('إي، اطرده', 'Yes, remove') + '</button><button type="button" data-rp="kickno">' + T('لا', 'No') + '</button></div></div>';
+      }
+      h += '<button type="button" class="wide" data-rp="close">' + T('إغلاق', 'Close') + '</button>';
+    } else {
+      var tg = st.target === '_content' ? T('محتوى في اللعبة', 'Content in the game') : (((c.G.players || []).filter(function (p) { return p.id === st.target; })[0]) || {}).name || '';
+      h = '<h3>🚩 ' + T('بلاغ: ', 'Report: ') + esc(tg) + '</h3><p class="mu">' + T('وش صار؟', 'What happened?') + '</p><div class="chips">' +
+        REASONS.map(function (r) { return '<button type="button" data-rp="why" data-r="' + r[0] + '" class="' + (st.reason === r[0] ? 'on' : '') + '">' + (EN ? r[2] : r[1]) + '</button>'; }).join('') + '</div>' +
+        '<textarea id="aqrept" rows="3" maxlength="300" placeholder="' + T('تفاصيل (اختياري)', 'Details (optional)') + '">' + esc(st.note) + '</textarea>' +
+        '<div class="er">' + esc(st.err) + '</div>' +
+        '<button type="button" class="pri wide" data-rp="send">' + T('أرسل البلاغ', 'Send report') + '</button><button type="button" class="wide" data-rp="back">' + T('رجوع', 'Back') + '</button>';
+    }
+    h += contact();
+    if (!o) { o = document.createElement('div'); o.id = 'aqrepov'; document.body.appendChild(o); }
+    o.innerHTML = '<div class="sh" role="dialog" aria-modal="true">' + h + '</div>';
+  }
+  function send(c) {
+    var p = (c.G.players || []).filter(function (x) { return x.id === st.target; })[0];
+    var mine = (c.G.players || []).filter(function (x) { return x.id === c.me; })[0];
+    var rec = { type: 'report', game: GAME, lang: EN ? 'en' : 'ar', room: c.G.code, phase: c.G.phase || '', target: st.target === '_content' ? 'content' : (p ? p.name : ''), targetId: st.target === '_content' ? '' : st.target, reason: st.reason, text: (st.note || '').trim().slice(0, 300), by: mine ? mine.name : (c.host ? 'host' : ''), at: Date.now() };
+    var done = function () { st.sent[st.target] = 1; st.step = 'list'; st.reason = ''; st.note = ''; st.err = ''; draw(); };
+    var fail = function () {
+      var msg = T('بلاغ أقنعني', 'AQNINI report') + ' (' + GAME + ' · ' + rec.room + ')\n' + rec.target + ' — ' + rec.reason + (rec.text ? '\n' + rec.text : '');
+      try { navigator.clipboard.writeText(msg); } catch (x) { }
+      st.err = T('ما قدرنا نرسل البلاغ، نسخناه لك عشان ترسله لنا.', 'Couldn’t send it; copied so you can send it to us.'); draw();
+    };
+    if (DEV) { try { console.log('[AQ report]', rec); } catch (x) { } done(); return; }
+    try {
+      if (window.firebase && firebase.apps && firebase.apps.length) firebase.database().ref('docs/feedback').push(JSON.stringify(rec)).then(done, fail);
+      else fail();
+    } catch (x) { fail(); }
+  }
+  document.addEventListener('input', function (e) { if (e.target && e.target.id === 'aqrept') st.note = e.target.value; });
+  document.addEventListener('click', function (e) {
+    var ov = document.getElementById('aqrepov');
+    if (ov && e.target === ov) { close(); return; }
+    var b = e.target.closest && e.target.closest('[data-rp]'); if (!b) return;
+    e.stopPropagation();
+    var a = b.getAttribute('data-rp'), c = ctx(); if (!c) { close(); return; }
+    if (a === 'close') { close(); return; }
+    if (a === 'rep') { st.step = 'form'; st.target = b.getAttribute('data-id'); st.reason = ''; st.note = ''; st.err = ''; st.confirm = null; }
+    else if (a === 'why') { st.reason = b.getAttribute('data-r'); st.err = ''; }
+    else if (a === 'back') { st.step = 'list'; }
+    else if (a === 'send') { if (!st.reason) { st.err = T('اختر وش صار أول.', 'Pick what happened first.'); } else { send(c); return; } }
+    else if (a === 'kick') { st.confirm = b.getAttribute('data-id'); }
+    else if (a === 'kickno') { st.confirm = null; }
+    else if (a === 'kickok') { if (c.host && c.s.kick) c.s.kick(st.confirm); st.confirm = null; }
+    draw();
+  }, true);
 })();
