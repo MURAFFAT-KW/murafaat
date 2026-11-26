@@ -1002,9 +1002,11 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (G.phase === 'reveal') b.ready = { k: 'reveal' + g };
       if (G.phase === 'market' && mk) {
         if (mk.stage === 'list' && !(b.list && b.list.key === mk.key)) {
+          if (roster(p.id).length <= 5 && Math.random() < .8) { b.list = { key: mk.key, items: {}, skip: true }; } else {
           const all = roster(p.id), safe = shuffle(all.filter(k => canFill(all.filter(x => x !== k)))), r = (safe.length ? safe : shuffle(all)).slice(0, Math.random() < .6 ? 1 : 2), items = {};
           r.forEach(k => { items[k] = Math.max(1, Math.round(val(k)) + rnd(-1, 3)); });
           if (r.length) b.list = { key: mk.key, items };
+          }
         }
         if (mk.stage === 'bid' && !(b.bids && b.bids.key === mk.key)) {
           /* smarter bots: 1) buy a replacement for whoever they listed, so their own sale can stand;
@@ -1147,7 +1149,9 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     G.players.forEach(p => {
       const r = roster(p.id); if (!r.length) return;
       const x = inp(p.id).list;
+      if (x && x.key === mk.key && x.skip && r.length <= 5) return;
       let items = x && x.key === mk.key && x.items ? Object.keys(x.items).filter(k => G.own[k] === p.id).slice(0, 10) : [];
+      if (!items.length && r.length <= 5) return; /* 5 players only: listing is optional, no auto-list */
       if (!items.length) {
         const k = r[Math.floor(Math.random() * r.length)];
         items = [k]; mk.auto.push(p.id);
@@ -1384,7 +1388,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<li><span>The five: goalkeeper, defender, defender or midfielder, midfielder or forward, forward.</span></li>' +
       '<li><span>Choose secretly: the stronger team (pricier players, smaller wallet) or the weaker one (cheaper players, bigger wallet). The host sets both wallets before the game. You get a random team from the other players’ picks.</span></li>' +
       '<li><span>The “Squads” button shows everyone’s teams by number and colour, and each team’s colour appears next to its owner’s name, so you know who to negotiate with.</span></li>' +
-      '<li><span>10 transfer windows: in each one you list at least one player at your price, and bid on other players.</span></li>' +
+      '<li><span>10 transfer windows: in each one you list at least one player at your price (unless you have only 5 players — then listing is optional), and bid on other players.</span></li>' +
       '<li><span>Sale money goes into your balance in the same window. You can sell without buying as long as you keep a full five, and a squad holds at most 9 players (so up to 4 subs).</span></li>' +
       '<li><span>100 points: 20 for your wallet, 20 for your players’ value, 20 for number of sales, 20 for number of buys, and 20 for the cup.</span></li>' +
       '<li><span>After season five you lock in your five and enter the Champions Cup.</span></li>' +
@@ -1556,19 +1560,21 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const mk = G.mk, me = ME_ID;
     const head = '<section class="mkhead"><div><span class="chip gold num">Window ' + mk.no + ' of ' + (G.settings.seasons * 2) + '</span><h2>' + mkLabel(mk.no) + '</h2></div><div class="kpi1"><span>Your balance</span><b class="num">' + mil(bal(me)) + '</b></div></section>';
     if (mk.stage === 'list') {
-      const x = inp(me).list, sent = x && x.key === mk.key;
+      const x = inp(me).list, sent = x && x.key === mk.key, skipOK = roster(me).length <= 5;
       if (U.lstKey !== mk.key) { U.lstKey = mk.key; U.lst = {}; }
       let body;
-      if (sent) body = '<section class="card pass"><h2>You listed ' + Object.keys(x.items).length + ' player(s) ✓</h2><p class="muted">' + Object.keys(x.items).map(k => esc(PL(k).name) + ' (' + mil(x.items[k]) + ')').join(', ') + '</p></section>';
+      if (sent && x.skip) body = '<section class="card pass"><h2>No players listed this window ✓</h2><p class="muted">You’re sticking with your five. You can still bid and buy in the next stage if you want.</p></section>';
+      else if (sent) body = '<section class="card pass"><h2>You listed ' + Object.keys(x.items).length + ' player(s) ✓</h2><p class="muted">' + Object.keys(x.items).map(k => esc(PL(k).name) + ' (' + mil(x.items[k]) + ')').join(', ') + '</p></section>';
       else {
         const n = Object.keys(U.lst).length;
-        body = '<section class="card action"><h2 style="margin:0 0 4px">List players for sale</h2><p class="muted">At least one player, at most 10. Set the price you want; bidding starts from it. Listing doesn’t guarantee a sale.</p>' +
+        body = '<section class="card action"><h2 style="margin:0 0 4px">List players for sale</h2><p class="muted">' + (skipOK ? 'Listing is optional for you, at most 10.' : 'At least one player, at most 10.') + ' Set the price you want; bidding starts from it. Listing doesn’t guarantee a sale.</p>' +
           '<div class="note">Sale money goes into your balance in the same window, and you can spend it. A sale goes through as long as you keep a full five (goalkeeper, defender, defender or midfielder, midfielder or forward, forward), and your subs can fill the gap. A squad holds at most 9 players.</div>' +
           rosterTable(me, {
             act: 'toggleList', sel: k => k in U.lst,
             right: k => k in U.lst ? '<span class="ask" data-stop="1"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="-1" aria-label="Less">−</button><input class="field num askin" data-bind="ask" data-k="' + k + '" inputmode="numeric" value="' + U.lst[k] + '"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="1" aria-label="More">+</button></span>' : ''
           }) +
-          '<button class="btn xl primary" data-act="sendList"' + (n ? '' : ' aria-disabled="true"') + '>List ' + (n || '') + ' for sale</button><p class="muted small">If time runs out and you haven’t listed anyone, the game lists a random player of yours at his value.</p></section>';
+          (skipOK ? '<div class="note"><b>You have only 5 players</b>, so listing is optional for you. If you don’t want to list anyone, tap «Ready without listing» — you can still buy in the bidding or keep your five.</div>' : '') +
+          '<button class="btn xl primary" data-act="sendList"' + (n ? '' : ' aria-disabled="true"') + '>List ' + (n || '') + ' for sale</button>' + (skipOK ? '<button class="btn xl" data-act="skipList">Ready without listing</button>' : '') + '<p class="muted small">' + (skipOK ? 'If time runs out and you haven’t listed anyone, you simply skip this window.' : 'If time runs out and you haven’t listed anyone, the game lists a random player of yours at his value.') + '</p></section>';
       }
       return head + body + clockBox('Listing time', mk.endsAt, mk.dur, 'go to bidding') + progBox('Who listed');
     }
@@ -1960,6 +1966,11 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const items = {}; Object.keys(U.lst).forEach(k => { if (G.own[k] === ME_ID) items[k] = Math.min(MAXP, Math.max(1, Math.round(+U.lst[k] || 1))); });
     if (!Object.keys(items).length) { toast('Pick at least one player.'); return false; }
     mine().list = { key: mk.key, items }; render(); await saveMe();
+  };
+  ACT.skipList = async () => {
+    const mk = G.mk; if (!mk || mk.stage !== 'list') return false;
+    if (roster(ME_ID).length > 5) { toast('Only available when you have 5 players.'); return false; }
+    mine().list = { key: mk.key, items: {}, skip: true }; render(); await saveMe();
   };
   ACT.bidNew = d => {
     const mk = G.mk; if (!mk || mk.stage !== 'bid') return false;

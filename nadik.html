@@ -1002,9 +1002,11 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       if (G.phase === 'reveal') b.ready = { k: 'reveal' + g };
       if (G.phase === 'market' && mk) {
         if (mk.stage === 'list' && !(b.list && b.list.key === mk.key)) {
+          if (roster(p.id).length <= 5 && Math.random() < .8) { b.list = { key: mk.key, items: {}, skip: true }; } else {
           const all = roster(p.id), safe = shuffle(all.filter(k => canFill(all.filter(x => x !== k)))), r = (safe.length ? safe : shuffle(all)).slice(0, Math.random() < .6 ? 1 : 2), items = {};
           r.forEach(k => { items[k] = Math.max(1, Math.round(val(k)) + rnd(-1, 3)); });
           if (r.length) b.list = { key: mk.key, items };
+          }
         }
         if (mk.stage === 'bid' && !(b.bids && b.bids.key === mk.key)) {
           /* smarter bots: 1) buy a replacement for whoever they listed, so their own sale can stand;
@@ -1147,7 +1149,9 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     G.players.forEach(p => {
       const r = roster(p.id); if (!r.length) return;
       const x = inp(p.id).list;
+      if (x && x.key === mk.key && x.skip && r.length <= 5) return;
       let items = x && x.key === mk.key && x.items ? Object.keys(x.items).filter(k => G.own[k] === p.id).slice(0, 10) : [];
+      if (!items.length && r.length <= 5) return; /* 5 players only: listing is optional, no auto-list */
       if (!items.length) {
         const k = r[Math.floor(Math.random() * r.length)];
         items = [k]; mk.auto.push(p.id);
@@ -1384,7 +1388,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
       '<li><span>الخماسي: حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم.</span></li>' +
       '<li><span>تختار سرًّا: الفريق الأقوى (لاعبين أغلى ومحفظة أصغر)، أو الأضعف (لاعبين أرخص ومحفظة أكبر). المضيف يحدد المحفظتين قبل اللعبة. وتاخذ فريق عشوائي من اختيارات غيرك.</span></li>' +
       '<li><span>زر «التشكيلات» يوريك فرق الكل بأرقامها وألوانها، ولون كل فريق يطلع جنب اسم صاحبه، عشان تعرف مع منو تفاوض.</span></li>' +
-      '<li><span>١٠ أسواق انتقالات: بكل سوق تعرض لاعب واحد على الأقل بسعرك، وتزايد على لاعبين غيرك.</span></li>' +
+      '<li><span>١٠ أسواق انتقالات: بكل سوق تعرض لاعب واحد على الأقل بسعرك (إلا إذا عندك ٥ لاعبين بس، العرض اختياري)، وتزايد على لاعبين غيرك.</span></li>' +
       '<li><span>فلوس البيع تنضاف لرصيدك بنفس السوق. تقدر تبيع بدون ما تشتري طالما يبقى عندك خماسي كامل، والفريق بحد أقصى ٩ لاعبين (يعني تقدر تزيد لين ٤ احتياط).</span></li>' +
       '<li><span>النقاط ١٠٠: ٢٠ للمحفظة، ٢٠ لقيمة لاعبينك، ٢٠ لعدد البيع، ٢٠ لعدد الشراء، و٢٠ للكأس.</span></li>' +
       '<li><span>بعد الموسم الخامس تثبّت خماسيك وتدخل كأس الأبطال.</span></li>' +
@@ -1556,19 +1560,21 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const mk = G.mk, me = ME_ID;
     const head = '<section class="mkhead"><div><span class="chip gold num">السوق ' + mk.no + ' من ' + (G.settings.seasons * 2) + '</span><h2>' + mkLabel(mk.no) + '</h2></div><div class="kpi1"><span>رصيدك</span><b class="num">' + mil(bal(me)) + '</b></div></section>';
     if (mk.stage === 'list') {
-      const x = inp(me).list, sent = x && x.key === mk.key;
+      const x = inp(me).list, sent = x && x.key === mk.key, skipOK = roster(me).length <= 5;
       if (U.lstKey !== mk.key) { U.lstKey = mk.key; U.lst = {}; }
       let body;
-      if (sent) body = '<section class="card pass"><h2>عرضت ' + Object.keys(x.items).length + ' لاعب ✓</h2><p class="muted">' + Object.keys(x.items).map(k => esc(PL(k).name) + ' (' + mil(x.items[k]) + ')').join('، ') + '</p></section>';
+      if (sent && x.skip) body = '<section class="card pass"><h2>ما عرضت أحد هالسوق ✓</h2><p class="muted">ملتزم بخماسيك. تقدر تزايد وتشتري بالمرحلة الجاية إذا تبي.</p></section>';
+      else if (sent) body = '<section class="card pass"><h2>عرضت ' + Object.keys(x.items).length + ' لاعب ✓</h2><p class="muted">' + Object.keys(x.items).map(k => esc(PL(k).name) + ' (' + mil(x.items[k]) + ')').join('، ') + '</p></section>';
       else {
         const n = Object.keys(U.lst).length;
-        body = '<section class="card action"><h2 style="margin:0 0 4px">اعرض لاعبين للبيع</h2><p class="muted">لازم لاعب واحد على الأقل، وبحد أقصى ١٠. حط السعر اللي تبيه، والمزايدة تبدأ منه. العرض ما يضمن البيع.</p>' +
+        body = '<section class="card action"><h2 style="margin:0 0 4px">اعرض لاعبين للبيع</h2><p class="muted">' + (skipOK ? 'العرض اختياري لك، وبحد أقصى ١٠.' : 'لازم لاعب واحد على الأقل، وبحد أقصى ١٠.') + ' حط السعر اللي تبيه، والمزايدة تبدأ منه. العرض ما يضمن البيع.</p>' +
           '<div class="note">فلوس البيع تنضاف لرصيدك بنفس السوق، وتقدر تشتري فيها. البيع يمشي طالما يبقى عندك خماسي كامل (حارس، مدافع، مدافع أو وسط، وسط أو مهاجم، مهاجم)، والاحتياط يسد مكان اللي تبيعه. الفريق بحد أقصى ٩ لاعبين.</div>' +
           rosterTable(me, {
             act: 'toggleList', sel: k => k in U.lst,
             right: k => k in U.lst ? '<span class="ask" data-stop="1"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="-1" aria-label="أقل">−</button><input class="field num askin" data-bind="ask" data-k="' + k + '" inputmode="numeric" value="' + U.lst[k] + '"><button class="btn sm" data-act="askAdj" data-k="' + k + '" data-v="1" aria-label="أكثر">+</button></span>' : ''
           }) +
-          '<button class="btn xl primary" data-act="sendList"' + (n ? '' : ' aria-disabled="true"') + '>اعرض ' + (n || '') + ' للبيع</button><p class="muted small">إذا خلص الوقت وما عرضت أحد، اللعبة تعرض لاعب عشوائي منك بقيمته.</p></section>';
+          (skipOK ? '<div class="note"><b>عندك ٥ لاعبين بس</b>، فالعرض اختياري لك. إذا ما تبي تعرض أحد، اضغط «جاهز بدون عرض» وتقدر تشتري بالمزايدة أو تكمل بخماسيك.</div>' : '') +
+          '<button class="btn xl primary" data-act="sendList"' + (n ? '' : ' aria-disabled="true"') + '>اعرض ' + (n || '') + ' للبيع</button>' + (skipOK ? '<button class="btn xl" data-act="skipList">جاهز بدون عرض</button>' : '') + '<p class="muted small">' + (skipOK ? 'إذا خلص الوقت وما عرضت أحد، تنحسب إنك ما عرضت هالسوق.' : 'إذا خلص الوقت وما عرضت أحد، اللعبة تعرض لاعب عشوائي منك بقيمته.') + '</p></section>';
       }
       return head + body + clockBox('وقت العرض', mk.endsAt, mk.dur, 'الذهاب للمزايدة') + progBox('مين عرض');
     }
@@ -1960,6 +1966,11 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     const items = {}; Object.keys(U.lst).forEach(k => { if (G.own[k] === ME_ID) items[k] = Math.min(MAXP, Math.max(1, Math.round(+U.lst[k] || 1))); });
     if (!Object.keys(items).length) { toast('اختر لاعب واحد على الأقل.'); return false; }
     mine().list = { key: mk.key, items }; render(); await saveMe();
+  };
+  ACT.skipList = async () => {
+    const mk = G.mk; if (!mk || mk.stage !== 'list') return false;
+    if (roster(ME_ID).length > 5) { toast('هالخيار بس لما يكون عندك ٥ لاعبين.'); return false; }
+    mine().list = { key: mk.key, items: {}, skip: true }; render(); await saveMe();
   };
   ACT.bidNew = d => {
     const mk = G.mk; if (!mk || mk.stage !== 'bid') return false;

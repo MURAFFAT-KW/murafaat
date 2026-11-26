@@ -527,6 +527,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
       var mk = G.mk || {}, key = mk.key + mk.stage, w = since(c, key);
       if (mk.stage === 'list') {
         if (!(m.list && m.list.key === mk.key) && c.has('toggleList')) {
+          if (roster.length <= 5 && c.has('skipList') && (mem['S' + mk.key] = mem['S' + mk.key] || (Math.random() < 0.8 ? 1 : 2)) === 1) { if (c.click('skipList')) return 'جاهز بدون عرض (عنده ٥ بس)'; }
           var plan = mem['L' + mk.key];
           if (!plan) {
             var sorted = roster.slice().sort(function (x, y) { return val(x) - val(y); });
