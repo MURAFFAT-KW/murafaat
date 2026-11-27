@@ -1,0 +1,28 @@
+name: AQNINI sign-in files
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download Google sign-in files
+        run: |
+          B=https://murafaat-1a91d.firebaseapp.com
+          mkdir -p __/auth __/firebase
+          curl -fsSL "$B/__/auth/handler" -o __/auth/handler.html
+          curl -fsSL "$B/__/auth/handler.js" -o __/auth/handler.js
+          curl -fsSL "$B/__/auth/experiments.js" -o __/auth/experiments.js
+          curl -fsSL "$B/__/auth/iframe" -o __/auth/iframe.html
+          curl -fsSL "$B/__/auth/iframe.js" -o __/auth/iframe.js
+          curl -fsSL "$B/__/firebase/init.json" -o __/firebase/init.json
+          touch .nojekyll
+          ls -la __/auth __/firebase
+      - name: Save to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Google sign-in files on aqnini.com" || echo "no changes"
+          git push
