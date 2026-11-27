@@ -1129,7 +1129,7 @@ function designSVG(d, model, bg) {
   const B = BODIES[model || modelOf(d)];
   if (!d) { const df = []; sharedDefs(df); return `<svg viewBox="0 0 100 140" class="dsvg empty"><defs>${df.join('')}</defs>${bg ? stage(bg) : ''}<g opacity=".5">${bodySVG(B)}${hands(B)}</g><text x="50" y="104" text-anchor="middle" font-size="9" font-weight="700" fill="#9a8fae">${L('فاضي', 'Empty')}</text></svg>`; }
   const defs = []; let body = ''; sharedDefs(defs);
-  const ps = [d.base, d.extra].filter(x => x && x.type && cloth(x.type)), ty = ps.map(x => x.type);
+  const ps = [d.base, d.extra, d.extra2].filter(x => x && x.type && cloth(x.type)), ty = ps.map(x => x.type);
   /* القميص مع بنطلون أو تنورة: ينحشر داخلها عشان يبين التفصيل على الخصر */
   const tuck = ty.includes('shirt') && ty.some(t => t === 'pants' || t === 'skirt' || t === 'maxi');
   const z = x => tuck && x.type === 'shirt' ? .5 : ZORDER[cloth(x.type).zone];
@@ -1253,8 +1253,8 @@ const GAME = {
     if (b === 'bdesc') { m.brand.desc = el.value; const c = $('dcount'); if (c) c.textContent = el.value.length; saveMeSoon(); }
   },
   assumptions: {
-    ar: ['اللون البنفسجي مؤقت.', 'العملة «د.ك» ورأس المال ١٠٠ ومحفظة التسوق ٥٠ — أرقام مؤقتة.', 'كل الأسعار مؤقتة: نوع الملابس ٨، لون الخامة ٤، نوع الخامة ٥، خلفية المتجر ٦، إطار المتجر ٤، كل ميزة ١٠.', 'الخامات: لين لونين ولين نوعين.', 'المزايا تجريبية؛ مفعّل منها «وقت إضافي» (+٣٠ ث) و«تنزيلات». الباقي بدون تأثير.', 'الأنماط مجانية. كل تصميم = قطعة أساسية + إضافية اختيارية. سعر البيع من ١ إلى ٢٠.', 'فلوس المبيعات تنضاف لرأس المال.', 'الزيارة تنحسب مرة لكل زائر لكل متجر بكل جولة تسوق.', 'كل لاعب يشتري التصميم مرة، وما يشتري من متجره.', '«محفظة التسوق»: ياخذها أعلى رصيد متبقي.', 'التصويت: صوت واحد لأكثر مصمم إبداعًا، وما يصوت لنفسه.', 'التعادل يقسم النقاط، وإذا الأعلى صفر ما أحد ياخذها.', 'إذا خلص الوقت ما تنتقل اللعبة تلقائيًا؛ المضيف يضغط «إنهاء».'],
-    en: ['Purple is temporary.', 'Currency “KD”, capital 100, shopping wallet 50 — temporary.', 'All prices temporary: clothing type 8, fabric colour 4, fabric type 5, store background 6, frame 4, each perk 10.', 'Fabrics: up to two colours and two types.', 'Perks are trial; active: “Extra time” (+30 s) and “Sale”. The rest have no effect yet.', 'Patterns are free. Each design = main piece + optional extra. Price 1–20.', 'Sales money is added to capital.', 'A visit counts once per visitor per store per shopping round.', 'Each player buys a design once, never from their own store.', '“Shopping wallet” goes to the highest remaining balance.', 'Voting: one vote for the most creative designer, no self-votes.', 'Ties split points; if the top value is zero nobody scores.', 'When time runs out nothing moves on by itself; the host presses “End”.']
+    ar: ['اللون البنفسجي مؤقت.', 'العملة «د.ك» ورأس المال ١٠٠ ومحفظة التسوق ٥٠ — أرقام مؤقتة.', 'كل الأسعار مؤقتة: نوع الملابس ٨، لون الخامة ٤، نوع الخامة ٥، خلفية المتجر ٦، إطار المتجر ٤، كل ميزة ١٠.', 'الخامات: لين لونين ولين نوعين.', 'المزايا تجريبية؛ مفعّل منها «وقت إضافي» (+٣٠ ث) و«تنزيلات». الباقي بدون تأثير.', 'الأنماط مجانية. كل تصميم = قطعة أساسية + لين قطعتين إضافيتين اختيارية. سعر البيع من ١ إلى ٢٠.', 'فلوس المبيعات تنضاف لرأس المال.', 'الزيارة تنحسب مرة لكل زائر لكل متجر بكل جولة تسوق.', 'كل لاعب يشتري التصميم مرة، وما يشتري من متجره.', '«محفظة التسوق»: ياخذها أعلى رصيد متبقي.', 'التصويت: صوت واحد لأكثر مصمم إبداعًا، وما يصوت لنفسه.', 'التعادل يقسم النقاط، وإذا الأعلى صفر ما أحد ياخذها.', 'إذا خلص الوقت ما تنتقل اللعبة تلقائيًا؛ المضيف يضغط «إنهاء».'],
+    en: ['Purple is temporary.', 'Currency “KD”, capital 100, shopping wallet 50 — temporary.', 'All prices temporary: clothing type 8, fabric colour 4, fabric type 5, store background 6, frame 4, each perk 10.', 'Fabrics: up to two colours and two types.', 'Perks are trial; active: “Extra time” (+30 s) and “Sale”. The rest have no effect yet.', 'Patterns are free. Each design = main piece + up to two optional extras. Price 1–20.', 'Sales money is added to capital.', 'A visit counts once per visitor per store per shopping round.', 'Each player buys a design once, never from their own store.', '“Shopping wallet” goes to the highest remaining balance.', 'Voting: one vote for the most creative designer, no self-votes.', 'Ties split points; if the top value is zero nobody scores.', 'When time runs out nothing moves on by itself; the host presses “End”.']
   }
 };
 
@@ -1371,7 +1371,7 @@ function designView() {
 ACT.edit = d => {
   const m = mine(); if (!(m.types.length && m.colors.length && m.fabrics.length)) { toast(L('اشترِ نوع ملابس ونوع خامة ولون خامة أول', 'Buy a clothing type, fabric type and colour first')); return false; }
   const i = +d.i; U.edit = i;
-  U.dd = m.designs[i] ? clone(m.designs[i]) : { name: L('تصميم ', 'Design ') + (i + 1), model: null, base: { type: m.types[0], color: m.colors[0], fabric: m.fabrics[0], pattern: 'plain' }, extra: null, price: CONFIG.salePrice.def };
+  U.dd = m.designs[i] ? clone(m.designs[i]) : { name: L('تصميم ', 'Design ') + (i + 1), model: null, base: { type: m.types[0], color: m.colors[0], fabric: m.fabrics[0], pattern: 'plain' }, extra: null, extra2: null, price: CONFIG.salePrice.def };
   if (m.designs[i] && !U.dd.model) U.dd.model = 'f';
   U.draft.name = U.dd.name;
 };
@@ -1382,10 +1382,11 @@ ACT.setM = d => {
   x.model = d.v;
   if (!fits(x.base.type, d.v)) x.base.type = ok[0];
   if (x.extra && !fits(x.extra.type, d.v)) x.extra = null;
+  if (x.extra2 && !fits(x.extra2.type, d.v)) x.extra2 = null;
 };
 ACT.setD = d => {
   const x = U.dd;
-  if (d.part === 'extra' && d.key === 'type') { if (d.v === 'none') { x.extra = null; return; } if (!x.extra) x.extra = { type: d.v, color: mine().colors[0], fabric: mine().fabrics[0], pattern: 'plain' }; }
+  if ((d.part === 'extra' || d.part === 'extra2') && d.key === 'type') { if (d.v === 'none') { x[d.part] = null; return; } if (!x[d.part]) x[d.part] = { type: d.v, color: mine().colors[0], fabric: mine().fabrics[0], pattern: 'plain' }; }
   x[d.part][d.key] = d.v;
 };
 ACT.price = d => { U.dd.price = Math.min(CONFIG.salePrice.max, Math.max(CONFIG.salePrice.min, U.dd.price + (+d.v))); };
@@ -1394,7 +1395,7 @@ ACT.delD = () => { const m = mine(); m.designs[U.edit] = null; if (m.featured ==
 ACT.cancelD = () => { U.edit = null; };
 function pieceEd(part) {
   const m = mine(), x = U.dd[part];
-  return `<div class="chips" style="margin-bottom:10px">${part === 'extra' ? `<button class="chip ${!x ? 'on' : ''}" data-act="setD" data-part="extra" data-key="type" data-v="none">${L('بدون', 'None')}</button>` : ''}${m.types.filter(t => fits(t, U.dd.model || 'f')).map(t => `<button class="chip ${x && x.type === t ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="type" data-v="${t}">${N(cloth(t).name)}</button>`).join('')}</div>
+  return `<div class="chips" style="margin-bottom:10px">${part !== 'base' ? `<button class="chip ${!x ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="type" data-v="none">${L('بدون', 'None')}</button>` : ''}${m.types.filter(t => fits(t, U.dd.model || 'f')).map(t => `<button class="chip ${x && x.type === t ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="type" data-v="${t}">${N(cloth(t).name)}</button>`).join('')}</div>
   ${x ? `<div class="chips" style="margin-bottom:10px">${m.fabrics.map(f => `<button class="chip ${x.fabric === f ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="fabric" data-v="${f}">🧵 ${N(byId(FABRICS, f).name)}</button>`).join('')}</div>
   <div class="swatches" style="margin-bottom:10px">${m.colors.map(c => swatch(byId(COLORS, c), x.color === c, `data-act="setD" data-part="${part}" data-key="color" data-v="${c}"`)).join('')}</div>
   <div class="chips">${PATTERNS.map(p => `<button class="chip ${x.pattern === p.id ? 'on' : ''}" data-act="setD" data-part="${part}" data-key="pattern" data-v="${p.id}">${N(p.name)}</button>`).join('')}</div>` : ''}`;
@@ -1409,6 +1410,7 @@ function editorView() {
   <div class="card"><h3>${L('العارضة', 'Model')}</h3><div class="chips">${[['f', L('👩 بنت', '👩 Girl')], ['m', L('👨 ولد', '👨 Boy')]].map(([v, t]) => `<button class="chip ${U.dd.model === v ? 'on' : ''}" data-act="setM" data-v="${v}">${t}</button>`).join('')}</div>${U.dd.model ? '' : `<p class="sub" style="margin:8px 0 0">${L('اختر مين بيلبس التصميم.', 'Choose who wears this design.')}</p>`}</div>
   <div class="card"><h3>${L('القطعة الأساسية', 'Main piece')}</h3>${pieceEd('base')}</div>
   <div class="card"><h3>${L('قطعة إضافية', 'Extra piece')} <span class="assume">${L('اختيارية', 'optional')}</span></h3>${pieceEd('extra')}</div>
+  <div class="card"><h3>${L('قطعة إضافية ثانية', 'Second extra piece')} <span class="assume">${L('اختيارية', 'optional')}</span></h3>${pieceEd('extra2')}</div>
   </div>
   <div class="edprev"><div class="preview${bgOf(mine()) ? ' hasbg' : ''}"${bdStyle(mine())}>${U.dd.model ? designSVG(U.dd, null, bgOf(mine())) : `<div class="mpick">${[['f', L('بنت', 'Girl')], ['m', L('ولد', 'Boy')]].map(([v, t]) => `<button data-act="setM" data-v="${v}"><svg viewBox="22 -2 56 144" class="dsvg">${bodySVG(BODIES[v])}${hands(BODIES[v])}</svg><b>${t}</b></button>`).join('')}</div>`}</div>
   ${bgOf(mine()) ? '' : `<p class="sub" style="margin:0 0 8px;text-align:center;font-size:12px">${L('ما اخترت خلفية للمتجر، فتطلع الخلفية الافتراضية.', 'No store background chosen, so the default shows.')}</p>`}<div class="card edprice"><span>${L('سعر البيع', 'Price')}</span><div class="stepper"><button data-act="price" data-v="1">+</button><span class="v">${money(U.dd.price)}</span><button data-act="price" data-v="-1">−</button></div></div></div>
@@ -1464,7 +1466,7 @@ function storeModal(id) {
   return `<div style="border:7px solid ${bd};background:${bg};color:${isLight(bg) ? '#1d1d1f' : '#fff'};border-radius:10px;padding:12px;text-align:center"><div class="ptitle">${esc(st.brand.name)}</div><small>${esc(P(id).name)}${st.discount ? ` • 🏷️ ${st.discount}%` : ''}</small></div>
   ${st.brand.desc ? `<div class="desc">${esc(st.brand.desc)}</div>` : ''}
   ${st.designs.map((d, i) => { if (!d) return `<div class="item">${designSVG(null, null, bgOf(st))}<div class="in"><b>${L('تصميم ناقص', 'Unfinished design')}</b></div></div>`; const pr = finalPrice(st, d), owned = mineB.includes(id + ':' + i);
-    return `<div class="item">${designSVG(d, null, bgOf(st))}<div class="in"><b>${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}</b><small>${[d.base, d.extra].filter(Boolean).map(x => N(cloth(x.type).name) + ' ' + N(byId(COLORS, x.color).name) + (x.fabric ? ' ' + N(byId(FABRICS, x.fabric).name) : '')).join(' + ')}</small><b style="color:var(--p)">${money(pr)}</b>${pr !== d.price ? `<span class="old">${money(d.price)}</span>` : ''}</div>
+    return `<div class="item">${designSVG(d, null, bgOf(st))}<div class="in"><b>${st.featured === i ? '⭐ ' : ''}${st.exclusive === i ? '💎 ' : ''}${esc(d.name)}</b><small>${[d.base, d.extra, d.extra2].filter(Boolean).map(x => N(cloth(x.type).name) + ' ' + N(byId(COLORS, x.color).name) + (x.fabric ? ' ' + N(byId(FABRICS, x.fabric).name) : '')).join(' + ')}</small><b style="color:var(--p)">${money(pr)}</b>${pr !== d.price ? `<span class="old">${money(d.price)}</span>` : ''}</div>
     ${amPlayer() ? (() => { const left = stockLeft(id, i); return `<button class="buy" data-act="buy" data-sid="${id}" data-i="${i}" ${left <= 0 || walletOf(ME_ID) < pr ? 'disabled' : ''}>${left <= 0 ? L('خلصت', 'Sold out') : owned ? L('اشترِ مرة ثانية', 'Buy again') : L('اشترِ', 'Buy')}<span class="stk">${left > 0 ? L('باقي ', 'left: ') + left : ''}${owned ? ' · ✓' : ''}</span></button>`; })() : ''}</div>`; }).join('')}
   <button class="btn ghost" data-act="closeModal">${L('طلعة من المتجر', 'Leave store')}</button>`;
 }
