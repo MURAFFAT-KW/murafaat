@@ -145,17 +145,19 @@
   function drawCard(data) {
     var W = 1080, H = 1350, c = document.createElement('canvas'); c.width = W; c.height = H;
     var x = c.getContext('2d');
+    /* نرسم النص بمحاذاة يسار ونحسب الوسط بأنفسنا: Safari يخربط الأسماء العربية (خاصة اللي فيها مسافة) مع rtl + center */
+    function ct(t, cx, y) { t = String(t); if (/[\u0600-\u06FF]/.test(t)) t = '\u202B' + t + '\u202C'; x.direction = 'ltr'; x.textAlign = 'left'; x.fillText(t, cx - x.measureText(t).width / 2, y); }
     var bg = x.createRadialGradient(W / 2, 260, 60, W / 2, 600, 1100);
     bg.addColorStop(0, '#22375F'); bg.addColorStop(.55, '#12203A'); bg.addColorStop(1, '#0A1426');
     x.fillStyle = bg; x.fillRect(0, 0, W, H);
     x.fillStyle = COLOR; x.fillRect(0, 0, W, 16); x.fillRect(0, H - 16, W, 16);
     return loadImg('icon-512.png').then(function (logo) {
       if (logo) { x.save(); var s = 230; x.beginPath(); if (x.roundRect) x.roundRect(W / 2 - s / 2, 90, s, s, 52); else x.rect(W / 2 - s / 2, 90, s, s); x.clip(); x.drawImage(logo, W / 2 - s / 2, 90, s, s); x.restore(); }
-      x.direction = EN ? 'ltr' : 'rtl'; x.textAlign = 'center'; x.fillStyle = '#fff';
+      x.fillStyle = '#fff';
       x.font = '800 92px "Alexandria","Readex Pro",system-ui,sans-serif';
-      x.fillText(T(GNAME[0], GNAME[1]), W / 2, 430);
+      ct(T(GNAME[0], GNAME[1]), W / 2, 430);
       x.font = '600 40px "Readex Pro",system-ui,sans-serif'; x.fillStyle = 'rgba(255,255,255,.7)';
-      x.fillText(T('نتيجة جلستنا', 'Our results'), W / 2, 495);
+      ct(T('نتيجة جلستنا', 'Our results'), W / 2, 495);
       var cols = { 1: ['#FBC611'], 2: ['#C9D2E0'], 3: ['#E59B5A'] };
       var slot, hgt = { 1: 330, 2: 250, 3: 190 }, base = 1120, med = { 1: '🥇', 2: '🥈', 3: '🥉' };
       if (EN) slot = { 2: W / 2 - 300, 1: W / 2, 3: W / 2 + 300 }; else slot = { 2: W / 2 + 300, 1: W / 2, 3: W / 2 - 300 };
@@ -163,17 +165,17 @@
         var r = Math.min(3, Math.max(1, d.r)), cx = slot[r], h = hgt[r], w = 260;
         var grd = x.createLinearGradient(0, base - h, 0, base); grd.addColorStop(0, cols[r][0]); grd.addColorStop(1, 'rgba(255,255,255,.08)');
         x.fillStyle = grd; x.beginPath(); if (x.roundRect) x.roundRect(cx - w / 2, base - h, w, h, [26, 26, 0, 0]); else x.rect(cx - w / 2, base - h, w, h); x.fill();
-        x.fillStyle = '#12203A'; x.font = '800 96px "Alexandria",system-ui,sans-serif'; x.fillText(String(r), cx, base - h + 110);
-        x.font = '72px system-ui'; x.fillText(med[r], cx, base - h - 150);
+        x.fillStyle = '#12203A'; x.font = '800 96px "Alexandria",system-ui,sans-serif'; ct(String(r), cx, base - h + 110);
+        x.font = '72px system-ui'; ct(med[r], cx, base - h - 150);
         x.fillStyle = '#fff'; x.font = '800 44px "Readex Pro",system-ui,sans-serif';
         var nm = d.n; while (x.measureText(nm).width > 290 && nm.length > 2) nm = nm.slice(0, -1); if (nm !== d.n) nm += '…';
-        x.fillText(nm, cx, base - h - 60);
-        if (d.s) { x.font = '600 30px "Readex Pro",system-ui,sans-serif'; x.fillStyle = 'rgba(255,255,255,.7)'; x.fillText(d.s.slice(0, 20), cx, base - h - 18); }
+        ct(nm, cx, base - h - 60);
+        if (d.s) { x.font = '600 30px "Readex Pro",system-ui,sans-serif'; x.fillStyle = 'rgba(255,255,255,.7)'; ct(d.s.slice(0, 20), cx, base - h - 18); }
       });
       x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '700 40px "Readex Pro",system-ui,sans-serif';
-      x.fillText(T('أقنعني · ألعاب جماعية', 'AQNINI · party games'), W / 2, 1215);
-      x.fillStyle = '#FBC611'; x.font = '700 34px "Readex Pro",system-ui,sans-serif'; x.direction = 'ltr';
-      x.fillText('aqnini.com', W / 2, 1275);
+      ct(T('أقنعني · ألعاب جماعية', 'AQNINI · party games'), W / 2, 1215);
+      x.fillStyle = '#FBC611'; x.font = '700 34px "Readex Pro",system-ui,sans-serif';
+      ct('aqnini.com', W / 2, 1275);
       return c;
     });
   }
