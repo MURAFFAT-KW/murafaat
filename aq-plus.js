@@ -213,7 +213,7 @@
 (function () {
   'use strict';
   if (window.AQREPORT) return; window.AQREPORT = 1;
-  var AQ_CONTACT_EMAIL = ''; // ← الإيميل الرسمي للتواصل والبلاغات (فاضي لين يجهز)
+  var AQ_CONTACT_EMAIL = 'support@aqnini.com'; // الإيميل الرسمي للتواصل والبلاغات
   var EN = /-en\.html/.test(location.pathname) || document.documentElement.lang === 'en';
   var GAME = (location.pathname.split('/').pop() || '').replace(/(-en)?\.html$/, '');
   if (!/^(murafaat|mazad|nadik|azyaa|aqar)$/.test(GAME)) return;
