@@ -1,7 +1,7 @@
 # دليل المطوّر — أقنعني
 
 هذا الدليل يشرح كيف مبنية ألعاب «أقنعني»، وكيف تضيف لعبة جديدة بدون ما تخرّب الموجود.
-الموقع: `https://muraffat-kw.github.io/murafaat/` — الـrepo: `MURAFFAT-KW/murafaat` — قاعدة البيانات: Firebase `murafaat-1a91d`.
+الموقع: `https://aqnini.com/` (الدومين الرسمي، Namecheap — الرابط القديم muraffat-kw.github.io/murafaat يتحول له تلقائياً؛ لا تحذف ملف CNAME) — الـrepo: `MURAFFAT-KW/murafaat` — قاعدة البيانات: Firebase `murafaat-1a91d`.
 
 ---
 

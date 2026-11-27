@@ -173,7 +173,7 @@
       x.fillStyle = 'rgba(255,255,255,.9)'; x.font = '700 40px "Readex Pro",system-ui,sans-serif';
       x.fillText(T('أقنعني · ألعاب جماعية', 'AQNINI · party games'), W / 2, 1215);
       x.fillStyle = '#FBC611'; x.font = '700 34px "Readex Pro",system-ui,sans-serif'; x.direction = 'ltr';
-      x.fillText('muraffat-kw.github.io/murafaat', W / 2, 1275);
+      x.fillText('aqnini.com', W / 2, 1275);
       return c;
     });
   }
