@@ -47,6 +47,13 @@
     '#aqAuth .err{min-height:22px;margin:14px 0 0;color:#DE0921;font-size:14px}' +
     '#aqAuth .note{margin:22px 0 0;font-size:13px;opacity:.6;line-height:1.8}' +
     '#aqAuth .note a{color:inherit}' +
+    '#aqAuth .or{display:flex;align-items:center;gap:12px;margin:18px 0;font-size:13px;opacity:.55}#aqAuth .or:before,#aqAuth .or:after{content:"";flex:1;height:1px;background:currentColor;opacity:.35}' +
+    '#aqAuth .e{width:100%;padding:15px 18px;border-radius:16px;border:0;background:#0554A4;color:#fff;font:600 17px "Readex Pro",system-ui,sans-serif;cursor:pointer}' +
+    '#aqAuth .e[disabled]{opacity:.6}#aqAuth .e:active{transform:scale(.98)}' +
+    '#aqAuth form{text-align:start}#aqAuth input{display:block;width:100%;box-sizing:border-box;margin:0 0 12px;padding:14px 16px;border-radius:14px;border:1.5px solid ' + (dark ? '#2A3550' : '#DCE2EE') + ';background:' + (dark ? '#18213A' : '#fff') + ';color:inherit;font:16px "Readex Pro",system-ui,sans-serif;direction:ltr;text-align:' + (EN ? 'left' : 'right') + '}' +
+    '#aqAuth input.nm{direction:' + (EN ? 'ltr' : 'rtl') + '}#aqAuth input:focus{outline:none;border-color:#0554A4}' +
+    '#aqAuth .lnk{display:block;width:100%;margin:12px 0 0;padding:6px;border:0;background:none;color:#0554A4;font:500 14px "Readex Pro",system-ui,sans-serif;cursor:pointer}' +
+    '#aqAuth .ok{color:#1E8E3E}' +
     '#aqAuth .spin{width:34px;height:34px;border-radius:50%;border:4px solid rgba(5,84,164,.18);border-top-color:#0554A4;margin:30px auto;animation:aqsp 1s linear infinite}' +
     '@keyframes aqsp{to{transform:rotate(360deg)}}' +
     '#aqAcc{position:fixed;top:14px;z-index:50}' +
@@ -71,16 +78,59 @@
     if (!pick()) { var s = document.createElement('script'); s.src = 'aq-brand.js'; s.onload = pick; document.head.appendChild(s); }
   }
 
+  var NOTE = function () {
+    return '<p class="note">' + T('عندك رابط دعوة؟ افتحه مباشرة وتدخل الغرفة بدون تسجيل.', 'Got an invite link? Open it directly — no sign-in needed.') + '<br>' +
+      T('بتسجيلك توافق على <a href="terms.html">الشروط</a> و<a href="privacy.html">سياسة الخصوصية</a>.', 'By signing in you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.') + '</p>';
+  };
   function showLogin(msg) {
     var box = ov.querySelector('.box');
     box.innerHTML = '<img class="logo" alt="">' +
       '<p class="sub">' + T('سجّل دخولك عشان تنشئ غرفة وتلعب مع ربعك', 'Sign in to create a room and play with your friends') + '</p>' +
       '<button class="g" type="button">' + G_ICON + '<span>' + T('الدخول بحساب Google', 'Continue with Google') + '</span></button>' +
-      '<p class="err">' + (msg || '') + '</p>' +
-      '<p class="note">' + T('عندك رابط دعوة؟ افتحه مباشرة وتدخل الغرفة بدون تسجيل.', 'Got an invite link? Open it directly — no sign-in needed.') + '<br>' +
-      T('بتسجيلك توافق على <a href="terms.html">الشروط</a> و<a href="privacy.html">سياسة الخصوصية</a>.', 'By signing in you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.') + '</p>';
+      '<div class="or">' + T('أو', 'or') + '</div>' +
+      '<button class="e" type="button">✉️ ' + T('الدخول بالإيميل', 'Continue with email') + '</button>' +
+      '<p class="err">' + (msg || '') + '</p>' + NOTE();
     setLogo();
     box.querySelector('.g').onclick = signIn;
+    box.querySelector('.e').onclick = function () { showEmail('in'); };
+  }
+
+  /* الدخول بالإيميل: in = دخول، up = حساب جديد، reset = نسيت كلمة السر */
+  function showEmail(mode, keep) {
+    var box = ov.querySelector('.box'), up = mode === 'up', rs = mode === 'reset';
+    var title = rs ? T('نسيت كلمة السر؟', 'Forgot your password?') : up ? T('حساب جديد', 'Create an account') : T('الدخول بالإيميل', 'Sign in with email');
+    box.innerHTML = '<img class="logo" alt="" style="width:46%;min-height:0">' +
+      '<p class="sub" style="margin-bottom:18px">' + (rs ? T('اكتب إيميلك ونرسل لك رابط تغيّر منه كلمة السر.', 'Enter your email and we will send you a reset link.') : title) + '</p>' +
+      '<form novalidate>' +
+      (up ? '<input class="nm" name="n" type="text" autocomplete="name" placeholder="' + T('اسمك', 'Your name') + '" required>' : '') +
+      '<input name="m" type="email" autocomplete="email" inputmode="email" placeholder="' + T('الإيميل', 'Email') + '" required>' +
+      (rs ? '' : '<input name="p" type="password" autocomplete="' + (up ? 'new-password' : 'current-password') + '" placeholder="' + T(up ? 'كلمة السر (٦ أحرف أو أكثر)' : 'كلمة السر', up ? 'Password (6+ characters)' : 'Password') + '" required>') +
+      '<button class="e" type="submit">' + (rs ? T('أرسل الرابط', 'Send link') : up ? T('سجّل', 'Create account') : T('دخول', 'Sign in')) + '</button>' +
+      '</form><p class="err"></p>' +
+      (mode === 'in' ? '<button class="lnk" data-go="reset" type="button">' + T('نسيت كلمة السر؟', 'Forgot password?') + '</button>' +
+        '<button class="lnk" data-go="up" type="button">' + T('ما عندك حساب؟ سجّل حساب جديد', 'No account? Create one') + '</button>' :
+        '<button class="lnk" data-go="in" type="button">' + T('عندك حساب؟ ادخل', 'Have an account? Sign in') + '</button>') +
+      '<button class="lnk" data-go="back" type="button" style="opacity:.7">' + T('رجوع', 'Back') + '</button>' + NOTE();
+    setLogo();
+    var f = box.querySelector('form'), er = box.querySelector('.err'), b = f.querySelector('.e');
+    if (keep && f.m) f.m.value = keep;
+    box.querySelectorAll('.lnk').forEach(function (x) {
+      x.onclick = function () { var g = x.getAttribute('data-go'); if (g === 'back') showLogin(); else showEmail(g, f.m.value); };
+    });
+    f.onsubmit = function (ev) {
+      ev.preventDefault(); er.className = 'err'; er.textContent = '';
+      var m = (f.m.value || '').trim(), pw = f.p ? f.p.value : '', nm = f.n ? f.n.value.trim() : '';
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(m)) { er.textContent = T('اكتب إيميل صحيح.', 'Enter a valid email.'); return; }
+      if (up && !nm) { er.textContent = T('اكتب اسمك.', 'Enter your name.'); return; }
+      if (!rs && pw.length < 6) { er.textContent = T('كلمة السر لازم ٦ أحرف أو أكثر.', 'Password must be at least 6 characters.'); return; }
+      b.disabled = true;
+      var job = rs ? auth.sendPasswordResetEmail(m) :
+        up ? auth.createUserWithEmailAndPassword(m, pw).then(function (c) { return c.user.updateProfile({ displayName: nm }).then(function () { done(c.user); }); }) :
+          auth.signInWithEmailAndPassword(m, pw);
+      job.then(function () {
+        if (rs) { er.className = 'err ok'; er.textContent = T('أرسلنا الرابط على إيميلك. شيّك على البريد (وحتى الـ Junk).', 'Link sent. Check your inbox (and junk folder).'); b.disabled = false; }
+      }).catch(function (e) { b.disabled = false; er.textContent = errText(e); });
+    };
   }
 
   function load(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
@@ -97,6 +147,11 @@
     var c = (e && e.code) || '';
     if (/popup-closed|cancelled-popup/.test(c)) return T('سكّرت نافذة الدخول، جرّب مرة ثانية.', 'The sign-in window was closed. Try again.');
     if (/network/.test(c)) return T('ما فيه اتصال بالإنترنت.', 'No internet connection.');
+    if (/email-already-in-use/.test(c)) return T('هالإيميل مسجّل من قبل. اضغط «عندك حساب؟ ادخل».', 'This email already has an account. Sign in instead.');
+    if (/invalid-credential|wrong-password|user-not-found|invalid-login/.test(c)) return T('الإيميل أو كلمة السر غلط.', 'Wrong email or password.');
+    if (/weak-password/.test(c)) return T('كلمة السر ضعيفة، خلها ٦ أحرف أو أكثر.', 'Password is too weak.');
+    if (/invalid-email/.test(c)) return T('اكتب إيميل صحيح.', 'Enter a valid email.');
+    if (/too-many-requests/.test(c)) return T('محاولات كثيرة، انتظر شوي وجرّب.', 'Too many attempts. Try again later.');
     if (/unauthorized-domain|operation-not-allowed|configuration/.test(c)) return T('تسجيل الدخول لسا ما تفعّل. كلّم المضيف.', 'Sign-in is not enabled yet.');
     return T('صار خطأ بالدخول، جرّب مرة ثانية.', 'Sign-in failed. Try again.');
   }
