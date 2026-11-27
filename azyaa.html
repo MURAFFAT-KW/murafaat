@@ -254,7 +254,7 @@ html.aqguest .backbtn.hub{display:none!important}
   if (typeof firebase === 'undefined') return;
   var CFG = {
     apiKey: "AIzaSyByoJGFA6WSH5IXgZ4rxbNITx2Oqnjai1A",
-    authDomain: "murafaat-1a91d.firebaseapp.com",
+    authDomain: /(^|\.)aqnini\.com$/.test(location.hostname) ? "aqnini.com" : "murafaat-1a91d.firebaseapp.com",
     databaseURL: "https://murafaat-1a91d-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "murafaat-1a91d"
   };

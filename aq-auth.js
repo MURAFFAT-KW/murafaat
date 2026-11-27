@@ -185,10 +185,14 @@
 
   function load(src) { return new Promise(function (ok, no) { var s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = no; document.head.appendChild(s); }); }
   var auth;
+  /* نستخدم نفس تطبيق Firebase اللي تستخدمه قاعدة البيانات (الافتراضي)، عشان قاعدة البيانات تعرف إن المضيف مسجّل دخول
+     (قواعد Firebase: ما ينشئ غرفة جديدة إلا حساب مسجّل). ننطر الصفحة تخلص تحميل عشان ملفات Firebase باللعبة تشتغل أول */
+  function domReady() { return new Promise(function (ok) { if (document.readyState !== 'loading') ok(); else document.addEventListener('DOMContentLoaded', ok); }); }
   function ready() {
-    var p = window.firebase && firebase.app ? Promise.resolve() : load(SDK + 'firebase-app-compat.js');
-    return p.then(function () { return firebase.auth ? null : load(SDK + 'firebase-auth-compat.js'); }).then(function () {
-      var app; try { app = firebase.app('aqauth'); } catch (e) { app = firebase.initializeApp(CFG, 'aqauth'); }
+    return domReady().then(function () {
+      return window.firebase && firebase.app ? null : load(SDK + 'firebase-app-compat.js');
+    }).then(function () { return firebase.auth ? null : load(SDK + 'firebase-auth-compat.js'); }).then(function () {
+      var app = firebase.apps.length ? firebase.app() : firebase.initializeApp(CFG);
       auth = app.auth(); auth.languageCode = EN ? 'en' : 'ar'; return auth;
     });
   }
