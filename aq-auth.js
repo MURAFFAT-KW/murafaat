@@ -242,7 +242,13 @@
         '#aqSet .row span{display:flex;align-items:center;gap:10px}#aqSet .row .ch{opacity:.4;font-size:18px}' +
         '#aqSet .seg{display:flex;border-radius:12px;padding:3px;gap:2px;flex:none}#aqSet .seg button{border:0;background:none;color:inherit;font:600 13px "Readex Pro",system-ui;padding:7px 10px;border-radius:9px;cursor:pointer;opacity:.7}' +
         '#aqSet .seg button.on{opacity:1}' +
-        '#aqSet .out{width:100%;margin-top:18px;padding:14px;border-radius:14px;border:0;font:700 15px "Readex Pro",system-ui;cursor:pointer}';
+        '#aqSet .out{width:100%;margin-top:18px;padding:14px;border-radius:14px;border:0;font:700 15px "Readex Pro",system-ui;cursor:pointer}' +
+        '#aqSet .del{display:block;margin:14px auto 0;background:none;border:0;font:600 13px "Readex Pro",system-ui;cursor:pointer;opacity:.75;text-decoration:underline}' +
+        '#aqSet .dz{text-align:center;padding:6px 0}#aqSet .dz .ic{font-size:40px;margin:4px 0 8px}#aqSet .dz p{margin:0 0 16px;font-size:14.5px;line-height:1.8;opacity:.8}' +
+        '#aqSet .dz input{display:block;width:100%;box-sizing:border-box;margin:0 0 12px;padding:14px 16px;border-radius:14px;border:1.5px solid rgba(128,140,160,.35);background:transparent;color:inherit;font:16px "Readex Pro",system-ui;direction:ltr;text-align:' + (EN ? 'left' : 'right') + '}' +
+        '#aqSet .dz .er{color:#DE0921;font-size:13.5px;margin:0 0 10px;min-height:1px}' +
+        '#aqSet .dz .go{width:100%;padding:14px;border-radius:14px;border:0;font:700 15px "Readex Pro",system-ui;cursor:pointer;background:#DE0921;color:#fff}' +
+        '#aqSet .dz .go[disabled]{opacity:.6}#aqSet .dz .no{width:100%;margin-top:8px;padding:13px;border-radius:14px;border:0;background:none;color:inherit;font:600 15px "Readex Pro",system-ui;cursor:pointer}';
       document.head.appendChild(st);
 
       var w = document.createElement('div'); w.id = 'aqAcc';
@@ -271,7 +277,8 @@
         '<button data-t="auto" type="button">' + T('تلقائي', 'Auto') + '</button><button data-t="light" type="button">' + T('صباحي', 'Light') + '</button><button data-t="dark" type="button">' + T('مسائي', 'Dark') + '</button></div></div>' : '') +
       (window.AQSTATS && AQSTATS.open ? '<button class="row" data-k="stats" type="button"><span>🏅 ' + T('سجلي وإنجازاتي', 'My stats & badges') + '</span><b class="ch">' + (EN ? '›' : '‹') + '</b></button>' : '') +
       '<button class="row" data-k="lang" type="button"><span>🌐 ' + T('اللغة', 'Language') + '</span><span style="opacity:.6">' + T('العربية', 'English') + ' ' + (EN ? '›' : '‹') + '</span></button>' +
-      '<button class="out" type="button" style="background:' + (isD ? '#3A1820' : '#FDECEE') + ';color:' + (isD ? '#FF8A95' : '#DE0921') + '">' + T('تسجيل الخروج', 'Sign out') + '</button></div>';
+      '<button class="out" type="button" style="background:' + (isD ? '#3A1820' : '#FDECEE') + ';color:' + (isD ? '#FF8A95' : '#DE0921') + '">' + T('تسجيل الخروج', 'Sign out') + '</button>' +
+      '<button class="del" type="button" style="color:' + (isD ? '#FF8A95' : '#DE0921') + '">' + T('حذف الحساب', 'Delete account') + '</button></div>';
     var av = o.querySelector('.av'); if (u.photoURL) av.style.backgroundImage = 'url("' + u.photoURL + '")'; else av.textContent = first;
     o.querySelector('.me b').textContent = u.displayName || T('حسابي', 'My account');
     o.querySelector('.me small').textContent = u.email || '';
@@ -290,7 +297,40 @@
     var stt = o.querySelector('[data-k=stats]'); if (stt) stt.onclick = function () { close(); setTimeout(function () { AQSTATS.open(); }, 260); };
     o.querySelector('[data-k=lang]').onclick = function () { try { localStorage.setItem('aqnieni.lang', EN ? 'ar' : 'en'); } catch (e) { } location.href = otherLang(); };
     o.querySelector('.out').onclick = function () { auth.signOut().then(function () { location.reload(); }); };
+    o.querySelector('.del').onclick = function () { delView(o.querySelector('.sh'), u, close); };
     document.body.appendChild(o); requestAnimationFrame(function () { o.classList.add('on'); });
+  }
+
+  /* حذف الحساب (متطلب Apple): تأكيد → إعادة التحقق → حذف نهائي */
+  function delView(sh, u, close) {
+    var isD = window.AQTHEME ? AQTHEME.dark() : dark;
+    var pd = (u.providerData || []).map(function (x) { return x.providerId; });
+    var pw = pd.indexOf('password') > -1 && pd.indexOf('google.com') < 0;
+    sh.innerHTML = '<div class="gr"></div><div class="dz" style="text-align:center">' + '<div style="width:64px;height:64px;margin:6px auto 12px;border-radius:50%;display:grid;place-items:center;background:' + (isD ? '#3A1820' : '#FDECEE') + '"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="' + (isD ? '#FF8A95' : '#DE0921') + '" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v5M14 11v5"/></svg></div>' +
+      '<h3>' + T('حذف الحساب', 'Delete account') + '</h3>' +
+      '<p>' + T('سيتم حذف حسابك وبياناتك نهائياً، ولا يمكن التراجع عن هذا الإجراء.', 'Your account and its data will be permanently deleted. This cannot be undone.') + '</p>' +
+      (pw ? '<input type="password" autocomplete="current-password" placeholder="' + T('أدخل كلمة المرور للتأكيد', 'Enter your password to confirm') + '">' : '') +
+      '<div class="er"></div>' +
+      '<button class="go" type="button" style="background-image:linear-gradient(#DE0921,#DE0921);color:#fff">' + T('حذف الحساب نهائياً', 'Delete permanently') + '</button>' +
+      '<button class="no" type="button">' + T('إلغاء', 'Cancel') + '</button></div>';
+    var go = sh.querySelector('.go'), er = sh.querySelector('.er'), inp = sh.querySelector('input');
+    sh.querySelector('.no').onclick = close;
+    go.onclick = function () {
+      er.textContent = '';
+      if (inp && !inp.value) { er.textContent = T('أدخل كلمة المرور.', 'Enter your password.'); inp.focus(); return; }
+      go.disabled = true; go.textContent = T('جارٍ الحذف…', 'Deleting…');
+      var re;
+      if (inp) re = u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, inp.value));
+      else { var gp = new firebase.auth.GoogleAuthProvider(); gp.setCustomParameters({ prompt: 'select_account' }); re = u.reauthenticateWithPopup(gp); }
+      re.then(function () { return u.delete(); }).then(function () {
+        sh.innerHTML = '<div class="gr"></div><div class="dz" style="text-align:center"><div style="font-size:40px;margin:6px 0 10px">✅</div><h3>' + T('تم حذف الحساب', 'Account deleted') + '</h3><p>' + T('شكراً لاستخدامك أقنعني.', 'Thank you for playing AQNINI.') + '</p></div>';
+        setTimeout(function () { location.reload(); }, 1800);
+      }).catch(function (e) {
+        go.disabled = false; go.textContent = T('حذف الحساب نهائياً', 'Delete permanently');
+        var c = (e && e.code) || '';
+        er.textContent = /user-mismatch/.test(c) ? T('اختر نفس الحساب المسجّل للتأكيد.', 'Choose the same signed-in account to confirm.') : errText(e);
+      });
+    };
   }
 
   ready().then(function () {
