@@ -1,10 +1,12 @@
 /* أقنعني — يحفظ نسخة من الصفحات عشان تفتح أسرع. الصفحات تتحدث من النت أول (عشان أي تعديل ترفعه يبين على طول)، والصور والملفات المشتركة من النسخة المحفوظة */
-var C = 'aqnieni-2026-11-27e', X = 'aqnieni-ext';
+var C = 'aqnieni-2026-11-27f', X = 'aqnieni-ext';
 self.addEventListener('install', function (e) { self.skipWaiting(); e.waitUntil(caches.open(C).then(function (c) { return c.addAll(['aq-pro.js', 'aq-brand.js', 'aq-theme.js', 'aq-plus.js', 'aq-auth.js', 'apple-touch-icon.png', 'icon-192.png']).catch(function () { }); })); });
 self.addEventListener('activate', function (e) { e.waitUntil(caches.keys().then(function (k) { return Promise.all(k.filter(function (x) { return x !== C && x !== X; }).map(function (x) { return caches.delete(x); })); }).then(function () { return self.clients.claim(); })); });
 self.addEventListener('fetch', function (e) {
   var r = e.request, u = new URL(r.url);
   if (r.method !== 'GET') return;
+  /* ملفات تسجيل الدخول من Google: دايماً من النت */
+  if (u.pathname.indexOf('/__/') === 0) return;
   /* ملفات Firebase والخطوط من قوقل: نسخها ثابتة، فنحفظها بالتلفون وتفتح اللعبة أسرع */
   if (u.origin !== location.origin) {
     if (/^https:\/\/(www\.gstatic\.com\/firebasejs\/|fonts\.gstatic\.com\/|fonts\.googleapis\.com\/)/.test(r.url)) {

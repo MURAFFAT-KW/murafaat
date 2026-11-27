@@ -5,7 +5,8 @@
 (function () {
   var CFG = {
     apiKey: "AIzaSyByoJGFA6WSH5IXgZ4rxbNITx2Oqnjai1A",
-    authDomain: "murafaat-1a91d.firebaseapp.com",
+    /* على aqnini.com: نافذة Google تبين اسم موقعنا بدل firebaseapp (ملفات الدخول بمجلد __/auth) */
+    authDomain: /(^|\.)aqnini\.com$/.test(location.hostname) ? "aqnini.com" : "murafaat-1a91d.firebaseapp.com",
     databaseURL: "https://murafaat-1a91d-default-rtdb.europe-west1.firebasedatabase.app",
     projectId: "murafaat-1a91d",
     storageBucket: "murafaat-1a91d.firebasestorage.app",
