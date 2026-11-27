@@ -326,7 +326,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
     if (c.has('pickWitness')) { c.click('pickWitness', null, 'rand'); return 'استدعى شاهد'; }
     var wt = c.$('#wtext'); if (wt && c.vis(wt) && c.has('witSubmit')) { var cw = G.cur || {}, da = cw.defA || '', db = cw.defB || '', fa = Math.random() < 0.5, x1 = fa ? da : db, x2 = fa ? db : da;
       c.fill(wt, c.en ? 'From what I\'ve seen, «' + x1 + '» makes more sense than «' + x2 + '».' : 'من تجربتي، «' + x1 + '» أصح من «' + x2 + '».'); c.click('witSubmit'); return 'كتب شهادته'; }
-    if (c.isHost() && c.has('endObj')) { var ok = G.cur && G.cur.obj, od = ok ? (ok.done || []).length : 0, oj = ok ? (ok.jurors || []).length : 1; if ((od >= oj && since(c, 'Hobj' + (ok && ok.key)) > 2) || since(c, 'Hobj' + (ok && ok.key)) > 25) { if (c.click('endObj')) return 'المضيف: نتيجة الاعتراض'; } }
+    if (c.isHost() && c.has('objDecide')) { var ok = G.cur && G.cur.obj; if (since(c, 'Hobj' + (ok && ok.key)) > 2) { if (c.click('objDecide', null, 'rand')) return 'المضيف: قرار الاعتراض'; } }
     if (c.has('objVote') && !mem['obj' + G.caseNo + (G.cur && G.cur.obj ? G.cur.obj.at || '' : '')]) { mem['obj' + G.caseNo + (G.cur && G.cur.obj ? G.cur.obj.at || '' : '')] = 1; c.click('objVote', null, 'rand'); return 'صوّت على الاعتراض'; }
 
     if (ph === 'perks') {

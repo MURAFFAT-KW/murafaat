@@ -137,7 +137,7 @@
       if (!r) r = x.classList.contains('p1') || x.classList.contains('g') ? 1 : x.classList.contains('p2') || x.classList.contains('s') ? 2 : 3;
       var sc = '', all = x.querySelectorAll('*');
       for (var i = 0; i < all.length; i++) { var e = all[i]; if (e.children.length || e === n || e === blk) continue; var t = (e.textContent || '').trim(); if (/\d/.test(t) && /[^\d\s]/.test(t) && t.length < 24) { sc = t; break; } }
-      out.push({ n: n.textContent.trim(), r: r, s: sc });
+      out.push({ n: String(n.textContent || '').replace(/[\u0640\u200B-\u200F\u202A-\u202E\u2060-\u2069\uFE00-\uFE0F\uFEFF]/g, '').replace(/\s+/g, ' ').trim(), r: r, s: sc });
     });
     return out.sort(function (a, b) { return a.r - b.r; }).slice(0, 3);
   }
@@ -186,7 +186,7 @@
         btn.disabled = false; btn.textContent = lbl;
         if (!b) return;
         var f = null; try { f = new File([b], 'aqnieni-' + GAME + '.png', { type: 'image/png' }); } catch (e) { }
-        if (f && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f], title: T('أقنعني', 'AQNINI') }).catch(function () { }); return; }
+        if (f && navigator.canShare && navigator.canShare({ files: [f] })) { navigator.share({ files: [f] }).catch(function () { }); return; }
         var url = URL.createObjectURL(b), a = document.createElement('a'); a.href = url; a.download = 'aqnieni-' + GAME + '.png'; document.body.appendChild(a); a.click(); a.remove();
         setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
       }, 'image/png');

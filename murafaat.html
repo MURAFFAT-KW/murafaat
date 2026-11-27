@@ -426,7 +426,7 @@ const MZ = (function () {
     { id: 'reply', name: 'حق الرد الإضافي', desc: 'أضف 30 ثانية إلى وقت ردك.' },
     { id: 'double', name: 'مضاعفة النقاط', desc: 'إذا فزت بالسؤال تحصل على ضعف النقاط.' },
     { id: 'witness', name: 'استدعاء شاهد', desc: 'اختر لاعبًا محايدًا يكتب رأيه ليظهر أثناء المرافعة.' },
-    { id: 'objection', name: 'الاعتراض', desc: 'يفتح تصويتًا سريعًا بين المحلفين. إن قُبل خُصمت 15 ثانية من خصمك، وإن رُفض خُصمت من وقتك القادم.' }
+    { id: 'objection', name: 'الاعتراض', desc: 'يوقف المؤقت والمضيف يقرر. إن قبله خُصمت 15 ثانية من خصمك، وإن رفضه خُصمت من وقتك القادم.' }
   ];
 
   const q = (t, o) => ({ t, o });
@@ -1107,7 +1107,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     G.cur = newCase(qid, pair); G.phase = 'case';
   }
   function jurorsNow() {
-    const c = G.cur, ex = [c.A, c.B, c.helper.A, c.helper.B];
+    const c = G.cur, ex = [c.A, c.B, c.helper.A, c.helper.B, c.witness && c.witness.pid];
     return G.players.filter(p => !ex.includes(p.id)).map(p => p.id);
   }
   function helperCands(side) {
@@ -1213,14 +1213,14 @@ if (typeof module !== 'undefined') module.exports = MZ;
     if (done.length !== o.done.length) { o.done = done; ch = true; }
     if (o.force) { /* المضيف بس اللي ينهي الاعتراض */
       const yes = done.filter(j => votes[j] === 'yes').length, nay = done.length - yes;
-      const acc = yes > nay, side = o.side, other = side === 'A' ? 'B' : 'A';
+      const acc = o.host ? o.dec === 'yes' : yes > nay, side = o.side, other = side === 'A' ? 'B' : 'A';
       c.used[c[side] + ':objection'] = true;
       if (acc) {
         const t = c.timer, l = left(); t.remaining = Math.max(0, l - PEN); t.running = false; if (t.remaining <= 0) { t.done = true; t.remaining = 0; }
-        c.notes.push('اعتراض ' + P(c[side]).name + ' مقبول (' + yes + '-' + nay + '): خُصمت 15 ثانية من ' + P(c[other]).name + '.');
+        c.notes.push('اعتراض ' + P(c[side]).name + ' مقبول' + (o.host ? ' من المضيف' : ' (' + yes + '-' + nay + ')') + ': خُصمت 15 ثانية من ' + P(c[other]).name + '.');
       } else {
         c.penalty[side] += PEN;
-        c.notes.push('اعتراض ' + P(c[side]).name + ' مرفوض (' + yes + '-' + nay + '): تُخصم 15 ثانية من وقته القادم.');
+        c.notes.push('اعتراض ' + P(c[side]).name + ' مرفوض' + (o.host ? ' من المضيف' : ' (' + yes + '-' + nay + ')') + ': تُخصم 15 ثانية من وقته القادم.');
       }
       c.obj = null; ch = true;
     }
@@ -1304,7 +1304,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       case 'swap': doSwap(side); break;
       case 'objection':
         pauseT();
-        c.obj = { side, key: uid('o'), endsAt: Date.now() + SEC('objSec') * 1000, jurors: jurorsNow(), done: [] };
+        c.obj = { side, key: uid('o'), endsAt: Date.now() + 864e5, jurors: [], done: [], host: 1 };
         c.notes.push(who.name + ' ' + gv(who, 'اعترض', 'اعترضت') + ' على كلام ' + P(c[side === 'A' ? 'B' : 'A']).name + '.'); break;
     }
     return true;
@@ -1413,7 +1413,6 @@ if (typeof module !== 'undefined') module.exports = MZ;
       '<div class="labelled"><span class="lbl">وقت المرافعة</span>' + seg('plead', TIMES, ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت الرد</span>' + seg('replySec', TIMES, ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">وقت تصويت المحلفين</span>' + seg('voteSec', TIMES, ' ث') + '</div>' +
-      '<div class="labelled"><span class="lbl">وقت تصويت الاعتراض</span>' + seg('objSec', TIMES, ' ث') + '</div>' +
       '<div class="labelled"><span class="lbl">مصدر الأسئلة</span><div class="grid2">' +
       '<button class="opt-card ' + (s.source === 'preset' ? 'on' : '') + '" data-act="set" data-k="source" data-v="preset"><b>أسئلة جاهزة</b><span class="muted small">بداية سريعة بأسئلة مناسبة لمجموعتك</span></button>' +
       '<button class="opt-card ' + (s.source === 'custom' ? 'on' : '') + '" data-act="set" data-k="source" data-v="custom"><b>أسئلة اللاعبين</b><span class="muted small">كل لاعب يكتب نصيبه من الأسئلة من تلفونه دون كشف اسمه</span></button></div></div>' +
@@ -1490,7 +1489,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const c = G.cur, p = P(c[side]);
     const sp = speakerSideC() === side;
     const h = c.helper[side] ? P(c.helper[side]) : null;
-    const showPerks = IDX[c.stage] !== undefined;
+    const showPerks = IDX[c.stage] !== undefined && (c[side] === ME_ID || (isHost() && G.settings.hostPlays === 0));
     const canSpk = h && sp && (c[side] === ME_ID || isHost());
     return '<article class="party' + (sp ? ' speaking' : '') + (c[side] === ME_ID ? ' mine' : '') + '"><div class="ptop"><span class="chip">' + (side === 'A' ? 'الطرف الأول' : 'الطرف الثاني') + '</span>' + (c[side] === ME_ID ? '<span class="chip gold">أنت</span>' : '') + (sp ? '<span class="chip live">يتحدث الآن</span>' : '') + (c.doubles[side] ? '<span class="chip gold">نقاط مضاعفة</span>' : '') + '</div>' +
       '<div class="pid">' + avatar(p, 56) + '<div><h3>' + esc(p.name) + '</h3></div></div>' +
@@ -1541,21 +1540,12 @@ if (typeof module !== 'undefined') module.exports = MZ;
     return '<div class="witness"><b>شهادة ' + esc(w.name) + ':</b> «' + esc(c.witness.text) + '»</div>';
   }
   function objBox() {
-    const c = G.cur;
-    return c.obj ? objBox0() + (isHost() ? (c.obj.done.length >= c.obj.jurors.length ? '<p class="muted small" style="margin:0">✓ كل المحلفين صوّتوا.</p>' : '') + '<button class="btn primary" data-act="endObj">إنهاء (الذهاب لنتيجة الاعتراض)</button>' : '') : '';
-  }
-  function objBox0() {
     const c = G.cur, o = c.obj;
     if (!o) return '';
     const by = P(c[o.side]), sp = P(c[o.side === 'A' ? 'B' : 'A']);
-    const head = '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span class="chip gold">اعتراض</span><span class="chip num" id="vclock">' + fmt(vLeft(o)) + '</span></div>';
-    if (o.jurors.includes(ME_ID)) {
-      const mineV = ME && ME.obj && ME.obj.key === o.key ? ME.obj.v : null;
-      return '<section class="card action" style="display:grid;gap:12px">' + head + '<h2 style="margin:0">اعتراض من ' + esc(by.name) + '</h2><p class="muted">على كلام ' + esc(sp.name) + '. أنت محلف: هل تقبل الاعتراض؟</p>' +
-        '<div class="btn-row"><button class="btn ' + (mineV === 'yes' ? 'primary' : '') + '" data-act="objVote" data-v="yes" aria-pressed="' + (mineV === 'yes') + '">قبول</button><button class="btn ' + (mineV === 'no' ? 'primary' : '') + '" data-act="objVote" data-v="no" aria-pressed="' + (mineV === 'no') + '">رفض</button></div>' +
-        '<p class="muted small">صوّت ' + o.done.length + ' من ' + o.jurors.length + '.' + (mineV ? ' تقدر تغيّر صوتك قبل انتهاء الوقت.' : '') + '</p></section>';
-    }
-    return '<section class="card action" style="display:grid;gap:8px">' + head + '<h3>اعتراض من ' + esc(by.name) + ' على كلام ' + esc(sp.name) + '</h3><p class="muted">المحلفون يصوّتون الآن: ' + o.done.length + ' من ' + o.jurors.length + '. المؤقت متوقف.</p></section>';
+    const head = '<span class="chip gold">اعتراض</span><h2 style="margin:0">اعتراض من ' + esc(by.name) + '</h2><p class="muted">على كلام ' + esc(sp.name) + '. المؤقت متوقف.</p>';
+    if (isHost()) return '<section class="card action" style="display:grid;gap:12px">' + head + '<p>القرار لك: اقبل (تنخصم 15 ثانية من ' + esc(sp.name) + ') أو ارفض (تنخصم 15 ثانية من وقت ' + esc(by.name) + ' القادم).</p><div class="btn-row"><button class="btn primary" data-act="objDecide" data-v="yes">قبول الاعتراض</button><button class="btn" data-act="objDecide" data-v="no">رفض الاعتراض</button></div></section>';
+    return '<section class="card action" style="display:grid;gap:8px">' + head + '<p class="muted">بانتظار قرار المضيف.</p></section>';
   }
   function speakingView() {
     const c = G.cur;
@@ -1604,17 +1594,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       if (o.appealable) {
         const why = o.tie ? 'تعادل في الصدارة' : o.margin === 1 ? 'الفارق صوت واحد فقط' : 'الاستئناف مسموح بكل سؤال';
         const card = (h, body) => '<section class="card" style="display:grid;gap:12px;border-color:var(--gold)"><h2>' + h + '</h2>' + body + '</section>';
-        if (c.appeal) {
-          const by = c.appeal.by, names = by.map(k => esc(P(c[k]).name)).join(' و');
-          const meToo = ms && !by.includes(ms) ? '<button class="btn gold" data-act="reqAppeal" data-side="' + ms + '">أطلب الاستئناف أنا بعد</button>' : '';
-          appealBox = card('طلب استئناف من ' + names,
-            (host ? '<p>اقبل عشان يبدأ تصويت ثاني بخيارين بس (بدون «لا أحد»)، أو ارفض وتنعتمد نتيجة التصويت الأول.</p><div class="btn-row"><button class="btn gold" data-act="confirmAppeal">قبول: ابدأ تصويت الاستئناف</button><button class="btn ghost" data-act="cancelAppeal">رفض: اعتماد التصويت الأول</button></div>'
-              : '<p class="muted">بانتظار المضيف ' + esc(P(G.host).name) + ' يقبل أو يرفض.</p>') + meToo);
-        } else {
-          appealBox = card('الاستئناف متاح', '<p class="muted">السبب: ' + why + '. يحق لأي طرف، أو الطرفين، طلب الاستئناف من تلفونه، والمضيف يقبل أو يرفض. والمضيف يقدر يفتح الاستئناف بنفسه.</p>' +
-            (ms ? '<button class="btn xl gold" data-act="reqAppeal" data-side="' + ms + '">أطلب الاستئناف</button>' : '') +
-            (host ? '<div class="btn-row"><button class="btn gold" data-act="hostAppeal">المضيف: فتح الاستئناف</button><button class="btn" data-act="noAppeal">المتابعة دون استئناف</button></div>' : (ms ? '' : '<p class="muted small">بانتظار قرار الطرفين والمضيف.</p>')));
-        }
+        appealBox = card('الاستئناف', host ? '<p class="muted">الاستئناف بيد المضيف بس، وبعد التصويت الأول بس: تصويت ثاني بين الطرفين (بدون «لا أحد»).</p><div class="btn-row"><button class="btn gold" data-act="hostAppeal">فتح الاستئناف</button><button class="btn" data-act="noAppeal">المتابعة دون استئناف</button></div>' : '<p class="muted">بانتظار المضيف يفتح الاستئناف أو يعتمد النتيجة.</p>');
       }
       return '<div class="vkind"><b>نتيجة التصويت الأول</b><span class="muted">هذه أصوات هيئة المحلفين.</span></div>' +
         '<section class="card" style="display:grid;gap:16px">' + bars(c.v1, ['A', 'B', 'none'], labels, o.leader) + '<p><b>' + msg + '</b></p></section>' + appealBox +
@@ -1867,6 +1847,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   });
   ACT.endVote = H(() => { const c = G.cur; if (!c || c.stage !== 'vote' || !c.vote) return false; if (!(c.vote.done || []).length && c.jurors.length) { toast('ما صوّت أحد للحين. التصويت يظل مفتوح لين يصوّت محلّف واحد على الأقل.'); return false; } c.vote.force = 1; hostStep(); });
   ACT.endObj = H(() => { const c = G.cur; if (!c || !c.obj) return false; c.obj.force = 1; hostStep(); });
+  ACT.objDecide = H(d => { const c = G.cur; if (!c || !c.obj || (d.v !== 'yes' && d.v !== 'no')) return false; c.obj.dec = d.v; c.obj.force = 1; hostStep(); });
   ACT.set = H(d => { const v = d.k === 'source' || d.k === 'pack' ? d.v : +d.v; G.settings[d.k] = v; if (d.k === 'source' && v === 'preset') { const s = G.settings; if ((s.rounds || 1) > PACKN) s.rounds = PACKN; s.questions = Math.min(Math.max(s.questions, s.rounds), PACKN); } });
   ACT.startGame = H(() => {
     const tgt = G.settings.players || 3, real = G.players.length - (G.settings.hostPlays === 0 ? 1 : 0);
@@ -1986,7 +1967,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   ACT.cancelWit = H(() => { const c = G.cur; if (!c.witness || !c.witness.pending) return false; c.notes.push('أُلغي استدعاء الشاهد ' + P(c.witness.pid).name + '.'); c.witness = null; });
   ACT.confirmAppeal = H(() => { const c = G.cur; if (!c.appeal || c.stage !== 'tally1') return false; c.appealUsed = true; startVote('appeal', 1); });
   ACT.cancelAppeal = H(() => { const c = G.cur; if (!c.appeal || !c.o1) return false; c.appeal = null; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
-  ACT.hostAppeal = H(() => { const c = G.cur; if (!c || c.stage !== 'tally1' || !c.o1 || !c.o1.appealable) return false; c.appeal = null; c.appealUsed = true; c.notes.push('المضيف فتح الاستئناف.'); startVote('appeal', 1); });
+  ACT.hostAppeal = H(() => { const c = G.cur; if (!c || c.stage !== 'tally1' || !c.o1 || !c.o1.appealable || c.appealUsed) return false; c.appeal = null; c.appealUsed = true; c.notes.push('المضيف فتح الاستئناف.'); startVote('appeal', 1); });
   ACT.noAppeal = H(() => { const c = G.cur; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
   ACT.tiebreak = H(() => { const c = G.cur; startVote('tiebreak', c.rounds.length + 1); });
   ACT.finalAppeal = H(() => { const c = G.cur; finalize(appealOutcome(c.lastT), 'appeal'); });
@@ -2006,7 +1987,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
   ACT.pickHelper = d => { const side = U.modal.side; U.modal = null; sendReq({ type: 'perk', side, id: 'team', pid: d.pid }); };
   ACT.pickWitness = d => { const side = U.modal.side; U.modal = null; sendReq({ type: 'perk', side, id: 'witness', pid: d.pid }); };
   ACT.spk = d => { sendReq({ type: 'spk', side: d.side }); };
-  ACT.reqAppeal = d => { if (mySide() !== d.side) return false; sendReq({ type: 'appeal', side: d.side }); };
+  ACT.reqAppeal = d => { return false; if (mySide() !== d.side) return false; sendReq({ type: 'appeal', side: d.side }); };
 
   /* my answers to things the room asks of me */
   ACT.witSubmit = async () => {
