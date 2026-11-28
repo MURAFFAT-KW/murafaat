@@ -435,7 +435,17 @@
     'section.splash.intro .go,section.splash.intro .btn,#app .intro .btn{margin-top:min(1.2svh,10px)!important;min-height:min(60px,7svh)!important;font-size:min(1.25rem,2.6svh)!important;width:100%;max-width:340px}' +
     'section.splash.intro .aqt-open,#app .intro .aqt-open{margin-top:min(.8svh,8px)!important;padding:min(10px,1.2svh)!important;font-size:min(.95rem,1.9svh)!important;max-width:340px}' +
     'body:has(#app .intro) #app,body:has(section.splash.intro) #app,body:has(section.splash.intro) #app .wrap{padding-top:0!important;padding-bottom:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important}' +
-    '@media (min-height:900px){section.splash.intro .lg svg,#app .intro .logo svg{height:150px!important}}';
+    '@media (min-height:900px){section.splash.intro .lg svg,#app .intro .logo svg{height:150px!important}}' +
+    /* v2: شعار واسم أكبر، الأزرار تحت آخر الصفحة: «شلون نلعب؟» ثم «فهمت» */
+    'section.splash.intro .lg svg,section.splash.intro .lg svg.aqlogo,section.splash.intro .lg svg.fulllogo,#app .intro .logo svg,#app .intro .logo svg.aqlogo{height:min(24svh,250px)!important;max-width:78vw!important}' +
+    'section.splash.intro .ar,#app .intro .gname{font-size:min(14vw,8svh)!important;line-height:1.05!important}' +
+    'section.splash.intro .aqt-open,#app .intro .aqt-open{order:98;margin-top:0!important;width:100%}' +
+    '#app .intro .intro-art,section.splash.intro .intro-art{margin:auto!important}' +
+    'section.splash.intro .go,section.splash.intro .btn,#app .intro .btn{order:99;margin-top:min(1.2svh,10px)!important}' +
+    'section.splash.intro,#app .intro{justify-content:flex-start!important;padding-top:max(52px,env(safe-area-inset-top))!important;padding-bottom:max(14px,env(safe-area-inset-bottom))!important}' +
+    '#app .intro .intro-art>svg,section.splash.intro .intro-art>svg,#app .intro .intro-art.fig svg{max-height:min(36svh,360px)!important}' +
+    'section.splash.intro .intro-art .pitch{width:min(60vw,250px,27svh)!important}' +
+    '#app .intro .intro-art.fig{width:100%!important;max-width:440px!important;gap:4px;justify-content:center!important}#app .intro .intro-art.fig svg,#app .intro .intro-art.fig svg:nth-child(2){width:32%!important;flex:none;max-height:min(40svh,400px)!important}';
   (document.head || document.documentElement).appendChild(css);
 })();
 

@@ -253,7 +253,7 @@ body.has-hb .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 <link rel="manifest" href="manifest.webmanifest"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="أقنعني"><link rel="apple-touch-icon" href="apple-touch-icon.png"><script src="aq-pro.js"></script>
 <link rel="icon" href="icon-192.png">
 <script src="aq-theme.js"></script><script src="aq-auth.js"></script>
-<script src="aq-plus.js" defer></script>
+<script src="aq-plus.js" defer></script><script src="azyaa-art.js"></script>
 </head>
 <body>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1204,6 +1204,7 @@ const bgOf = st => st && st.store && st.store.bg ? colorHex(st.store.bg) : null;
 const bdStyle = st => { const b = bgOf(st), d = st && st.store && st.store.border ? colorHex(st.store.border) : null; return b || d ? ` data-aqkeep style="${b ? `--sbg:${b};` : ''}${d ? `border:3px solid ${d};` : ''}"` : ''; };
 const modelOf = d => (d && d.model === 'm') ? 'm' : 'f';
 function designSVG(d, model, bg) {
+  if (d && window.AZ3) { try { return AZ3(d, model, bg); } catch (e) { } } /* رسم العارضات v3 (azyaa-art.js) */
   const B0 = BODIES[model || modelOf(d)];
   const hasBag = d && [d.base, d.extra, d.extra2].some(x => x && x.type === 'bag');
   /* البنت: يد على الخصر. الولد: يدينه الثنتين بجيوبه (إلا إذا شايل شنطة، يشيلها بيده) */
