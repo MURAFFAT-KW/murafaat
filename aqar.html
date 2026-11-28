@@ -909,6 +909,8 @@ const PERKS = [
 ];
 const PERK_WHEN = { inspect: ['pre', 'pitch', 'deals', 'summary'], budgetUp: ['pre', 'pitch', 'deals', 'summary'], budgetDown: ['pre', 'pitch', 'deals', 'summary'], protect: ['pre', 'pitch', 'deals', 'summary'], addons: ['pre', 'pitch', 'deals', 'summary'], violation: ['pre'], negotiator: ['pitch'], outbid: ['deals'], glitch: ['deals'], deposit: ['deals'], rent: ['deals'], hijack: ['summary'] };
 
+/* عدد البيوت لكل لاعب: يحدده المضيف بالإعدادات (الافتراضي ٣) */
+const MAXH = () => (G && G.settings && +G.settings.houses) || 3;
 /* ---------- العقار ---------- */
 function specValue(sp) {
   let v = (byId(CONFIG.areas, sp.area) || { price: 0 }).price + (byId(CONFIG.lands, sp.land) || { price: 0 }).price + sp.floors * CONFIG.floorPrice + (byId(CONFIG.styles, sp.style) || { price: 0 }).price + (sp.basement ? CONFIG.basementPrice : 0) + (byId(CONFIG.colors, sp.color) || { price: 0 }).price;
@@ -1269,17 +1271,17 @@ const GAME = {
   intro: { ar: 'كل لاعب مكتب عقاري بميزانية محدودة.<br>تبني عقاراتك وتعرضها وتقنع الباقين يشترون منك.<br>فاوض، استخدم مزاياك، واجمع أعلى نقاط.', en: 'Each player is a real-estate office with a limited budget.<br>Build your properties, pitch them and convince others to buy.<br>Negotiate, use your perks and score the most points.' },
   lead: { ar: 'كل لاعب على تلفونه. ابنِ عقاراتك وفاوض ربعك على أحسن صفقة.', en: 'Everyone on their own phone. Build your properties and negotiate the best deal with your friends.' },
   timer: { min: 30, max: 300, step: 30 },
-  defaults: { hostPlays: 1, players: 3, budget: 1000, setupTime: 180, rounds: 3, presenters: 2, pitchTime: 60, dealTime: 120, voteTime: 60 },
-  limits: { budget: [100, 10000, 100], setupTime: [30, 300, 30], pitchTime: [30, 300, 30], dealTime: [30, 300, 30], voteTime: [30, 300, 30], rounds: [1, 10, 1], presenters: [1, 5, 1] },
+  defaults: { hostPlays: 1, players: 3, houses: 3, budget: 1000, setupTime: 180, rounds: 3, presenters: 2, pitchTime: 60, dealTime: 120, voteTime: 60 },
+  limits: { houses: [1, 5, 1], budget: [100, 10000, 100], setupTime: [30, 300, 30], pitchTime: [30, 300, 30], dealTime: [30, 300, 30], voteTime: [30, 300, 30], rounds: [1, 10, 1], presenters: [1, 5, 1] },
   afterStep() { G.settings.presenters = Math.min(G.settings.presenters, G.settings.players); },
   settingsView() {
-    return stp('budget', 100, 10000, { label: L('ميزانية كل مكتب', 'Budget per office'), fmt: money }) + stp('rounds', 1, 10, { label: L('عدد الجولات', 'Rounds') }) +
+    return stp('houses', 1, 5, { label: L('عدد البيوت لكل لاعب (بالتجهيز)', 'Houses per player (at setup)') }) + stp('budget', 100, 10000, { label: L('ميزانية كل مكتب', 'Budget per office'), fmt: money }) + stp('rounds', 1, 10, { label: L('عدد الجولات', 'Rounds') }) +
       stp('presenters', 1, Math.min(5, G.settings.players), { label: L('عدد اللي يعرضون بالجولة (عشوائي)', 'Presenters per round (random)') }) +
       timeRow('setupTime', L('وقت تجهيز المكتب (مزايا + عقارات)', 'Office setup time')) + timeRow('pitchTime', L('وقت العرض والإقناع (لكل لاعب)', 'Pitch time (per player)')) +
       timeRow('dealTime', L('وقت التفاوض والصفقات', 'Negotiation & deals time')) + timeRow('voteTime', L('وقت التصويت', 'Voting time')) +
       `<p class="sub">${L('النقاط: ٥ بنود، والمراكز تاخذ', 'Scoring: 5 categories; ranks score')} ${CONFIG.rankPoints.join(' / ')}. <span class="badge">${L('الأسعار تجريبية', 'Trial prices')}</span></p>`;
   },
-  settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · ${L('ميزانية', 'budget')} ${money(s.budget)} · ${s.rounds} ${L('جولات', 'rounds')} · ${s.presenters} ${L('يعرضون بالجولة', 'presenters/round')}`; },
+  settingsSummary() { const s = G.settings; return `${s.players} ${L('لاعبين', 'players')} · 🏠 ${MAXH()} · ${L('ميزانية', 'budget')} ${money(s.budget)} · ${s.rounds} ${L('جولات', 'rounds')} · ${s.presenters} ${L('يعرضون بالجولة', 'presenters/round')}`; },
   freshExtra: () => ({ budget: {}, props: [], perks: {}, used: {}, profit: {}, dealsN: {}, votes: {}, round: 0, presenters: [], pIdx: 0, presentedIds: [], suspended: {}, protectedRound: {}, negotiator: {}, offers: [], dealsList: [], holds: [], rentals: [], rentReqs: [], roundDone: [], spoken: [], results: null }),
   resetMine(m) { Object.assign(m, { perks: [], props: [], done: {}, vote: null }); },
   viewKey: () => 'r' + G.round + 'p' + G.pIdx + (U.sub || ''),
@@ -1345,7 +1347,7 @@ const GAME = {
     return '';
   },
   assumptions: {
-    ar: ['الميزانية الافتراضية ١٠٠٠ د.ك والمضيف يغيرها. العملة مؤقتة.', 'أسعار المناطق والأراضي والأدوار والسرداب والستايل والألوان والتجهيزات تجريبية. الأبيض مجاني.', 'أسعار المزايا موحّدة مؤقتًا (٥٠)، ومبالغها (زيادة/نقص ١٠٠، عربون ٥٠، إيجار ٣٠ × جولتين) مؤقتة.', 'أقصى عدد عقارات بمرحلة التجهيز ٣.', 'كل العقارات المملوكة معروضة بالسوق بسعر يحدده صاحبها.', 'التفاوض بالكلام، والمشتري يسجّل السعر المتفق عليه والبايع يقبل أو يرفض.', 'الصفقات تكتمل بنهاية وقت الصفقات.', 'المتحدثين عشوائي بدون تكرار لين الكل يعرض. النهاية بعد عدد الجولات.', 'خطف الصفقة: تعويض المشتري الأول غير محدد؛ مؤقتًا يرجع له مبلغه من البايع.', 'العربون: ينحسب من السعر إذا اشترى، ويروح للبايع إذا ما اشترى (مؤقت).', 'الإيجار: الأجرة تنخصم بداية كل جولة للمالك. فايدته باللعب غير محددة.', '«أحمي نفسك» تحميك طول الجولة اللي تفعّلها فيها (مؤقت).', 'التعادل في بند: نفس نقاط المركز. وإذا اللاعبين أقل من ٥ المراكز الموجودة بس تاخذ نقاط.', 'إذا خلص الوقت ما تنتقل اللعبة تلقائيًا؛ المضيف يضغط «إنهاء».'],
+    ar: ['الميزانية الافتراضية ١٠٠٠ د.ك والمضيف يغيرها. العملة مؤقتة.', 'أسعار المناطق والأراضي والأدوار والسرداب والستايل والألوان والتجهيزات تجريبية. الأبيض مجاني.', 'أسعار المزايا موحّدة مؤقتًا (٥٠)، ومبالغها (زيادة/نقص ١٠٠، عربون ٥٠، إيجار ٣٠ × جولتين) مؤقتة.', 'عدد البيوت لكل لاعب بمرحلة التجهيز يحدده المضيف (١–٥، الافتراضي ٣).', 'كل العقارات المملوكة معروضة بالسوق بسعر يحدده صاحبها.', 'التفاوض بالكلام، والمشتري يسجّل السعر المتفق عليه والبايع يقبل أو يرفض.', 'الصفقات تكتمل بنهاية وقت الصفقات.', 'المتحدثين عشوائي بدون تكرار لين الكل يعرض. النهاية بعد عدد الجولات.', 'خطف الصفقة: تعويض المشتري الأول غير محدد؛ مؤقتًا يرجع له مبلغه من البايع.', 'العربون: ينحسب من السعر إذا اشترى، ويروح للبايع إذا ما اشترى (مؤقت).', 'الإيجار: الأجرة تنخصم بداية كل جولة للمالك. فايدته باللعب غير محددة.', '«أحمي نفسك» تحميك طول الجولة اللي تفعّلها فيها (مؤقت).', 'التعادل في بند: نفس نقاط المركز. وإذا اللاعبين أقل من ٥ المراكز الموجودة بس تاخذ نقاط.', 'إذا خلص الوقت ما تنتقل اللعبة تلقائيًا؛ المضيف يضغط «إنهاء».'],
     en: ['Default budget 1000 KD; the host can change it. Currency is temporary.', 'Area, land, floor, basement, style, colour and fitting prices are trial values. White is free.', 'Perk prices are a flat temporary 50; amounts (boost/cut 100, deposit 50, rent 30 × 2) are temporary.', 'Max 3 properties during setup.', 'Every owned property is listed at a price its owner sets.', 'Negotiate out loud; the buyer records the agreed price and the seller accepts or rejects.', 'Deals complete when the deals time ends.', 'Presenters random, no repeats until all have pitched. The game ends after the set rounds.', 'Deal hijack: first buyer compensation undecided; for now the seller refunds them.', 'Deposit counts toward the price if bought; goes to the seller if not (temporary).', 'Rent is paid to the owner at the start of each round. What renting gives you is undecided.', '“Protect yourself” covers you for the round you activate it (temporary).', 'Category ties share the rank points; with fewer than 5 players only existing ranks score.', 'When time runs out nothing moves on by itself; the host presses “End”.']
   }
 };
@@ -1386,7 +1388,7 @@ ACT.setupEnd = H(() => phaseTo(() => {
     const m = inp(p.id), ok = m.g === G.gameNo;
     G.perks[p.id] = ok ? (m.perks || []).slice(0, CONFIG.maxPerks) : []; G.used[p.id] = [];
     let b = G.settings.budget - G.perks[p.id].length * CONFIG.perkPrice;
-    (ok ? m.props || [] : []).slice(0, CONFIG.maxPropsAtStart).forEach(sp => { const v = specValue(sp); if (b >= v) { b -= v; G.props.push({ id: ++n, owner: p.id, area: sp.area, land: sp.land, floors: sp.floors, style: sp.style, basement: !!sp.basement, color: sp.color || 'white', extras: (sp.extras || []).slice(), cost: v, asking: sp.asking || v }); } });
+    (ok ? m.props || [] : []).slice(0, MAXH()).forEach(sp => { const v = specValue(sp); if (b >= v) { b -= v; G.props.push({ id: ++n, owner: p.id, area: sp.area, land: sp.land, floors: sp.floors, style: sp.style, basement: !!sp.basement, color: sp.color || 'white', extras: (sp.extras || []).slice(), cost: v, asking: sp.asking || v }); } });
     G.budget[p.id] = b; G.profit[p.id] = 0; G.dealsN[p.id] = 0; G.votes[p.id] = 0;
   });
   G.nextProp = n + 1; startRound(1);
@@ -1506,7 +1508,7 @@ ACT.basement = d => { draft().basement = d.v === '1'; };
 ACT.floors = d => { const x = draft(); x.floors = Math.min(CONFIG.maxFloors, Math.max(1, x.floors + (+d.v))); };
 ACT.buyProp = () => {
   const m = mine(), x = draft(), v = specValue(x);
-  if (m.props.length >= CONFIG.maxPropsAtStart) { toast(L(`أقصى عدد ${CONFIG.maxPropsAtStart} عقارات`, `Max ${CONFIG.maxPropsAtStart} properties`)); return false; }
+  if (m.props.length >= MAXH()) { toast(L(`أقصى عدد ${MAXH()} عقارات`, `Max ${MAXH()} properties`)); return false; }
   if (myBudgetSetup(m) < v) { toast(L('الميزانية ما تكفي', 'Not enough budget')); return false; }
   m.props.push(Object.assign(clone(x), { key: uid('p'), asking: v })); saveMe(); toast(L('انضاف العقار ✓', 'Property added ✓'));
 };
@@ -1518,7 +1520,7 @@ function setupView() {
   let h = '';
   if (amPlayer()) {
     const m = mine(), bud = myBudgetSetup(m);
-    const bar = `<div class="moneybar"><span class="money">💰 ${L('ميزانيتك', 'Your budget')}: ${money(bud)}</span><span class="money alt">✨ ${m.perks.length}/${CONFIG.maxPerks}</span><span class="money alt">🏠 ${m.props.length}/${CONFIG.maxPropsAtStart}</span></div>`;
+    const bar = `<div class="moneybar"><span class="money">💰 ${L('ميزانيتك', 'Your budget')}: ${money(bud)}</span><span class="money alt">✨ ${m.perks.length}/${CONFIG.maxPerks}</span><span class="money alt">🏠 ${m.props.length}/${MAXH()}</span></div>`;
     if (U.sub !== 'props') {
       h += `<h2>${L('المزايا', 'Perks')}</h2><p class="sub">${L(`اختر لين ${CONFIG.maxPerks} مزايا. سعرها ينخصم من ميزانيتك، وكل ميزة تُستخدم مرة وحدة بأي جولة.`, `Pick up to ${CONFIG.maxPerks} perks. Their price comes off your budget; each is used once.`)} <span class="badge">${L('الأسعار مؤقتة', 'Temporary prices')}</span></p>${bar}
       <div class="perks">${PERKS.map(k => { const on = m.perks.includes(k.id); return `<button class="perk ${on ? 'on' : ''}" data-act="togPerk" data-id="${k.id}"><span class="pi">${k.icon}</span><span class="pt"><b>${N(k.name)}</b><small>${k.effect()}</small></span><span class="pp">${on ? '✓' : money(CONFIG.perkPrice)}</span></button>`; }).join('')}</div>
