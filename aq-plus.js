@@ -414,3 +414,63 @@
   function start() { var app = document.getElementById('app'); if (!app) return setTimeout(start, 100); mo.observe(app, { childList: true }); try { enhance(); } catch (e) { } mo.takeRecords(); }
   start();
 })();
+
+/* ---------- صفحة البداية لكل لعبة: كلها بشاشة وحدة بدون ما تنزل ---------- */
+(function () {
+  var css = document.createElement('style'); css.id = 'aq-intro-fit';
+  css.textContent =
+    'section.splash.intro,#app .intro{min-height:0!important;height:100svh;max-height:100svh;box-sizing:border-box;padding:max(6px,env(safe-area-inset-top)) 10px max(6px,env(safe-area-inset-bottom))!important;gap:min(2.2svh,18px)!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;overflow:hidden}' +
+    'section.splash.intro .lg,#app .intro .logo{margin:0!important;flex:none}' +
+    'section.splash.intro .lg svg,section.splash.intro .lg svg.aqlogo,section.splash.intro .lg svg.fulllogo,#app .intro .logo svg,#app .intro .logo svg.aqlogo{height:min(17svh,170px)!important;width:auto!important;max-width:64vw!important}' +
+    'body:has(section.splash.intro),body:has(#app .intro){margin:0!important;padding-top:0!important;padding-bottom:0!important}' +
+    'section.splash.intro .ar,#app .intro .gname{font-size:min(17vw,9.5svh)!important;line-height:1.05!important;margin:0!important;letter-spacing:0!important}' +
+    'section.splash.intro .introtx,#app .intro .lead{display:none!important}' +
+    'section.splash.intro .en{font-size:min(.95rem,1.8svh)!important;margin:0!important}' +
+    '#app .intro .intro-art,section.splash.intro .intro-art{margin:0 auto!important;flex:0 1 auto;min-height:0;display:flex!important;justify-content:center;align-items:flex-end;width:min(84vw,340px)!important}' +
+    '#app .intro .intro-art>svg,section.splash.intro .intro-art>svg{max-height:min(36svh,340px)!important;width:auto!important;max-width:100%!important;height:auto!important}' +
+    '#app .intro .intro-art.fig svg{max-height:min(36svh,340px)!important}' +
+    'section.splash.intro .intro-art .pitch{flex:none!important;width:min(56vw,230px,24svh)!important;max-width:none!important;margin:0 auto!important}' +
+    'section.splash.intro .introtx,#app .intro .lead{font-size:min(4.1vw,2.15svh)!important;line-height:1.55!important;margin:0 auto!important;max-width:min(94vw,380px)!important;width:100%;text-wrap:balance}' +
+    'section.splash.intro .go,section.splash.intro .btn,#app .intro .btn{margin-top:min(1.2svh,10px)!important;min-height:min(60px,7svh)!important;font-size:min(1.25rem,2.6svh)!important;width:100%;max-width:340px}' +
+    'section.splash.intro .aqt-open,#app .intro .aqt-open{margin-top:min(.8svh,8px)!important;padding:min(10px,1.2svh)!important;font-size:min(.95rem,1.9svh)!important;max-width:340px}' +
+    'body:has(#app .intro) #app,body:has(section.splash.intro) #app,body:has(section.splash.intro) #app .wrap{padding-top:0!important;padding-bottom:0!important;min-height:0!important;margin-top:0!important;margin-bottom:0!important}' +
+    '@media (min-height:900px){section.splash.intro .lg svg,#app .intro .logo svg{height:150px!important}}';
+  (document.head || document.documentElement).appendChild(css);
+})();
+
+/* ---------- كلام صفحة البداية: لا تبقى كلمة أو كلمتين بسطر بروحها ---------- */
+(function () {
+  function fit() {
+    var el = document.querySelector('section.splash.intro .introtx,#app .intro .lead');
+    if (!el || !el.clientWidth) return;
+    if (!el.__aqln) {
+      var parts = el.innerHTML.split(/<br\s*\/?>/i).filter(function (s) { return s.trim(); });
+      el.innerHTML = parts.map(function (s) { return '<span class="aqln">' + s.trim() + '</span>'; }).join('');
+      el.__aqln = true;
+    }
+    var avail = el.clientWidth - 2;
+    var base = parseFloat(getComputedStyle(el).fontSize) || 16;
+    [].forEach.call(el.querySelectorAll('.aqln'), function (ln) {
+      ln.style.cssText = 'display:inline-block;white-space:nowrap;font-size:' + base + 'px';
+      var w = ln.getBoundingClientRect().width;
+      if (w <= avail) { ln.style.cssText = 'display:block;white-space:nowrap'; return; }
+      if (w <= avail * 1.2) { ln.style.cssText = 'display:block;white-space:nowrap;font-size:' + (base * avail / w * 0.98).toFixed(2) + 'px'; return; }
+      ln.style.cssText = 'display:block;text-wrap:balance;-webkit-text-wrap:balance';
+    });
+  }
+  var q = 0;
+  function sched() { if (q) return; q = requestAnimationFrame(function () { q = 0; fit(); }); }
+  function start() {
+    fit();
+    new MutationObserver(function () {
+      var el = document.querySelector('section.splash.intro .introtx,#app .intro .lead');
+      if (el && !el.__aqln) sched();
+    }).observe(document.body, { childList: true, subtree: true });
+    addEventListener('resize', function () {
+      var el = document.querySelector('section.splash.intro .introtx,#app .intro .lead');
+      if (el) sched();
+    });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(sched);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();

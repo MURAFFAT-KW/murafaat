@@ -1505,6 +1505,14 @@ window.AQQR={svg:function(text,fg,bg){var q=new QRCode(-1,EC.M);q.addData(text);
       ['🏆', 'خمس بنود', 'الثروة النهائية، وأرباح البيع، والعقارات المملوكة، والصفقات المكتملة، وأفضل إقناع بالتصويت. المراكز تاخذ ٥/٤/٣/٢/١.', 'Five categories', 'Final wealth, sales profit, properties, deals and best pitch by vote. Ranks score 5/4/3/2/1.']
     ]
   };
+  var IDEA = {
+    murafaat: ['💡', 'فكرة اللعبة', 'كل لاعب يجاوب على أسئلة رأي بسرية.<br>اثنين اختلفوا، وكل واحد يدافع عن رأي الثاني.<br>والباقين محلفين يصوّتون للأقوى إقناعًا.', 'The idea', 'Everyone secretly answers opinion questions.<br>Two who disagree each defend the other’s view.<br>The rest are the jury and vote for the best.'],
+    mazad: ['💡', 'فكرة اللعبة', 'اثنين يبيعون نفس الغرض، وكل واحد سعره سرّي.<br>كل بائع ياخذ وقته يقنعكم تشترون منه.<br>الباقين يشترون أو يرفضون، والأعلى مجموع يفوز.', 'The idea', 'Two players sell the same item at secret prices.<br>Each seller gets a turn to convince you.<br>The rest buy or pass; the highest total wins.'],
+    nadik: ['💡', 'فكرة اللعبة', 'تدير فريق خماسي مع احتياطين، تاريخي أو من عندك.<br>تبيع وتشتري لاعبين بسوق انتقالات لين ٥ مواسم.<br>وبالنهاية تقنع الجمهور يصوّت لفريقك بالكأس.', 'The idea', 'Run a five-a-side team with two subs, real or your own.<br>Buy and sell players over up to 5 seasons.<br>Then convince the crowd to vote for your team.'],
+    azyaa: ['💡', 'فكرة اللعبة', 'صمّم تشكيلتك وجهّز متجرك واعرض قطعتك المميزة.<br>أقنع الباقين يزورون متجرك ويشترون منك.<br>الأكثر إقناعًا وإبداعًا يفوز.', 'The idea', 'Design a collection and show off your best piece.<br>Convince the others to visit and buy from you.<br>The most persuasive and creative wins.'],
+    aqar: ['💡', 'فكرة اللعبة', 'كل لاعب مكتب عقاري بميزانية محدودة.<br>تبني عقاراتك وتعرضها وتقنعهم يشترون منك.<br>فاوض، استخدم مزاياك، واجمع أعلى نقاط.', 'The idea', 'Each player is a real-estate office on a budget.<br>Build properties, pitch them, convince others to buy.<br>Negotiate, use your perks, score the most points.']
+  };
+  if (S[GAME] && IDEA[GAME]) S[GAME] = [IDEA[GAME]].concat(S[GAME]);
   var steps = S[GAME]; if (!steps) return;
   window.AQTUT = 1;
   var i = 0, ov = null, c = COL[GAME] || '#12203A';
