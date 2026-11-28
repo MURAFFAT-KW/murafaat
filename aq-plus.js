@@ -337,3 +337,80 @@
     draw();
   }, true);
 })();
+
+/* ---------- ترتيب الصفحة (المنصة، المزاد، الرئيس): المؤقت ثابت فوق، وأزرار المضيف ثابتة تحت ----------
+   عشان اللاعب ما يصعد وينزل يدور المؤقت، والمضيف ما ينزل لآخر الصفحة كل مرة. العقار والأزياء مسوينه داخل ملفاتهم. */
+(function () {
+  'use strict';
+  var name = (location.pathname.split('/').pop() || '').replace(/(-en)?\.html$/, '');
+  var CFG = {
+    mazad: { main: ['skip', 'perksNext', 'itemsNext', 'nextRound'], ic: ['tPause', 'tRestart'] },
+    nadik: { main: ['skip', 'tierNext', 'cupNext'], ic: ['tPause', 'tRestart'] },
+    murafaat: { main: ['next', 'endVote', 'nextCase', 'startAnswers'], ic: ['timer', 'tRestart', 'vPause', 'vRestart'] }
+  }[name];
+  if (!CFG || !window.MutationObserver) return;
+  var EN = (document.documentElement.getAttribute('lang') || 'ar').slice(0, 2) === 'en';
+  var css = document.createElement('style'); css.id = 'aq-layout-css';
+  css.textContent =
+    '.aqtb{position:sticky;top:max(6px,env(safe-area-inset-top));z-index:7;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid #E3E7EE;border-radius:16px;padding:6px 14px;margin:0 0 12px;box-shadow:0 8px 18px -12px rgba(18,32,58,.35)}' +
+    '.aqtb .aqtl{font-weight:800;font-size:.95rem;color:#4B5568;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}' +
+    '.aqtb .ring{position:relative;display:flex;align-items:center;gap:8px;width:auto!important;height:auto!important;margin:0!important;flex:none}' +
+    '.aqtb .ring svg{width:34px!important;height:34px!important;flex:none}' +
+    '.aqtb .ring .clock{position:static!important;inset:auto!important;display:block!important;font-size:1.6rem!important;line-height:1.1}' +
+    '.aqtb .ring::after{display:none!important}' +
+    '.aqtb:has(.ring.tup) ,.aqtb:has(.ring.ended){border-color:#F3B4B4;background:rgba(255,241,241,.97)}' +
+    '.aqtb:has(.ring.tup) .aqtl::after,.aqtb:has(.ring.ended) .aqtl::after{content:"' + (EN ? ' — Time’s up ⏰' : ' — انتهى الوقت ⏰') + '";color:#C81E1E}' +
+    '.aqtb:has(.ring.paused) .aqtl::after{content:"' + (EN ? ' — Paused ⏸️' : ' — متوقف ⏸️') + '";color:#6b7280}' +
+    '.aqhb{position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(255,255,255,.97);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-top:1px solid #E3E7EE;padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -8px 22px -12px rgba(18,32,58,.3)}' +
+    '.aqhb .hb{max-width:620px;margin:0 auto;display:flex;gap:8px;align-items:stretch}' +
+    '.aqhb .btn{margin:0!important;min-height:54px;width:auto!important}' +
+    '.aqhb .btn.aqic{flex:0 0 54px;padding:0!important;font-size:20px!important}' +
+    '.aqhb .btn.aqmain{flex:1;font-size:15px!important;line-height:1.3;padding:6px 10px!important}' +
+    'body.has-aqhb #app{padding-bottom:calc(96px + env(safe-area-inset-bottom))}' +
+    'body.has-aqhb #aqrep{bottom:calc(84px + env(safe-area-inset-bottom))!important}' +
+    'body.has-aqhb #toast{bottom:calc(92px + env(safe-area-inset-bottom))!important}' +
+    '.aqhb .btn.aqmain{background:#12203A!important;border-color:#12203A!important;color:#fff!important}' +
+    '.aqhb .btn.aqmain[aria-disabled=true]{opacity:.45}' +
+    /* زر تثبيت اللاعب (مثل «ثبّت عروضي» بالرئيس) يلصق تحت وهو نازل بالقائمة */
+    '#app button[data-act=sendBids],#app button[data-act=sendBuy],#app button[data-act=sendVote],#app button[data-act=sendPrice]{position:sticky;bottom:calc(10px + env(safe-area-inset-bottom));z-index:5;box-shadow:0 10px 24px -10px rgba(0,0,0,.45)}' +
+    'body.has-aqhb #app button[data-act=sendBids],body.has-aqhb #app button[data-act=sendBuy],body.has-aqhb #app button[data-act=sendVote],body.has-aqhb #app button[data-act=sendPrice]{bottom:calc(84px + env(safe-area-inset-bottom))}' +
+    'html.aq-tv .aqtb .ring svg{width:48px!important;height:48px!important}html.aq-tv .aqtb .ring .clock{font-size:2.4rem!important}';
+  (document.head || document.documentElement).appendChild(css);
+
+  var busy = false;
+  function lead(b) { var m = (b.textContent || '').trim().match(/^[^\p{L}\p{N}]+/u); return m ? m[0].trim() : (b.textContent || '').trim().slice(0, 2); }
+  function enhance() {
+    var app = document.getElementById('app'); if (!app) return;
+    var root = app.querySelector(':scope > .wrap') || app;
+    /* ١) المؤقت: نطلعه فوق بشريط صغير ثابت */
+    var ring = root.querySelector('.ring');
+    if (ring && !ring.closest('.aqtb') && !ring.closest('.modal,.sheet,[role=dialog]')) {
+      var card = ring.closest('section') || ring.parentNode;
+      var lab = card.querySelector('.tcontrols h3') || card.querySelector('h2') || card.querySelector('h3');
+      var bar = document.createElement('div'); bar.className = 'aqtb';
+      var l = document.createElement('span'); l.className = 'aqtl'; l.textContent = '⏳ ' + (lab ? lab.textContent.trim() : (EN ? 'Timer' : 'المؤقت'));
+      bar.appendChild(l); bar.appendChild(ring);
+      if (lab && lab.tagName === 'H3' && lab.closest('.tcontrols')) lab.remove();
+      var anchor = root.querySelector(':scope > .aqhint') || root.querySelector(':scope > header.top, :scope > .top');
+      if (anchor) anchor.parentNode.insertBefore(bar, anchor.nextSibling); else root.insertBefore(bar, root.firstChild);
+    }
+    /* ٢) أزرار المضيف: شريط ثابت تحت */
+    var btns = Array.prototype.filter.call(root.querySelectorAll('button[data-act]'), function (b) {
+      var a = b.dataset.act; return (CFG.main.indexOf(a) >= 0 || CFG.ic.indexOf(a) >= 0) && !b.closest('.modal,.sheet,[role=dialog],.aqhb');
+    });
+    var hb = root.querySelector(':scope > .aqhb');
+    if (btns.length) {
+      if (!hb) { hb = document.createElement('div'); hb.className = 'aqhb'; hb.innerHTML = '<div class="hb"></div>'; root.appendChild(hb); }
+      var row = hb.firstChild;
+      btns.filter(function (b) { return CFG.ic.indexOf(b.dataset.act) >= 0; }).forEach(function (b) { b.setAttribute('aria-label', b.textContent.trim()); b.textContent = lead(b); b.classList.add('aqic'); b.classList.remove('xl'); row.appendChild(b); });
+      btns.filter(function (b) { return CFG.main.indexOf(b.dataset.act) >= 0; }).forEach(function (b) { b.classList.add('aqmain'); b.classList.remove('xl'); row.appendChild(b); });
+    }
+    document.body.classList.toggle('has-aqhb', !!root.querySelector(':scope > .aqhb'));
+    /* ٣) نشيل الأماكن اللي فضت */
+    Array.prototype.forEach.call(root.querySelectorAll('.tctl,.btn-row,.tcontrols,.timerbox'), function (e) { if (!e.closest('.aqtb,.aqhb') && !e.children.length && !e.textContent.trim()) e.remove(); });
+    Array.prototype.forEach.call(root.querySelectorAll('section.card.timerbox'), function (e) { if (!e.textContent.trim() && !e.querySelector('button,input,img,svg')) e.remove(); });
+  }
+  var mo = new MutationObserver(function () { if (busy) return; busy = true; try { enhance(); } catch (e) { } mo.takeRecords(); busy = false; });
+  function start() { var app = document.getElementById('app'); if (!app) return setTimeout(start, 100); mo.observe(app, { childList: true }); try { enhance(); } catch (e) { } mo.takeRecords(); }
+  start();
+})();

@@ -206,6 +206,16 @@ html.aqguest .backbtn.hub{display:none!important}
 .edprice{padding:8px!important;display:grid;gap:6px;justify-items:center;text-align:center}.edprice>span{font-weight:800;font-size:14px}
 .edprice .stepper{gap:6px}.edprice .stepper button{width:38px;height:38px;min-height:38px;font-size:18px}.edprice .stepper .v{min-width:56px;font-size:15px}
 @media (min-width:760px){.edsplit{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px}.edprev .preview svg{height:420px!important}}
+
+.hostbar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid #E3E7EE;padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -8px 22px -12px rgba(18,32,58,.3)}
+.hostbar .hb{max-width:620px;margin:0 auto;display:flex;gap:8px;align-items:stretch}
+.hostbar .btn{margin:0!important;min-height:54px;width:auto}
+.hostbar .btn.ic{flex:0 0 54px;padding:0;font-size:20px}
+.hostbar .btn.end{flex:1;font-size:15px;line-height:1.3;padding:6px 10px}
+.hostbar .host-note{font-size:10px}
+body.has-hb #app{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+body.has-hb #aqrep{bottom:calc(84px + env(safe-area-inset-bottom))!important}
+body.has-hb .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
 </style>
 <style id="aq-pro-azyaa">
 .preview{background:radial-gradient(120% 90% at 50% 20%,#fff 0,#f6f0fb 55%,#ece2f6 100%)!important;border:1px solid #ece4f4;box-shadow:inset 0 -18px 30px rgba(123,47,190,.05)}
@@ -517,7 +527,11 @@ function tickUI() {
   const eb = $('endBtn'); if (eb) eb.classList.toggle('pulse', r <= 0);
 }
 setInterval(tickUI, 250);
-const endBtn = (label, act) => isHost() ? tCtl() + `<button class="btn end" id="endBtn" data-act="${act}">${L('إنهاء', 'End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>` : '';
+function hostBar(main) {
+  const t = G && G.endsAt ? (isPz() ? `<button class="btn ic" data-act="tPause" aria-label="${L('متابعة', 'Resume')}">▶️</button>` : `<button class="btn ghost ic" data-act="tPause" aria-label="${L('إيقاف', 'Pause')}">⏸️</button>`) + (G.dur ? `<button class="btn ghost ic" data-act="tRestart" aria-label="${L('إعادة المؤقت', 'Restart timer')}">🔄</button>` : '') : '';
+  return `<div class="hostbar"><div class="hb">${t}${main}</div></div>`;
+}
+const endBtn = (label, act) => isHost() ? hostBar(`<button class="btn end" id="endBtn" data-act="${act}">${L('إنهاء', 'End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>`) : '';
 const waitHost = () => isHost() ? '' : `<p class="sub" style="text-align:center">${L('بانتظار المضيف', 'Waiting for the host')} ${esc(P(G.host).name)} ${L('ينقل اللعبة للمرحلة الجاية…', 'to move to the next stage…')}</p>`;
 
 /* ---------- رجوع المضيف للمرحلة السابقة ---------- */
@@ -627,6 +641,7 @@ function modalView() {
 
 /* ---------- العرض ---------- */
 function render() {
+  SVGN = 0; PID = 0; /* أرقام ثابتة للرسومات عشان الصفحة ما تنعاد وتتحرك بكل تحديث */
   let html;
   if (U.notice) html = noticeView();
   else if (U.splash) html = splashView();
@@ -652,8 +667,9 @@ function render() {
   const sy = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
   app.innerHTML = html; U.lastHtml = html;
   if (fid) { const el = $(fid); if (el) { try { el.focus({ preventScroll: true }); if (ss != null) el.setSelectionRange(ss, se); } catch (e) { } } }
-  if (key !== U.lastKey) { window.scrollTo(0, 0); U.lastKey = key; } else window.scrollTo(0, y);
+  if (key !== U.lastKey) { window.scrollTo(0, 0); U.lastKey = key; } else if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
   const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sy;
+  document.body.classList.toggle('has-hb', !!app.querySelector('.hostbar'));
   tickUI();
 }
 
@@ -877,6 +893,7 @@ const BODIES = {
     legO: [[59.5, 11.3], [64, 11.0], [70, 10.3], [78, 9.2], [87, 7.9], [94, 6.7], [98, 6.3], [103, 6.7], [108, 6.9], [114, 6.0], [121, 4.4], [127, 3.9]],
     legI: [[66, .7], [72, 1.3], [80, 2.0], [90, 2.7], [97, 3.0], [101, 2.8], [106, 2.2], [112, 2.4], [120, 2.8], [127, 3.0]],
     arm: [[10.6, 26.2], [12.2, 35.6], [13.4, 45.4], [14.2, 55.6], [14.7, 65.6]], armW: 3.9, hand: 1.95,
+    armHip: [[10.6, 26.2], [14.4, 33.2], [18.4, 41.4], [16.6, 47.6], [12.9, 53.2]],
     feetY: 127.6, shoe: 'f'
   },
   /* ولد: جسم رياضي — كتوف عريضة، صدر بارز، خصر ضيق (شكل V)، أذرع وفخوذ عضلية */
@@ -887,12 +904,13 @@ const BODIES = {
     legO: [[59.5, 10.4], [65, 10.4], [71, 10.3], [79, 9.6], [88, 8.4], [95, 7.2], [98.5, 6.9], [103, 7.6], [108, 7.7], [114, 6.6], [121, 5.2], [127, 4.7]],
     legI: [[67.5, .8], [73, 1.3], [81, 2.1], [91, 3.0], [97, 3.4], [101, 3.2], [106, 2.4], [112, 2.6], [120, 3.0], [127, 3.2]],
     arm: [[13.5, 26.2], [15.4, 35.6], [16.5, 45.4], [17.3, 55.6], [17.8, 65.6]], armW: 5.1, hand: 2.3,
+    armHip: [[13.5, 26.2], [16.8, 35], [19.2, 44.2], [17.4, 53.2], [13.4, 61.4]],
     feetY: 127.6, shoe: 'm'
   }
 };
 /* سماكة الذراع على طوله: كتف وعضلة، كوع أنحف، ساعد، رسغ */
 const ARMPROF = [[0, 1.16], [.16, 1.12], [.3, 1.04], [.44, .84], [.52, .82], [.62, .92], [.78, .84], [1, .64]];
-const SKIN = '#E6D6C6', SKIN2 = '#D9C6B4', HAIR = '#2B1D24';
+const SKIN = '#EED3C0', SKIN2 = '#DEBCA6', HAIR = '#2B1D24';
 const CLOTH_FOR = { m: ['shirt', 'jacket', 'pants', 'scarf', 'bag', 'hat', 'belt'] };
 const fits = (type, model) => !CLOTH_FOR[model] || CLOTH_FOR[model].includes(type);
 const r1 = v => Math.round(v * 10) / 10;
@@ -918,11 +936,18 @@ function sidePts(B, y0, y1, ease, flare, tab) {
   for (let i = 0; i <= n; i++) { const y = lerp(y0, y1, i / n); o.push([50 - halfAt(tab, y) - ease - (flare ? flare(y) : 0), y]); }
   return o;
 }
+/* طرف القماش: موجات خفيفة كأنه ينسدل ويتحرك */
+function waveSeg(a, b, dip, n, amp) {
+  let o = ''; n = n || 6; amp = amp == null ? 1.1 : amp;
+  const P = i => { const t = i / n; return [lerp(a[0], b[0], t), lerp(a[1], b[1], t) + dip * 4 * t * (1 - t)]; };
+  for (let i = 1; i <= n; i++) { const p0 = P(i - 1), p1 = P(i); o += ` Q${r1((p0[0] + p1[0]) / 2)} ${r1((p0[1] + p1[1]) / 2 + (i % 2 ? amp : -amp * .6))} ${r1(p1[0])} ${r1(p1[1])}`; }
+  return o;
+}
 /* شكل متناظر: نقاط الجانب الأيسر من فوق لتحت، والطرف السفلي منحني */
 function symShape(top, left, hemDip) {
   const right = left.slice().reverse().map(p => [mx(p[0]), p[1]]);
   const a = left[left.length - 1], b = right[0];
-  return `M${top} L${r1(left[0][0])} ${r1(left[0][1])}${curve(left)} Q50 ${r1(a[1] + (hemDip || 0) * 2)} ${r1(b[0])} ${r1(b[1])} L${r1(right[0][0])} ${r1(right[0][1])}${curve(right)} Z`;
+  return `M${top} L${r1(left[0][0])} ${r1(left[0][1])}${curve(left)} ${waveSeg(a, b, hemDip || 0, 7, 1.5)} L${r1(right[0][0])} ${r1(right[0][1])}${curve(right)} Z`;
 }
 /* خط الذراع (يسار)، ونقطة عليه عند نسبة t */
 function armAt(B, t) {
@@ -961,11 +986,11 @@ function legPath(B, ease, y0, y1, flare) {
 function bodySVG(B, ghost) {
   const h = B.head, fem = B.shoe === 'f';
   let o = `<ellipse cx="50" cy="${B.feetY + 6.4}" rx="20" ry="2.4" fill="rgba(60,30,90,.12)"/>`;
-  if (fem) o += `<path d="M${50 - h.rx - 1.4} ${h.cy - 1} Q${50 - h.rx - 2.6} ${h.cy + 12} ${50 - h.rx - .6} ${h.cy + 20} Q50 ${h.cy + 23} ${50 + h.rx + .6} ${h.cy + 20} Q${50 + h.rx + 2.6} ${h.cy + 12} ${50 + h.rx + 1.4} ${h.cy - 1} Z" fill="${HAIR}"/>`;
-  o += `<path d="${armPoly(B, .06, 1, B.armW, B.armW)}" fill="${SKIN}"/><path d="${armPoly(B, .06, 1, B.armW, B.armW, 'r')}" fill="${SKIN2}"/>`;
+  if (fem) o += `<path d="M${50 - h.rx - 1.6} ${h.cy - 2} Q${50 - h.rx - 3.8} ${h.cy + 8} ${50 - h.rx - 3} ${h.cy + 16} Q${50 - h.rx - 3.6} ${h.cy + 20} ${50 - h.rx - 1.6} ${h.cy + 22.5} Q${50 - h.rx + .6} ${h.cy + 21} ${50 - h.rx + 1.4} ${h.cy + 23.4} Q50 ${h.cy + 21.6} ${50 + h.rx - 1.4} ${h.cy + 23.4} Q${50 + h.rx - .6} ${h.cy + 21} ${50 + h.rx + 1.6} ${h.cy + 22.5} Q${50 + h.rx + 3.6} ${h.cy + 20} ${50 + h.rx + 3} ${h.cy + 16} Q${50 + h.rx + 3.8} ${h.cy + 8} ${50 + h.rx + 1.6} ${h.cy - 2} Z" fill="url(#${CUR.n}hr)"/>`;
+  o += `<path d="${armPoly(B, .06, 1, B.armW, B.armW)}" fill="${SKIN}"/><path d="${armPoly(B.R || B, .06, 1, B.armW, B.armW, 'r')}" fill="${SKIN2}"/>`;
   o += `<path d="${legPath(B, 0, B.hipY, B.feetY + .4)}" fill="${SKIN}"/><path d="${mirrorPath(legPath(B, 0, B.hipY, B.feetY + .4))}" fill="${SKIN2}"/>`;
-  const ov = d => CUR.cy ? `<path d="${d}" fill="url(#${CUR.cy})" opacity=".55"/>` : '';
-  o += ov(armPoly(B, .06, 1, B.armW, B.armW)) + ov(armPoly(B, .06, 1, B.armW, B.armW, 'r')) + ov(legPath(B, 0, B.hipY, B.feetY + .4)) + ov(mirrorPath(legPath(B, 0, B.hipY, B.feetY + .4)));
+  const ov = d => CUR.cy ? `<path d="${d}" fill="url(#${CUR.cy})" opacity=".85"/>` : '';
+  o += ov(armPoly(B, .06, 1, B.armW, B.armW)) + ov(armPoly(B.R || B, .06, 1, B.armW, B.armW, 'r')) + ov(legPath(B, 0, B.hipY, B.feetY + .4)) + ov(mirrorPath(legPath(B, 0, B.hipY, B.feetY + .4)));
   o += shoes(B);
   o += `<path d="M${50 - B.neck[0]} ${B.shY - 1.4} L${r1(50 - B.sh + .8)} ${B.shY + .2} Q${r1(50 - B.sh - .8)} ${B.shY + 1} ${r1(50 - halfAt(B.side, B.pitY))} ${B.pitY}${curve(sidePts(B, B.pitY, B.crotchY + 1, 0))} Q50 ${B.crotchY + 3} ${r1(50 + halfAt(B.side, B.crotchY + 1))} ${B.crotchY + 1}${curve(sidePts(B, B.pitY, B.crotchY + 1, 0).reverse().map(p => [mx(p[0]), p[1]]))} Q${r1(50 + B.sh + .8)} ${B.shY + 1} ${r1(50 + B.sh - .8)} ${B.shY + .2} L${50 + B.neck[0]} ${B.shY - 1.4} Z" fill="${SKIN}"/>`;
   o += `<path d="M50 ${B.shY - .6} L${r1(50 + B.sh - .8)} ${B.shY + .2} Q${r1(50 + B.sh + .8)} ${B.shY + 1} ${r1(50 + halfAt(B.side, B.pitY))} ${B.pitY}${curve(sidePts(B, B.pitY, B.crotchY + 1, 0).map(p => [mx(p[0]), p[1]]))} Q52 ${B.crotchY + 2.6} 50 ${B.crotchY + 2.6} Z" fill="${SKIN2}"/>`;
@@ -977,13 +1002,27 @@ function bodySVG(B, ghost) {
     else m += ' ' + mm(`M${50 - 11.6} ${r1(B.pitY + 6.6)} Q${50 - 6} ${r1(B.pitY + 9.6)} ${50 - .5} ${r1(B.pitY + 7.4)}`) + ` M50 ${r1(B.pitY + 1)} L50 ${r1(W + 3)}` + [40.6, 44.2, 47.8].map(y => ' ' + mm(`M${50 - 3.8} ${y} Q${50 - 1.9} ${y + .7} 50 ${y + .2}`)).join('') + ' ' + mm(`M${50 - 8.6} ${r1(W + 2)} Q${50 - 5.2} ${r1(W + 8)} ${50 - 1.6} ${r1(W + 12.4)}`) + ' ' + mm(`M${r1(50 - B.sh + .6)} ${sY + 2.4} Q${r1(50 - B.sh - .4)} ${sY + 6} ${r1(50 - B.sh + 1.8)} ${sY + 9}`);
     o += ln(m); }
   o += `<ellipse cx="50" cy="${h.cy}" rx="${h.rx}" ry="${h.ry}" fill="${SKIN}"/><path d="M50 ${h.cy - h.ry} Q${50 + h.rx} ${h.cy - h.ry + .4} ${50 + h.rx} ${h.cy} Q${50 + h.rx - .4} ${h.cy + h.ry - 1} 50.6 ${h.cy + h.ry} Q${50 + h.rx - 2.4} ${h.cy + 2} ${50 + h.rx - 3} ${h.cy - h.ry + 3} Z" fill="${SKIN2}"/>`;
-  if (fem) o += `<path d="M${50 - h.rx - .6} ${h.cy + 1.2} Q${50 - h.rx - 1} ${h.cy - h.ry - 1.2} 50.4 ${h.cy - h.ry - .8} Q${50 + h.rx + 1} ${h.cy - h.ry - .6} ${50 + h.rx + .6} ${h.cy + 1.2} Q${50 + h.rx - .4} ${h.cy - h.ry + 2.4} 52 ${h.cy - h.ry + 2} Q47 ${h.cy - h.ry + 1.4} ${50 - h.rx - .6} ${h.cy + 1.2} Z" fill="${HAIR}"/>`;
-  else o += `<path d="M${50 - h.rx - .3} ${h.cy - .4} Q${50 - h.rx - .8} ${h.cy - h.ry - 1.4} 50 ${h.cy - h.ry - 1} Q${50 + h.rx + .8} ${h.cy - h.ry - 1.4} ${50 + h.rx + .3} ${h.cy - .4} Q${50 + h.rx - .3} ${h.cy - h.ry + 2.6} 50 ${h.cy - h.ry + 2.4} Q${50 - h.rx + .3} ${h.cy - h.ry + 2.6} ${50 - h.rx - .3} ${h.cy - .4} Z" fill="${HAIR}"/>`;
+  if (fem) o += `<path d="M${50 - h.rx - .6} ${h.cy + 1.2} Q${50 - h.rx - 1} ${h.cy - h.ry - 1.2} 50.4 ${h.cy - h.ry - .8} Q${50 + h.rx + 1} ${h.cy - h.ry - .6} ${50 + h.rx + .6} ${h.cy + 1.2} Q${50 + h.rx - .4} ${h.cy - h.ry + 2.4} 52 ${h.cy - h.ry + 2} Q47 ${h.cy - h.ry + 1.4} ${50 - h.rx - .6} ${h.cy + 1.2} Z" fill="url(#${CUR.n}hr)"/>`;
+  else o += `<path d="M${50 - h.rx - .3} ${h.cy - .4} Q${50 - h.rx - .8} ${h.cy - h.ry - 1.4} 50 ${h.cy - h.ry - 1} Q${50 + h.rx + .8} ${h.cy - h.ry - 1.4} ${50 + h.rx + .3} ${h.cy - .4} Q${50 + h.rx - .3} ${h.cy - h.ry + 2.6} 50 ${h.cy - h.ry + 2.4} Q${50 - h.rx + .3} ${h.cy - h.ry + 2.6} ${50 - h.rx - .3} ${h.cy - .4} Z" fill="url(#${CUR.n}hr)"/>`;
+  /* ملامح بأسلوب رسم الأزياء */
+  { const cx = 50, cy = h.cy, ink = '#3A2530';
+    const brow = sg => `<path d="M${r1(cx + sg * 1.0)} ${r1(cy - 1.9)} Q${r1(cx + sg * 2.3)} ${r1(cy - 2.9)} ${r1(cx + sg * 3.7)} ${r1(cy - 2.0)}" fill="none" stroke="${HAIR}" stroke-width="${fem ? .42 : .6}" stroke-linecap="round"/>`;
+    const eye = sg => fem ? `<path d="M${r1(cx + sg * 1.2)} ${r1(cy - .2)} Q${r1(cx + sg * 2.4)} ${r1(cy - 1.1)} ${r1(cx + sg * 3.6)} ${r1(cy - .3)} Q${r1(cx + sg * 2.4)} ${r1(cy + .5)} ${r1(cx + sg * 1.2)} ${r1(cy - .2)}Z" fill="#fff" opacity=".9"/><circle cx="${r1(cx + sg * 2.4)}" cy="${r1(cy - .3)}" r=".55" fill="#3B2418"/><circle cx="${r1(cx + sg * 2.25)}" cy="${r1(cy - .45)}" r=".16" fill="#fff"/><path d="M${r1(cx + sg * 1.1)} ${r1(cy - .2)} Q${r1(cx + sg * 2.4)} ${r1(cy - 1.2)} ${r1(cx + sg * 3.8)} ${r1(cy - .5)} l${sg * .5} -.35" fill="none" stroke="${ink}" stroke-width=".38" stroke-linecap="round"/>`
+      : `<path d="M${r1(cx + sg * 1.3)} ${r1(cy - .3)} Q${r1(cx + sg * 2.4)} ${r1(cy - .9)} ${r1(cx + sg * 3.5)} ${r1(cy - .3)} Q${r1(cx + sg * 2.4)} ${r1(cy + .3)} ${r1(cx + sg * 1.3)} ${r1(cy - .3)}Z" fill="#fff" opacity=".85"/><circle cx="${r1(cx + sg * 2.4)}" cy="${r1(cy - .3)}" r=".48" fill="#2E1E14"/><path d="M${r1(cx + sg * 1.3)} ${r1(cy - .35)} Q${r1(cx + sg * 2.4)} ${r1(cy - 1)} ${r1(cx + sg * 3.5)} ${r1(cy - .35)}" fill="none" stroke="${ink}" stroke-width=".32"/>`;
+    /* ظل تحت الذقن */
+    o += `<ellipse cx="50" cy="${r1(cy + h.ry + .9)}" rx="${r1(B.neck[0] + .4)}" ry=".9" fill="#8A6550" opacity=".25" filter="url(#${CUR.fb})"/>`;
+    /* لمعة الشعر وخصلات */
+    if (fem) o += `<path d="M${r1(cx - h.rx + .6)} ${r1(cy - h.ry + 2.4)} Q${cx - 1} ${r1(cy - h.ry - .2)} ${cx + 2.6} ${r1(cy - h.ry + .4)}" fill="none" stroke="#7A5866" stroke-width=".7" stroke-linecap="round" opacity=".8"/><path d="M${r1(cx - h.rx - 1.2)} ${r1(cy + 4)} Q${r1(cx - h.rx - 2.2)} ${r1(cy + 12)} ${r1(cx - h.rx - .4)} ${r1(cy + 19)}" fill="none" stroke="#6A4A58" stroke-width=".5" opacity=".7"/><path d="M${r1(cx + h.rx + 1.2)} ${r1(cy + 4)} Q${r1(cx + h.rx + 2.2)} ${r1(cy + 12)} ${r1(cx + h.rx + .4)} ${r1(cy + 19)}" fill="none" stroke="#4A3040" stroke-width=".45" opacity=".6"/>`;
+    else o += `<path d="M${r1(cx - h.rx + 1)} ${r1(cy - h.ry + 1.2)} Q${cx} ${r1(cy - h.ry - 1.6)} ${r1(cx + h.rx - .6)} ${r1(cy - h.ry + .8)}" fill="none" stroke="#5E4652" stroke-width=".55" stroke-linecap="round" opacity=".8"/><path d="M${cx - 2} ${r1(cy - h.ry + .4)} q1.4 -1.4 3.2 -.6 M${cx + .4} ${r1(cy - h.ry)} q1.4 -1.2 3 -.2" fill="none" stroke="#4A3540" stroke-width=".4" stroke-linecap="round"/>`;
+  }
   return o;
 }
 function hands(B) {
-  const w = armAt(B, 1);
-  return `<ellipse cx="${r1(50 - w[0])}" cy="${r1(w[1] + B.hand * .8)}" rx="${B.hand * .85}" ry="${B.hand * 1.15}" fill="${SKIN}"/><ellipse cx="${r1(50 + w[0])}" cy="${r1(w[1] + B.hand * .8)}" rx="${B.hand * .85}" ry="${B.hand * 1.15}" fill="${SKIN2}"/>`;
+  const w = armAt(B, 1), hh = B.hand;
+  const one = (x, y, sg, col) => `<path d="M${r1(x - hh * .78)} ${r1(y)} Q${r1(x - hh * 1.05)} ${r1(y + hh * 1.5)} ${r1(x - hh * .55)} ${r1(y + hh * 2.5)} Q${r1(x)} ${r1(y + hh * 3.05)} ${r1(x + hh * .5)} ${r1(y + hh * 2.45)} Q${r1(x + hh * 1)} ${r1(y + hh * 1.4)} ${r1(x + hh * .78)} ${r1(y)} Z" fill="${col}"/><path d="M${r1(x + sg * hh * .7)} ${r1(y + hh * .6)} Q${r1(x + sg * hh * 1.25)} ${r1(y + hh * 1.3)} ${r1(x + sg * hh * .75)} ${r1(y + hh * 1.8)}" fill="none" stroke="${col}" stroke-width="${r1(hh * .55)}" stroke-linecap="round"/><path d="M${r1(x - hh * .25)} ${r1(y + hh * 1.9)} L${r1(x - hh * .3)} ${r1(y + hh * 2.5)} M${r1(x + hh * .15)} ${r1(y + hh * 1.95)} L${r1(x + hh * .12)} ${r1(y + hh * 2.6)}" stroke="#A87E68" stroke-width=".18" stroke-linecap="round" opacity=".6"/>`;
+  const w2 = armAt(B.R || B, 1);
+  if (B.R && B.shoe === 'm') return B.pockets ? '' : one(50 - w[0], w[1] - .2, 1, SKIN); /* الولد: يده (أو يدينه) بجيبه */
+  return one(50 - w[0], w[1] - .2, 1, SKIN) + (B.R ? `<g transform="rotate(-58 ${r1(50 + w2[0])} ${r1(w2[1])})">${one(50 + w2[0], w2[1] - .2, -1, SKIN2)}</g>` : one(50 + w2[0], w2[1] - .2, -1, SKIN2));
 }
 /* القطع: كل قطعة ترجع { main, sleeves, folds, seam, trim, dots, lapel } محسوبة من مقاس العارضة */
 function shapeOf(type, B, opt) {
@@ -992,10 +1031,10 @@ function shapeOf(type, B, opt) {
   const torso = (e, y1, flare, dip, nk, neckDip) => {
     const L = sidePts(B, B.pitY, y1, e, flare), R = L.slice().reverse().map(p => [mx(p[0]), p[1]]), a = L[L.length - 1];
     nk = nk == null ? nw + 1 : nk;
-    return `M${r1(50 + nk)} ${r1(sY - 1.6)} Q50 ${r1(sY + (neckDip || 2.4))} ${shoulderTop(e, nk)}${curve(L)} Q50 ${r1(a[1] + (dip || 0) * 2)} ${r1(mx(a[0]))} ${r1(a[1])}${curve(R)} Q${r1(50 + sh + e + 1.1)} ${r1(sY + 1)} ${r1(50 + sh + e - .8)} ${r1(sY + .2)} Q${r1(50 + nk + 3.4)} ${r1(sY - 1.4)} ${r1(50 + nk)} ${r1(sY - 1.6)} Z`;
+    return `M${r1(50 + nk)} ${r1(sY - 1.6)} Q50 ${r1(sY + (neckDip || 2.4))} ${shoulderTop(e, nk)}${curve(L)} ${y1 - W > 30 ? waveSeg(a, [mx(a[0]), a[1]], dip || 0, 8, 1.6) : ` Q50 ${r1(a[1] + (dip || 0) * 2)} ${r1(mx(a[0]))} ${r1(a[1])}`}${curve(R)} Q${r1(50 + sh + e + 1.1)} ${r1(sY + 1)} ${r1(50 + sh + e - .8)} ${r1(sY + .2)} Q${r1(50 + nk + 3.4)} ${r1(sY - 1.4)} ${r1(50 + nk)} ${r1(sY - 1.6)} Z`;
   };
   const both = d => [d, mirrorPath(d)];
-  const sl = (a, b, c, e) => { capOn = true; const d = armPoly(B, a, b, c, e); capOn = false; return both(d); };
+  const sl = (a, b, c, e) => { capOn = true; const d = armPoly(B, a, b, c, e), d2 = B.R ? armPoly(B.R, a, b, c, e) : d; capOn = false; return [d, mirrorPath(d2)]; };
   const w = B.armW;
   switch (type) {
     case 'shirt': {
@@ -1031,7 +1070,7 @@ function shapeOf(type, B, opt) {
       const L = sidePts(B, B.pitY, H - 2, .5, y => y > W ? (y - W) * .25 : 0);
       L.push([50 - halfAt(B.side, H) - 3.4, H + 6], [50 - halfAt(B.side, H) - (hem - H) * .26, hem]);
       const R = L.slice().reverse().map(p => [mx(p[0]), p[1]]), a = L[L.length - 1];
-      const main = `M${r1(50 + st)} ${sY - .6} L${r1(50 + st + 2.6)} ${sY - .2} L${r1(mx(L[0][0]))} ${B.pitY} Q50 ${sY + 2} ${r1(L[0][0])} ${B.pitY} L${r1(50 - st - 2.6)} ${sY - .2} L${r1(50 - st)} ${sY - .6} Q${50 - 3} ${sY + 4.6} 50 ${sY + 5.4} Q${50 + 3} ${sY + 4.6} ${r1(50 + st)} ${sY - .6} Z M${r1(L[0][0])} ${B.pitY}${curve(L)} Q50 ${r1(a[1] + 3)} ${r1(R[0][0])} ${r1(R[0][1])}${curve(R)} Q50 ${sY + 6} ${r1(L[0][0])} ${B.pitY} Z`;
+      const main = `M${r1(50 + st)} ${sY - .6} L${r1(50 + st + 2.6)} ${sY - .2} L${r1(mx(L[0][0]))} ${B.pitY} Q50 ${sY + 2} ${r1(L[0][0])} ${B.pitY} L${r1(50 - st - 2.6)} ${sY - .2} L${r1(50 - st)} ${sY - .6} Q${50 - 3} ${sY + 4.6} 50 ${sY + 5.4} Q${50 + 3} ${sY + 4.6} ${r1(50 + st)} ${sY - .6} Z M${r1(L[0][0])} ${B.pitY}${curve(L)} ${waveSeg(a, R[0], 1.5, 8, 2)}${curve(R)} Q50 ${sY + 6} ${r1(L[0][0])} ${B.pitY} Z`;
       return { main, seam: `M${r1(50 - halfAt(B.side, W) - .5)} ${W} Q50 ${W + 1.6} ${r1(50 + halfAt(B.side, W) + .5)} ${W}`, folds: `M46 ${W + 3} Q41 ${(W + hem) / 2} ${r1(50 - (hem - W) * .2)} ${hem - .4} M50 ${W + 4} L50 ${hem + 1} M54 ${W + 3} Q59 ${(W + hem) / 2} ${r1(50 + (hem - W) * .2)} ${hem - .4}`, trim: `M${50 - st} ${sY - .6} Q${50 - 3} ${sY + 4.6} 50 ${sY + 5.4} Q${50 + 3} ${sY + 4.6} ${50 + st} ${sY - .6}` };
     }
     case 'abaya': case 'daraa': {
@@ -1065,39 +1104,58 @@ function shapeOf(type, B, opt) {
   return null;
 }
 let SVGN = 0, PID = 0, CUR = { cy: '', sf: '' };
+const hx = h => { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+const tone = (c, t, k) => { const a = hx(c), b = hx(t); return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * k).toString(16).padStart(2, '0')).join(''); };
 function sharedDefs(defs) {
-  const n = ++SVGN; CUR = { cy: 'cy' + n, sf: 'sf' + n, ln: 'ln' + n, sp: 'sp' + n, fl: 'fl' + n };
+  const n = ++SVGN; CUR = { cy: 'cy' + n, sf: 'sf' + n, ln: 'ln' + n, sp: 'sp' + n, fl: 'fl' + n, fb: 'fb' + n, gw: 'gw' + n, au: 'au' + n, rf: 'rf' + n, md: 'md' + n, n };
+  defs.push(`<linearGradient id="${CUR.n}hr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4A3040"/><stop offset=".5" stop-color="#2B1D24"/><stop offset="1" stop-color="#150D12"/></linearGradient><linearGradient id="${CUR.n}lt" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".16"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#120818" stop-opacity=".22"/></linearGradient>`);
+  defs.push(`<filter id="${CUR.fb}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".55"/></filter><filter id="${CUR.gw}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="1.6"/></filter>` +
+    `<linearGradient id="${CUR.au}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFF1B8"/><stop offset=".35" stop-color="#E2B33C"/><stop offset=".6" stop-color="#9C6E12"/><stop offset=".8" stop-color="#E9C25A"/><stop offset="1" stop-color="#7A5409"/></linearGradient>` +
+    `<linearGradient id="${CUR.rf}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></linearGradient><mask id="${CUR.rf}" maskUnits="userSpaceOnUse" x="-20" y="0" width="140" height="160"><rect x="-20" y="131.4" width="140" height="30" fill="url(#${CUR.rf}g)"/></mask>`);
   defs.push(`<radialGradient id="${CUR.sp}" cx=".5" cy=".38" r=".75"><stop offset="0" stop-color="#ffffff"/><stop offset=".6" stop-color="#f7f2fb"/><stop offset="1" stop-color="#ece2f5"/></radialGradient><radialGradient id="${CUR.sp}c" cx=".5" cy=".36" r=".75"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="${CUR.sp}b" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="${CUR.fl}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7b2fbe" stop-opacity=".13"/><stop offset="1" stop-color="#7b2fbe" stop-opacity=".03"/></linearGradient>`);
   defs.push(`<linearGradient id="${CUR.cy}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1a0f24" stop-opacity=".34"/><stop offset=".14" stop-color="#1a0f24" stop-opacity=".08"/><stop offset=".34" stop-color="#fff" stop-opacity=".16"/><stop offset=".52" stop-color="#fff" stop-opacity="0"/><stop offset=".84" stop-color="#1a0f24" stop-opacity=".14"/><stop offset="1" stop-color="#1a0f24" stop-opacity=".36"/></linearGradient><linearGradient id="${CUR.ln}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".1"/><stop offset=".6" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#1a0f24" stop-opacity=".12"/></linearGradient><filter id="${CUR.sf}" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation=".7"/></filter>`);
 }
 function garment(p, B, defs, opt) {
   const hex = colorHex(p.color), S = shapeOf(p.type, B, opt || {}), id = 'g' + SVGN + 'x' + (++PID), lt = isLight(hex);
   if (!S) return '';
-  const line = lt ? 'rgba(40,25,50,.3)' : 'rgba(0,0,0,.45)', hi = lt ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.22)';
+  const line = tone(hex, '#1a0f24', lt ? .45 : .55), hi = lt ? 'rgba(255,255,255,.7)' : 'rgba(255,255,255,.3)', fab = p.fabric || 'cotton';
   const fill = fillFor(hex, p.pattern, defs), tx = textureFor(p.fabric, defs);
   const shade = (d, cid) => `<clipPath id="${cid}"><path d="${d}"/></clipPath>` ;
   const paint = (d, k) => {
     const cid = 'c' + id + k; defs.push(shade(d, cid));
     let o = `<path d="${d}" fill="rgba(35,18,50,.28)" filter="url(#${CUR.sf})" transform="translate(.35 .9)"/><path d="${d}" fill="${fill}"/>`;
     if (tx) o += `<path d="${d}" fill="${tx}"/>`;
-    o += `<path d="${d}" fill="url(#${CUR.cy})" opacity="${lt ? .75 : 1}"/><path d="${d}" fill="url(#${CUR.ln})"/>`;
+    o += `<path d="${d}" fill="url(#${CUR.cy})" opacity="${lt ? .75 : 1}"/><path d="${d}" fill="url(#${CUR.ln})"/><path d="${d}" fill="url(#${CUR.n}lt)"/>`;
+    /* لمعة الخامة */
+    if (fab === 'velvet') o += `<g clip-path="url(#${cid})"><path d="${d}" fill="none" stroke="${tone(hex, '#fff', .55)}" stroke-width="2.2" opacity=".55" filter="url(#${CUR.gw})"/></g>`;
+    if (fab === 'leather' || fab === 'silk') { const bb = bbox(d); if (bb) o += `<g clip-path="url(#${cid})" opacity="${fab === 'leather' ? .7 : .55}"><ellipse cx="${r1(bb[0] + bb[2] * .32)}" cy="${r1(bb[1] + bb[3] * .28)}" rx="${r1(bb[2] * .09)}" ry="${r1(bb[3] * .22)}" fill="#fff" filter="url(#${CUR.gw})"/><ellipse cx="${r1(bb[0] + bb[2] * .68)}" cy="${r1(bb[1] + bb[3] * .55)}" rx="${r1(bb[2] * .05)}" ry="${r1(bb[3] * .16)}" fill="#fff" opacity=".6" filter="url(#${CUR.gw})"/></g>`; }
     return o;
   };
   let o = '';
   if (S.handle) o += `<path d="${S.handle}" fill="none" stroke="${hex}" stroke-width="1.6" stroke-linecap="round"/><path d="${S.handle}" fill="none" stroke="${line}" stroke-width=".4"/>`;
-  if (S.sleeves) S.sleeves.forEach((sl, k) => { o += paint(sl, 's' + k) + (S.sfold ? `<g clip-path="url(#c${id}s${k})"><path d="${k ? mirrorPath(S.sfold) : S.sfold}" fill="none" stroke="${line}" stroke-width=".55" stroke-linecap="round" opacity=".7"/></g>` : '') + `<path d="${sl}" fill="none" stroke="${line}" stroke-width=".55" stroke-linejoin="round"/>`; });
+  if (S.sleeves) S.sleeves.forEach((sl, k) => { o += paint(sl, 's' + k) + (S.sfold ? `<g clip-path="url(#c${id}s${k})"><path d="${k ? (B.R ? '' : mirrorPath(S.sfold)) : S.sfold}" fill="none" stroke="${line}" stroke-width=".55" stroke-linecap="round" opacity=".7"/></g>` : '') + `<path d="${sl}" fill="none" stroke="${line}" stroke-width=".55" stroke-linejoin="round"/>`; });
   o += paint(S.main, 'm');
   const cid = 'c' + id + 'm';
   o += `<g clip-path="url(#${cid})">`;
   if (S.v) o += `<path d="${S.v}" fill="rgba(0,0,0,.28)"/>`;
   if (S.lapel) o += `<path d="${S.lapel}" fill="rgba(0,0,0,.16)" stroke="${line}" stroke-width=".4"/>`;
-  if (S.folds) o += `<path d="${S.folds}" fill="none" stroke="${line}" stroke-width=".6" stroke-linecap="round" opacity=".7"/><path d="${S.folds}" fill="none" stroke="${hi}" stroke-width=".45" stroke-linecap="round" transform="translate(-1 0)" opacity=".7"/>`;
-  if (S.seam) o += `<path d="${S.seam}" fill="none" stroke="${line}" stroke-width=".5" stroke-dasharray="1.3 1"/>`;
-  o += `</g><path d="${S.main}" fill="none" stroke="${line}" stroke-width=".6" stroke-linejoin="round"/>`;
+  if (S.folds) o += `<path d="${S.folds}" fill="none" stroke="#1a0f24" stroke-width="${fab === 'silk' || fab === 'chiffon' ? 1.6 : 1.2}" stroke-linecap="round" opacity="${lt ? .22 : .4}" filter="url(#${CUR.fb})"/><path d="${S.folds}" fill="none" stroke="${hi}" stroke-width="${fab === 'silk' ? 1.4 : .9}" stroke-linecap="round" transform="translate(-1.1 0)" opacity="${fab === 'silk' || fab === 'leather' ? .9 : .6}" filter="url(#${CUR.fb})"/><path d="${S.folds}" fill="none" stroke="${line}" stroke-width=".3" stroke-linecap="round" opacity=".35"/>`;
+  if (S.seam) o += fab === 'denim' ? `<path d="${S.seam}" fill="none" stroke="#E0A24A" stroke-width=".45" stroke-dasharray="1 .8"/>` : `<path d="${S.seam}" fill="none" stroke="${lt ? 'rgba(0,0,0,.25)' : 'rgba(255,255,255,.35)'}" stroke-width=".35" stroke-dasharray="1 .8"/>`;
+  o += `</g><path d="${S.main}" fill="none" stroke="${line}" stroke-width=".45" stroke-linejoin="round" opacity=".85"/>`;
   if (S.trim) o += `<path d="${S.trim}" fill="${p.type === 'belt' || p.type === 'shirt' ? (lt ? 'rgba(0,0,0,.06)' : 'rgba(255,255,255,.1)') : 'none'}" stroke="${lt ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.4)'}" stroke-width=".8" stroke-linecap="round" stroke-linejoin="round"/>`;
-  if (S.dots) o += S.dots.map(d => `<circle cx="${d[0]}" cy="${d[1]}" r=".85" fill="${lt ? '#7a6a58' : '#e9d9a6'}"/>`).join('');
+  if (S.dots) o += S.dots.map(d => `<circle cx="${d[0]}" cy="${d[1]}" r=".95" fill="url(#${CUR.au})"/><circle cx="${r1(d[0] - .3)}" cy="${r1(d[1] - .3)}" r=".28" fill="#fff" opacity=".85"/>`).join('');
+  if (p.type === 'abaya' || p.type === 'daraa') {
+    const sY = B.shY, hemY = B.feetY + (p.type === 'abaya' ? 1.6 : .4), ab = p.type === 'abaya';
+    let e = '';
+    if (ab) { for (let y = sY + 3; y < hemY - 1; y += 3.2) e += `M${r1(48.6)} ${r1(y)} l1.4 -1.4 l1.4 1.4 l-1.4 1.4Z M${r1(51.4)} ${r1(y + 1.6)} l1 -1 l1 1 l-1 1Z M${r1(46.6)} ${r1(y + 1.6)} l1 -1 l1 1 l-1 1Z `; }
+    else { const nw2 = B.neck[0] + 1.2; for (let k = 0; k <= 8; k++) { const t = k / 8, x = lerp(50 - nw2 - 3, 50 + nw2 + 3, t), y = sY + .8 + Math.sin(t * Math.PI) * 3.6; e += `M${r1(x - .9)} ${r1(y)} l.9 -.9 l.9 .9 l-.9 .9Z `; } for (let y = sY + 6; y < sY + 17; y += 2.6) e += `M49.1 ${r1(y)} l.9 -.9 l.9 .9 l-.9 .9Z `; }
+    o += `<path d="${e}" fill="url(#${CUR.au})" opacity=".95"/><path d="${e}" fill="none" stroke="#6E4B08" stroke-width=".15" opacity=".6"/>`;
+  }
+  if (p.type === 'necklace') o = `<g>${o.replace(/fill="(#[0-9a-fA-F]{6}|url\(#pt[0-9]+\))"/, `fill="url(#${CUR.au})"`)}</g><path d="${S.main}" fill="url(#${CUR.au})" opacity="${p.color === 'gold' ? .9 : .35}"/>`;
+  if (fab === 'chiffon' && !['bag', 'belt', 'necklace', 'hat'].includes(p.type)) o = `<g opacity=".86">${o}</g>`;
   return o;
 }
+function bbox(d) { const n = (d.match(/-?\d+(?:\.\d+)?/g) || []).map(Number); if (n.length < 4) return null; let a = 1e9, b = 1e9, c = -1e9, e = -1e9; for (let i = 0; i + 1 < n.length; i += 2) { a = Math.min(a, n[i]); c = Math.max(c, n[i]); b = Math.min(b, n[i + 1]); e = Math.max(e, n[i + 1]); } return [a, b, c - a, e - b]; }
 function fillFor(hex, pattern, defs) {
   if (!pattern || pattern === 'plain') return hex;
   const id = 'pt' + (++PID), c = isLight(hex) ? 'rgba(0,0,0,.22)' : 'rgba(255,255,255,.38)';
@@ -1113,20 +1171,43 @@ function textureFor(f, defs) {
   const id = 'tx' + (++PID);
   if (f === 'leather' || f === 'silk') defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".42" stop-color="#fff" stop-opacity="${f === 'leather' ? .38 : .28}"/><stop offset=".5" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity="${f === 'leather' ? .18 : 0}"/></linearGradient>`);
   else if (f === 'velvet') defs.push(`<radialGradient id="${id}" cx=".5" cy=".4" r=".7"><stop offset=".3" stop-color="#fff" stop-opacity=".12"/><stop offset="1" stop-color="#000" stop-opacity=".35"/></radialGradient>`);
-  else if (f === 'denim') defs.push(`<pattern id="${id}" width="2.4" height="2.4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width=".8" height="2.4" fill="#fff" fill-opacity=".16"/></pattern>`);
-  else if (f === 'wool') defs.push(`<pattern id="${id}" width="3" height="3" patternUnits="userSpaceOnUse"><circle cx=".8" cy=".8" r=".55" fill="#fff" fill-opacity=".22"/><circle cx="2.3" cy="2.3" r=".55" fill="#000" fill-opacity=".1"/></pattern>`);
+  else if (f === 'denim') defs.push(`<pattern id="${id}" width="1.6" height="1.6" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)"><rect width=".55" height="1.6" fill="#fff" fill-opacity=".18"/><rect x="1" y=".4" width=".2" height=".3" fill="#fff" fill-opacity=".25"/></pattern>`);
+  else if (f === 'wool') defs.push(`<pattern id="${id}" width="3" height="2.4" patternUnits="userSpaceOnUse"><path d="M0 0 L1.5 1.2 L0 2.4 M1.5 0 L3 1.2 L1.5 2.4" fill="none" stroke="#fff" stroke-opacity=".16" stroke-width=".35"/><path d="M.75 0 L2.25 1.2 L.75 2.4" fill="none" stroke="#000" stroke-opacity=".1" stroke-width=".3"/></pattern>`);
+  else if (f === 'cotton') defs.push(`<pattern id="${id}" width="1.2" height="1.2" patternUnits="userSpaceOnUse"><rect width="1.2" height=".3" fill="#fff" fill-opacity=".07"/><rect width=".3" height="1.2" fill="#000" fill-opacity=".05"/></pattern>`);
   else if (f === 'chiffon') defs.push(`<linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity=".05"/></linearGradient>`);
-  else if (f === 'linen') defs.push(`<pattern id="${id}" width="2" height="2" patternUnits="userSpaceOnUse"><rect width="2" height=".5" fill="#fff" fill-opacity=".12"/></pattern>`);
+  else if (f === 'linen') defs.push(`<pattern id="${id}" width="7" height="2.6" patternUnits="userSpaceOnUse"><rect width="4.2" height=".35" fill="#fff" fill-opacity=".2"/><rect x="2.4" y="1.3" width="3.6" height=".3" fill="#000" fill-opacity=".08"/><rect x="5" y=".7" width="1.6" height=".25" fill="#fff" fill-opacity=".14"/></pattern>`);
   else return null;
   return `url(#${id})`;
 }
 /* منصة عرض الأزياء: ضوء من فوق وممشى تحت العارضة */
-const stage = bg => bg ? `<rect x="-20" y="-10" width="140" height="160" fill="${bg}"/><rect x="-20" y="-10" width="140" height="160" fill="url(#${CUR.sp}c)"/><path d="M41 -2 L59 -2 L76 124 L24 124 Z" fill="url(#${CUR.sp}b)" opacity="${isLight(bg) ? .45 : .22}"/><path d="M38 121 L62 121 L82 140 L18 140 Z" fill="${isLight(bg) ? 'rgba(0,0,0,.07)' : 'rgba(255,255,255,.1)'}"/>` : `<rect x="-20" y="-10" width="140" height="160" fill="url(#${CUR.sp})"/><path d="M41 -2 L59 -2 L76 124 L24 124 Z" fill="url(#${CUR.sp}b)" opacity=".7"/><path d="M38 121 L62 121 L82 140 L18 140 Z" fill="url(#${CUR.fl})"/><path d="M50 121 L50 140 M41.6 121 L31 140 M58.4 121 L69 140" stroke="rgba(123,47,190,.08)" stroke-width=".4"/>`;
+const stage = bg => {
+  const base = bg || '#F4EEF9', lt = isLight(base), dk = tone(base, '#120A1C', lt ? .1 : .35), fl = tone(base, '#120A1C', lt ? .16 : .45), n = CUR.n;
+  let o = `<defs><linearGradient id="bk${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${tone(base, '#fff', lt ? .35 : .08)}"/><stop offset="1" stop-color="${dk}"/></linearGradient><radialGradient id="sl${n}" cx=".5" cy="0" r=".9"><stop offset="0" stop-color="#fff" stop-opacity="${lt ? .9 : .45}"/><stop offset=".5" stop-color="#fff" stop-opacity="${lt ? .25 : .1}"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><linearGradient id="fl${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${fl}"/><stop offset="1" stop-color="${tone(fl, '#000', .25)}"/></linearGradient><linearGradient id="pn${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="${lt ? .5 : .16}"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient><linearGradient id="rw${n}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="${lt ? .5 : .14}"/><stop offset="1" stop-color="#fff" stop-opacity="${lt ? .12 : .04}"/></linearGradient></defs>`;
+  o += `<rect x="-20" y="-10" width="140" height="160" fill="url(#bk${n})"/>`;
+  /* ألواح إضاءة طويلة ورا العارضة */
+  o += [6, 18, 82, 94].map((x, i) => `<rect x="${x - 2.2}" y="${8 + (i % 2) * 6}" width="4.4" height="${104 - (i % 2) * 6}" rx="2.2" fill="url(#pn${n})"/>`).join('');
+  /* أضواء بعيدة (بوكيه) */
+  o += [[10, 6, 2.6], [22, 14, 1.6], [86, 9, 2.2], [76, 4, 1.4], [94, 20, 1.8], [4, 24, 1.4]].map(c => `<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}" fill="#fff" opacity="${lt ? .5 : .22}" filter="url(#${CUR.gw})"/>`).join('');
+  /* الجمهور على جنب الممشى وفلاشات الكاميرات */
+  const ppl = (x, y, s2, c) => `<g transform="translate(${x} ${y}) scale(${s2})"><circle cx="0" cy="-6.2" r="2.1" fill="${c}"/><path d="M-4.2 2 Q-4 -3 0 -3.6 Q4 -3 4.2 2 Z" fill="${c}"/></g>`;
+  const pc = lt ? 'rgba(40,24,56,.2)' : 'rgba(0,0,0,.42)', pc2 = lt ? 'rgba(40,24,56,.3)' : 'rgba(0,0,0,.6)';
+  o += [[2, 120], [9, 121], [16, 122], [84, 122], [91, 121], [98, 120]].map(q => ppl(q[0], q[1], .9, pc)).join('') + [[-1, 129], [7, 130], [15, 131], [85, 131], [93, 130], [101, 129]].map(q => ppl(q[0], q[1], 1.15, pc2)).join('');
+  o += [[8, 114, 1], [90, 116, .8], [17, 118, .6]].map(q => `<circle cx="${q[0]}" cy="${q[1]}" r="${3.6 * q[2]}" fill="#fff" opacity=".7" filter="url(#${CUR.gw})"/><path d="M${q[0]} ${q[1] - 2.6 * q[2]} L${q[0] + .5 * q[2]} ${q[1] - .5 * q[2]} L${q[0] + 2.6 * q[2]} ${q[1]} L${q[0] + .5 * q[2]} ${q[1] + .5 * q[2]} L${q[0]} ${q[1] + 2.6 * q[2]} L${q[0] - .5 * q[2]} ${q[1] + .5 * q[2]} L${q[0] - 2.6 * q[2]} ${q[1]} L${q[0] - .5 * q[2]} ${q[1] - .5 * q[2]}Z" fill="#fff"/>`).join('');
+  /* سبوت لايت من فوق */
+  o += `<path d="M44 -6 L56 -6 L80 131 L20 131 Z" fill="url(#sl${n})" opacity=".9"/><ellipse cx="50" cy="-4" rx="16" ry="9" fill="#fff" opacity="${lt ? .7 : .3}" filter="url(#${CUR.gw})"/>`;
+  /* الأرضية اللامعة والممشى */
+  o += `<rect x="-20" y="131" width="140" height="20" fill="url(#fl${n})"/><path d="M36 131 L64 131 L84 141 L16 141 Z" fill="url(#rw${n})"/><path d="M-20 131 H120" stroke="#fff" stroke-opacity="${lt ? .6 : .2}" stroke-width=".35"/>`;
+  o += [0, 1, 2, 3].map(k => `<circle cx="${r1(36 - k * 5.4)}" cy="${r1(131.8 + k * 2.6)}" r=".55" fill="#FFF3C8"/><circle cx="${r1(64 + k * 5.4)}" cy="${r1(131.8 + k * 2.6)}" r=".55" fill="#FFF3C8"/>`).join('');
+  return o;
+};
 const bgOf = st => st && st.store && st.store.bg ? colorHex(st.store.bg) : null;
-const bdStyle = st => { const b = bgOf(st), d = st && st.store && st.store.border ? colorHex(st.store.border) : null; return b || d ? ` style="${b ? `--sbg:${b};` : ''}${d ? `border:3px solid ${d};` : ''}"` : ''; };
+const bdStyle = st => { const b = bgOf(st), d = st && st.store && st.store.border ? colorHex(st.store.border) : null; return b || d ? ` data-aqkeep style="${b ? `--sbg:${b};` : ''}${d ? `border:3px solid ${d};` : ''}"` : ''; };
 const modelOf = d => (d && d.model === 'm') ? 'm' : 'f';
 function designSVG(d, model, bg) {
-  const B = BODIES[model || modelOf(d)];
+  const B0 = BODIES[model || modelOf(d)];
+  const hasBag = d && [d.base, d.extra, d.extra2].some(x => x && x.type === 'bag');
+  /* البنت: يد على الخصر. الولد: يدينه الثنتين بجيوبه (إلا إذا شايل شنطة، يشيلها بيده) */
+  const B = d ? Object.assign({}, B0, B0.shoe === 'm' && !hasBag ? { arm: B0.armHip, pockets: 2 } : {}, { R: Object.assign({}, B0, { arm: B0.armHip }) }) : B0;
   if (!d) { const df = []; sharedDefs(df); return `<svg viewBox="0 0 100 140" class="dsvg empty"><defs>${df.join('')}</defs>${bg ? stage(bg) : ''}<g opacity=".5">${bodySVG(B)}${hands(B)}</g><text x="50" y="104" text-anchor="middle" font-size="9" font-weight="700" fill="#9a8fae">${L('فاضي', 'Empty')}</text></svg>`; }
   const defs = []; let body = ''; sharedDefs(defs);
   const ps = [d.base, d.extra, d.extra2].filter(x => x && x.type && cloth(x.type)), ty = ps.map(x => x.type);
@@ -1134,13 +1215,14 @@ function designSVG(d, model, bg) {
   const tuck = ty.includes('shirt') && ty.some(t => t === 'pants' || t === 'skirt' || t === 'maxi');
   const z = x => tuck && x.type === 'shirt' ? .5 : ZORDER[cloth(x.type).zone];
   ps.sort((a, b) => z(a) - z(b)).forEach(p => { body += garment(p, B, defs, { tuck }); });
-  return `<svg viewBox="0 0 100 140" class="dsvg"><defs>${defs.join('')}</defs>${stage(bg)}${bodySVG(B)}${body}${hands(B)}</svg>`;
+  const sc = stage(bg), fy = B.feetY + 4;
+  return `<svg viewBox="0 0 100 140" class="dsvg"><defs>${defs.join('')}</defs>${sc}<g mask="url(#${CUR.rf})"><g transform="translate(0 ${r1(2 * fy)}) scale(1 -1)" opacity=".5"><use href="#${CUR.md}"/></g></g><g id="${CUR.md}">${bodySVG(B)}${body}${hands(B)}</g></svg>`;
 }
 function storeHTML(st, name, act, opt) {
   opt = opt || {};
   const bg = st.store && st.store.bg ? colorHex(st.store.bg) : '#f6f4f8', bd = st.store && st.store.border ? colorHex(st.store.border) : '#d6d0de';
   const feat = (st.featured != null && st.designs && st.designs[st.featured]) || (st.designs || []).find(Boolean) || null;
-  return `<div class="store${opt.big ? ' big' : ''}" style="background:${bg};border-color:${bd};color:${isLight(bg) ? '#1d1d1f' : '#fff'}" ${act || ''}>
+  return `<div class="store${opt.big ? ' big' : ''}" data-aqkeep style="background:${bg};border-color:${bd};color:${isLight(bg) ? '#1d1d1f' : '#fff'}" ${act || ''}>
     ${st.discount ? `<span class="sbadges">🏷️${st.discount}%</span>` : ''}${opt.big ? `<span class="sloc">📍 ${L('موقع مميز', 'Prime spot')}</span>` : ''}<div class="sname">${esc(st.brand && st.brand.name || L('متجر ', '') + name + L('', '’s store'))}</div>
     <div class="sfeat">${designSVG(feat, null, bgOf(st))}</div><div class="sowner">${esc(name)}</div>${opt.spy ? `<div class="sspy">🔍 🚶${opt.spy.v} · 🛍️${opt.spy.s}</div>` : ''}</div>`;
 }
@@ -1350,7 +1432,7 @@ ACT.togOwn = d => {
   saveMe();
 };
 ACT.setStore = d => { const m = mine(), cost = d.k === 'bg' ? P_.storeBg : P_.storeBorder; if (m.store[d.k] === d.id) m.store[d.k] = null; else if (m.store[d.k]) m.store[d.k] = d.id; else if (spendOk(cost)) m.store[d.k] = d.id; saveMe(); };
-const swatch = (c, on, act) => `<div class="swwrap"><button class="sw ${on ? 'on' : ''}" style="background:${c.hex}" ${act}></button><div class="swl">${N(c.name)}</div></div>`;
+const swatch = (c, on, act) => `<div class="swwrap"><button class="sw ${on ? 'on' : ''}" data-aqkeep style="background:${c.hex}" ${act}></button><div class="swl">${N(c.name)}</div></div>`;
 function matView() {
   const m = mine();
   return `<button class="mini" data-act="sub" data-v="">${BACK} ${L('المزايا', 'Perks')}</button><h2>${L('المواد الأولية', 'Raw materials')}</h2><p class="sub">${L('اضغط مرة ثانية للاسترجاع.', 'Tap again to refund.')} <span class="badge">${L('الأسعار مؤقتة', 'Temporary prices')}</span></p>${capBar()}

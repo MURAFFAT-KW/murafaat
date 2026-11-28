@@ -169,6 +169,8 @@ html[dir=ltr] .stepper{flex-direction:row-reverse}
 .pbadges{display:flex;flex-wrap:wrap;gap:4px;margin-top:3px}
 .pbadges span{font-size:.72rem;font-weight:700;background:#FFF3D1;color:#875c00;border-radius:99px;padding:2px 8px}
 .acts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.acts.in{margin:0;gap:5px}.acts.in .mini{padding:6px 10px}
+.prop .askbox b{font-size:1.05rem;white-space:nowrap}
 .mini{border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 11px;font:700 .85rem var(--font);cursor:pointer;color:var(--ink)}
 .mini.ok{background:var(--p);border-color:var(--p);color:#fff}
 .mini:disabled{opacity:.4;cursor:default}
@@ -241,7 +243,28 @@ html.aqguest .backbtn.hub{display:none!important}
 .notice .nbox{background:#fff;border:3px solid #DE0921;border-radius:22px;padding:24px 20px;max-width:520px;display:grid;gap:12px;color:#111}
 .notice h2{color:#111;font-size:1.35rem;text-align:center}
 .notice p{color:#111;line-height:1.85;font-size:1rem}
-.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}</style>
+.notice .nbtn{margin-top:8px;background:#DE0921;color:#fff;border:0;border-radius:99px;min-height:58px;font:800 1.15rem var(--font-d);cursor:pointer}
+/* ترتيب الصفحة: شريط ثابت فوق (المؤقت + أزرارك) وشريط المضيف ثابت تحت — عشان ما تصعد وتنزل */
+.sticky{position:sticky;top:0;z-index:6;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);margin:0 -16px 8px;padding:6px 16px 8px;box-shadow:0 6px 14px -10px rgba(18,32,58,.25)}
+.sticky .timer{position:static;padding:2px 0 6px;background:none;backdrop-filter:none}
+.dock{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:6px}
+.dock .dk{border:1.5px solid #D5DBE5;background:#fff;border-radius:14px;padding:5px 2px 4px;font:700 11.5px/1.25 var(--font);color:var(--ink);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:0}
+.dock .dk i{font-style:normal;font-size:17px;line-height:1.1}
+.dock .dk span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.dock .dk.money{background:#E9F6EE;border-color:#BFE3CC;cursor:default}
+.dock .dk.money span{color:var(--p);font-weight:800}
+.hostbar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:rgba(255,255,255,.97);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-top:1px solid #E3E7EE;padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -8px 22px -12px rgba(18,32,58,.3)}
+.hostbar .hb{max-width:620px;margin:0 auto;display:flex;gap:8px;align-items:stretch}
+.hostbar .btn{margin:0!important;min-height:54px;width:auto}
+.hostbar .btn.ic{flex:0 0 54px;padding:0;font-size:20px}
+.hostbar .btn.main,.hostbar .btn.end{flex:1;font-size:15px;line-height:1.3;padding:6px 10px}
+.hostbar .host-note{font-size:10px}
+body.has-hb #app{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+body.has-hb #aqrep{bottom:calc(84px + env(safe-area-inset-bottom))!important}
+body.has-hb .toast{bottom:calc(96px + env(safe-area-inset-bottom))}
+#inbox{scroll-margin-top:120px}
+#aqping{position:fixed;left:50%;transform:translateX(-50%);top:calc(10px + env(safe-area-inset-top));z-index:40;border:0;border-radius:99px;background:var(--p);color:#fff;font:800 14px/1.3 var(--font);padding:10px 18px;box-shadow:0 10px 24px -8px rgba(0,0,0,.4);cursor:pointer;white-space:nowrap}
+</style>
 <style id="aq-pro-aqar2">.preview .house{width:100%!important;height:auto!important;max-width:420px;margin:0 auto;border-radius:16px}.preview:has(.house){padding:0!important;background:none!important;overflow:hidden;border-radius:16px}.pv .house,.dv .house{border-radius:10px}</style>
 <style id="aq-pro-podium">
 .podium{position:relative;isolation:isolate;padding:58px 6px 0;margin-top:2px!important;background:radial-gradient(60% 75% at 50% 18%,rgba(251,198,17,.22),rgba(251,198,17,0) 70%);border-radius:18px;overflow:hidden}
@@ -546,7 +569,12 @@ function tickUI() {
   const eb = $('endBtn'); if (eb) eb.classList.toggle('pulse', r <= 0);
 }
 setInterval(tickUI, 250);
-const endBtn = (label, act) => isHost() ? tCtl() + `<button class="btn end" id="endBtn" data-act="${act}">${L('إنهاء', 'End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>` : '';
+function hostBar(main) {
+  const t = G && G.endsAt ? (isPz() ? `<button class="btn ic" data-act="tPause" aria-label="${L('متابعة', 'Resume')}">▶️</button>` : `<button class="btn ghost ic" data-act="tPause" aria-label="${L('إيقاف', 'Pause')}">⏸️</button>`) + (G.dur ? `<button class="btn ghost ic" data-act="tRestart" aria-label="${L('إعادة المؤقت', 'Restart timer')}">🔄</button>` : '') : '';
+  return `<div class="hostbar"><div class="hb">${t}${main}</div></div>`;
+}
+const endBtn = (label, act) => isHost() ? hostBar(`<button class="btn end" id="endBtn" data-act="${act}">${L('إنهاء', 'End')} (${label})<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>`) : '';
+const hostGo = (label, act) => isHost() ? hostBar(`<button class="btn main" data-act="${act}">${label}<span class="host-note">${L('يظهر للمضيف فقط', 'Host only')}</span></button>`) : '';
 const waitHost = () => isHost() ? '' : `<p class="sub" style="text-align:center">${L('بانتظار المضيف', 'Waiting for the host')} ${esc(P(G.host).name)} ${L('ينقل اللعبة للمرحلة الجاية…', 'to move to the next stage…')}</p>`;
 
 /* ---------- رجوع المضيف للمرحلة السابقة ---------- */
@@ -655,6 +683,7 @@ function modalView() {
 
 /* ---------- العرض ---------- */
 function render() {
+  HSV = 0; /* أرقام ثابتة للرسومات عشان الصفحة ما تنعاد وتتحرك بكل تحديث */
   let html;
   if (U.notice) html = noticeView();
   else if (U.splash) html = splashView();
@@ -680,8 +709,10 @@ function render() {
   const sy = document.querySelector('.sheet') ? document.querySelector('.sheet').scrollTop : 0;
   app.innerHTML = html; U.lastHtml = html;
   if (fid) { const el = $(fid); if (el) { try { el.focus({ preventScroll: true }); if (ss != null) el.setSelectionRange(ss, se); } catch (e) { } } }
-  if (key !== U.lastKey) { window.scrollTo(0, 0); U.lastKey = key; } else window.scrollTo(0, y);
+  if (key !== U.lastKey) { window.scrollTo(0, 0); U.lastKey = key; } else if (Math.abs(window.scrollY - y) > 1) window.scrollTo(0, y);
   const sh = document.querySelector('.sheet'); if (sh) sh.scrollTop = sy;
+  document.body.classList.toggle('has-hb', !!app.querySelector('.hostbar'));
+  if (GAME.afterRender) try { GAME.afterRender(); } catch (e) { }
   tickUI();
 }
 
@@ -873,9 +904,10 @@ const PERKS = [
   { id: 'hijack', icon: '🦅', name: { ar: 'خطف الصفقة', en: 'Deal hijack' }, effect: () => L('بعد ما تكتمل البيعة تنقل العقار لك بعرض أعلى.', 'After a deal completes, take the property with a higher offer.') },
   { id: 'glitch', icon: '⚠️', name: { ar: 'خلل بالإجراءات', en: 'Paperwork glitch' }, effect: () => L('تلغي بيعة قبل ما تكتمل، ويرجع العقار لصاحبه.', 'Cancel a deal before it completes; the property returns to its owner.') },
   { id: 'violation', icon: '⛔', name: { ar: 'مخالفة نظم', en: 'Regulation breach' }, effect: () => L('قبل بداية الجولة توقف مكتب تختاره عن اللعب طول الجولة.', 'Before a round, suspend an office of your choice for the whole round.') },
+  { id: 'inspect', icon: '🔍', name: { ar: 'تفتيش', en: 'Inspection' }, effect: () => L('طول الجولة اللي تفعّلها فيها تشوف كم فلوس عند كل مكتب وكم بيت يملك.', 'For the round you use it, see how much money every office has and how many houses it owns.') },
   { id: 'protect', icon: '🛡️', name: { ar: 'أحمي نفسك', en: 'Protect yourself' }, effect: () => L('تحميك من المزايدة وخطف الصفقة.', 'Protects you from Outbid and Deal hijack.') },
 ];
-const PERK_WHEN = { budgetUp: ['pre', 'pitch', 'deals', 'summary'], budgetDown: ['pre', 'pitch', 'deals', 'summary'], protect: ['pre', 'pitch', 'deals', 'summary'], addons: ['pre', 'pitch', 'deals', 'summary'], violation: ['pre'], negotiator: ['pitch'], outbid: ['deals'], glitch: ['deals'], deposit: ['deals'], rent: ['deals'], hijack: ['summary'] };
+const PERK_WHEN = { inspect: ['pre', 'pitch', 'deals', 'summary'], budgetUp: ['pre', 'pitch', 'deals', 'summary'], budgetDown: ['pre', 'pitch', 'deals', 'summary'], protect: ['pre', 'pitch', 'deals', 'summary'], addons: ['pre', 'pitch', 'deals', 'summary'], violation: ['pre'], negotiator: ['pitch'], outbid: ['deals'], glitch: ['deals'], deposit: ['deals'], rent: ['deals'], hijack: ['summary'] };
 
 /* ---------- العقار ---------- */
 function specValue(sp) {
@@ -889,74 +921,335 @@ const office = id => L('مكتب ', '') + P(id).name + L('', '’s office');
 const propTitle = pr => `${N(byId(CONFIG.areas, pr.area).name)} • ${N(byId(CONFIG.lands, pr.land).name)}`;
 const propSpecs = pr => `${pr.floors} ${L(pr.floors === 1 ? 'دور' : 'أدوار', pr.floors === 1 ? 'floor' : 'floors')} • ${N(byId(CONFIG.styles, pr.style).name)}${pr.basement ? ' • ' + L('سرداب', 'basement') : ''}${pr.color && pr.color !== 'white' ? ' • ' + N(byId(CONFIG.colors, pr.color).name) : ''}${pr.extras.length ? ' • ' + pr.extras.map(e => byId(CONFIG.extras, e).icon).join(' ') : ''}`;
 let HSV = 0;
-function houseSVG(sp) {
-  /* مشهد كامل: سما وأرض والبيت كبير بالنص. الستايل وعدد الأدوار والسرداب واللون والتجهيزات كلها تبين بالرسم */
-  const f = Math.max(1, Math.min(CONFIG.maxFloors, sp.floors || 1)), fh = 30, ground = 130, ex = sp.extras || [], st = sp.style;
-  const wall = (byId(CONFIG.colors, sp.color) || CONFIG.colors[0]).hex, id = 'h' + (++HSV);
-  const isWhite = !sp.color || sp.color === 'white', wallG = isWhite ? '#F5F4F0' : wall;
-  const glass = '#34505E', refl = '#5F7F8E', warm = '#E3B26C', warm2 = '#D9A45E', wood = '#A9744A', woodD = '#8A5A35', mull = '#EDEDE8', dark = '#2B2B2B';
-  const shade = 'rgba(0,0,0,.07)';
-  const pane = (px, py, pw, ph, n, o) => {
-    o = o || {}; let g = `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="${o.r || 0}" fill="${glass}"/>`;
-    g += `<rect x="${px + pw * .08}" y="${py + ph * .3}" width="${pw * .3}" height="${ph * .7}" fill="${warm}"/>`;
-    if (pw > 20) g += `<rect x="${px + pw * .58}" y="${py + ph * .45}" width="${pw * .28}" height="${ph * .55}" fill="${warm2}"/>`;
-    g += `<polygon points="${px + pw * .5},${py} ${px + pw * .62},${py} ${px + pw * .36},${py + ph} ${px + pw * .24},${py + ph}" fill="${refl}" opacity=".85"/>`;
-    for (let k = 1; k < (n || 1); k++) g += `<rect x="${px + pw * k / n - .8}" y="${py}" width="1.6" height="${ph}" fill="${o.mc || mull}"/>`;
-    if (o.frame) g += `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="${o.r || 0}" fill="none" stroke="${o.frame}" stroke-width="${o.fw || 1.6}"/>`;
+/* بيوت العقار v2 — أيزومتريك بخامات وإضاءة وتفاصيل. houseISO(sp, opt) — opt.night للمغرب، opt.lite للبطاقات الصغيرة */
+function houseISO(sp, opt) {
+  opt = opt || {};
+  const NIGHT = !!opt.night, LITE = !!opt.lite;
+  const COL = { white: '#F4F1EA', sand: '#E4C48E', grey: '#C3CBD5', blue: '#AFCDEB', green: '#B5DCBD', pink: '#F0BCC6' };
+  const f = Math.max(1, Math.min(3, sp.floors || 1)), ex = sp.extras || [], st0 = sp.style || 'classic', area = sp.area || 'sub';
+  const st = st0 === 'minimal' ? 'euro' : st0;
+  const id = 'q' + (++HSV);
+  const S = 0.88, OX = 100, OY = 62, H = 21;
+  const p = (x, y, z) => [OX + (x - y) * 0.866 * S, OY + (x + y) * 0.5 * S - z * S];
+  const f1 = v => Math.round(v * 10) / 10;
+  const pts = a => a.map(q => { const r = p(q[0], q[1], q[2]); return f1(r[0]) + ',' + f1(r[1]); }).join(' ');
+  const poly = (a, fill, extra) => `<polygon points="${pts(a)}" fill="${fill}"${extra ? ' ' + extra : ''}/>`;
+  const hex = h => { h = h.replace('#', ''); if (h.length === 3) h = h.split('').map(c => c + c).join(''); return [0, 2, 4].map(i => parseInt(h.slice(i, i + 2), 16)); };
+  const mix = (c, t, k) => { const a = hex(c), b = hex(t); return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * k).toString(16).padStart(2, '0')).join(''); };
+  const night = c => NIGHT ? mix(c, '#2A2F55', .3) : c;
+  let seed = 7; [st, area, sp.color || '', f, ex.join('')].join('|').split('').forEach(ch => { seed = (seed * 31 + ch.charCodeAt(0)) % 9973; });
+  const rnd = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  let defs = '', gN = 0;
+  const lg = (stops, x2, y2) => { const g = id + 'g' + (++gN); defs += `<linearGradient id="${g}" x1="0" y1="0" x2="${x2 == null ? 1 : x2}" y2="${y2 == null ? 1 : y2}">${stops.map(s => `<stop offset="${s[0]}" stop-color="${s[1]}"${s[2] != null ? ` stop-opacity="${s[2]}"` : ''}/>`).join('')}</linearGradient>`; return `url(#${g})`; };
+  const rg = (stops, cx, cy, r) => { const g = id + 'g' + (++gN); defs += `<radialGradient id="${g}" cx="${cx || .5}" cy="${cy || .5}" r="${r || .5}">${stops.map(s => `<stop offset="${s[0]}" stop-color="${s[1]}" stop-opacity="${s[2] == null ? 1 : s[2]}"/>`).join('')}</radialGradient>`; return `url(#${g})`; };
+  /* نقش على وجه: نرسمه بإحداثيات العالم ونحوّله لمستوى الوجه */
+  const pat = (w, h, body, plane, o) => {
+    const g = id + 'p' + (++gN), k = S, q = p(o[0], o[1], o[2]);
+    const m = plane === 'front' ? [.866 * k, .5 * k, 0, k] : plane === 'side' ? [-.866 * k, .5 * k, 0, k] : [.866 * k, .5 * k, -.866 * k, .5 * k];
+    defs += `<pattern id="${g}" patternUnits="userSpaceOnUse" width="${w}" height="${h}" patternTransform="matrix(${m.map(f1).join(' ')} ${f1(q[0])} ${f1(q[1])})">${body}</pattern>`;
+    return `url(#${g})`;
+  };
+  let wall = COL[sp.color] || COL.white;
+  if (st === 'heritage' && (!sp.color || sp.color === 'white')) wall = '#E8D2A6';
+  wall = night(wall);
+  const wL = mix(wall, '#FFFFFF', NIGHT ? 0 : .1), wR = mix(wall, '#2E2A3A', .26), wT = mix(wall, '#FFFFFF', .3);
+  const gL = lg([[0, mix(wL, '#FFFFFF', .12)], [1, mix(wL, '#4A4036', .08)]], 1, .6);
+  const gR = lg([[0, mix(wR, '#FFFFFF', .05)], [1, mix(wR, '#1E1A28', .14)]], 1, .4);
+  const AO = lg([[0, '#000', 0], [1, '#000', .28]], 0, 1);
+  const box = (x0, y0, z0, x1, y1, z1, cL, cR, cT, extra) =>
+    poly([[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], cT, extra) +
+    poly([[x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1]], cL, extra) +
+    poly([[x1, y0, z0], [x1, y1, z0], [x1, y1, z1], [x1, y0, z1]], cR, extra);
+  const glow = (x, y, z, r, c, o) => { const q = p(x, y, z); return `<circle cx="${f1(q[0])}" cy="${f1(q[1])}" r="${r}" fill="${rg([[0, c, o], [1, c, 0]])}"/>`; };
+  let s = '';
+  /* ---------- السما ---------- */
+  if (NIGHT) s += `<rect width="200" height="172" fill="${lg([[0, '#28305E'], [.45, '#7A4E7E'], [.72, '#E58A63'], [1, '#F7C68B']], 0, 1)}"/>` + [[22, 14], [60, 8], [150, 12], [182, 26], [118, 6]].map(t => `<circle cx="${t[0]}" cy="${t[1]}" r=".7" fill="#fff" opacity=".8"/>`).join('');
+  else s += `<rect width="200" height="172" fill="${lg([[0, '#BFDDF3'], [.55, '#E6F2FA'], [1, '#F6FAFC']], 0, 1)}"/><circle cx="26" cy="20" r="34" fill="${rg([[0, '#FFF6D8', .9], [1, '#FFF6D8', 0]])}"/>` +
+    [[140, 18, 1], [52, 30, .8]].map(c => `<g opacity=".85" transform="translate(${c[0]} ${c[1]}) scale(${c[2]})"><ellipse cx="0" cy="0" rx="14" ry="4.5" fill="#fff"/><ellipse cx="-6" cy="-3" rx="7" ry="5" fill="#fff"/><ellipse cx="5" cy="-4" rx="8" ry="6" fill="#fff"/></g>`).join('');
+  /* ---------- خلفية حسب المنطقة ---------- */
+  const far = NIGHT ? '#5A4F7A' : '#B8CCDD', far2 = NIGHT ? '#6D5E86' : '#C9D8E4';
+  if (area === 'coast') s += `<path d="M0 60 Q50 57 100 60 T200 58 V90 H0Z" fill="${NIGHT ? '#4F6E9E' : lg([[0, '#7FC7E2'], [1, '#B9E3F0']], 0, 1)}"/>` + [[8, 64], [44, 68], [96, 62], [150, 66], [176, 61]].map(w => `<path d="M${w[0]} ${w[1]} q4 -1.6 8 0" stroke="#fff" stroke-width=".8" fill="none" opacity=".75"/>`).join('') + `<path d="M150 58 l6 -9 l6 9z" fill="#fff" opacity=".9"/><path d="M155 58 h10 l-2 2 h-7z" fill="#8A6A45"/>`;
+  else if (area === 'city') s += [[4, 18, 34], [20, 12, 50], [33, 16, 28], [146, 15, 44], [160, 20, 58], [180, 14, 36], [192, 10, 24]].map(b => `<rect x="${b[0]}" y="${68 - b[2]}" width="${b[1]}" height="${b[2] + 20}" fill="${far}"/><rect x="${b[0] + b[1] - 3}" y="${68 - b[2]}" width="3" height="${b[2] + 20}" fill="${far2}" opacity=".6"/>` + Array.from({ length: Math.floor(b[2] / 6) }, (_, i) => Array.from({ length: Math.floor(b[1] / 5) }, (_, j) => `<rect x="${b[0] + 1.6 + j * 5}" y="${68 - b[2] + 3 + i * 6}" width="2.4" height="2.6" fill="${NIGHT ? (rnd() > .45 ? '#FFD98A' : '#3E3A60') : '#DCE7F0'}"/>`).join('')).join('')).join('');
+  else if (area === 'res') s += `<path d="M0 64 Q40 52 80 62 T160 58 T200 60 V90 H0Z" fill="${NIGHT ? '#4C5A6E' : '#C6DDBA'}"/>` + [[14, 58], [40, 61], [168, 56], [190, 60]].map(h => `<path d="M${h[0] - 7} ${h[1]} h14 v7 h-14z" fill="${far}"/><path d="M${h[0] - 9} ${h[1]} l9 -6 l9 6z" fill="${NIGHT ? '#6A5068' : '#C9A79A'}"/><rect x="${h[0] - 4}" y="${h[1] + 2}" width="3" height="3" fill="${NIGHT ? '#FFD98A' : '#9FB6C8'}"/>`).join('');
+  else s += `<path d="M0 66 Q50 48 100 62 T200 56 V90 H0Z" fill="${NIGHT ? '#4D5C70' : '#C4DCB2'}"/><path d="M0 72 Q60 60 120 70 T200 68 V90 H0Z" fill="${NIGHT ? '#43536A' : '#AFD099'}"/>` + [[30, 58], [168, 54], [184, 58]].map(t => `<circle cx="${t[0]}" cy="${t[1]}" r="3.5" fill="${NIGHT ? '#3D5650' : '#8DBB7C'}"/>`).join('');
+  s += `<rect y="84" width="200" height="88" fill="${NIGHT ? lg([[0, '#4A4566'], [1, '#2B2944']], 0, 1) : lg([[0, '#EEF4F7'], [1, '#E3ECF1']], 0, 1)}"/>`;
+  /* ---------- الأرض ---------- */
+  const L = 110, T = 7;
+  s += poly([[0, L, 0], [L, L, 0], [L, L, -T], [0, L, -T]], lg([[0, night('#9A7650')], [1, night('#6F5236')]], 0, 1)) + poly([[L, 0, 0], [L, L, 0], [L, L, -T], [L, 0, -T]], lg([[0, night('#7B5B3D')], [1, night('#553E29')]], 0, 1));
+  s += poly([[0, L, -1.2], [L, L, -1.2], [L, L, 0], [0, L, 0]], night('#7DB866')) + poly([[L, 0, -1.2], [L, L, -1.2], [L, L, 0], [L, 0, 0]], night('#6AA457'));
+  s += poly([[0, 0, 0], [L, 0, 0], [L, L, 0], [0, L, 0]], night('#A6D58E'));
+  if (!LITE) s += poly([[0, 0, 0], [L, 0, 0], [L, L, 0], [0, L, 0]], pat(14, 14, `<rect width="7" height="14" fill="${night('#B3DC9B')}" opacity=".55"/>`, 'top', [0, 0, 0]));
+  /* ---------- المبنى: الأبعاد ---------- */
+  let x0 = 22, y0 = 16, x1 = 80, y1 = 64;
+  if (st === 'modern') { x0 = 18; x1 = 80; }
+  const zb = sp.basement ? 7 : 0, top = f * H, dx = (x0 + x1) / 2;
+  /* ممشى بلاط */
+  s += poly([[dx - 6, y1, .2], [dx + 6, y1, .2], [dx + 6, L, .2], [dx - 6, L, .2]], night('#E7E0D2'));
+  if (!LITE) s += poly([[dx - 6, y1, .25], [dx + 6, y1, .25], [dx + 6, L, .25], [dx - 6, L, .25]], pat(6, 6, `<rect width="6" height="6" fill="none" stroke="${night('#CFC5B2')}" stroke-width=".5"/>`, 'top', [dx - 6, y1, .25]));
+  /* ظل ناعم */
+  const shL = top + (st === 'euro' ? 16 : 6) + zb;
+  s += `<g filter="url(#${id}bl)" opacity="${NIGHT ? .2 : .32}">${poly([[x1, y0, 0], [x1 + shL * .6, y0 + shL * .12, 0], [x1 + shL * .6, y1 + shL * .12, 0], [x1, y1, 0]], '#18341D')}</g>`;
+  defs += `<filter id="${id}bl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="2.4"/></filter>`;
+  /* ---------- شجر ---------- */
+  const tree = (x, y, r, kind) => {
+    const b = p(x, y, 0);
+    let g = `<ellipse cx="${f1(b[0] + r * .5)}" cy="${f1(b[1] + 1)}" rx="${f1(r * 1.1)}" ry="${f1(r * .4)}" fill="#1E3A1E" opacity=".25"/>`;
+    if (kind === 'palm') {
+      const t = p(x, y, r * 2.6);
+      g += `<path d="M${f1(b[0])} ${f1(b[1])} Q${f1(b[0] + 3)} ${f1((b[1] + t[1]) / 2)} ${f1(t[0])} ${f1(t[1])}" stroke="${night('#8C6A44')}" stroke-width="2.4" fill="none" stroke-linecap="round"/>`;
+      if (!LITE) for (let k = 1; k < 6; k++) { const yy = b[1] + (t[1] - b[1]) * k / 6, xx = b[0] + (t[0] - b[0]) * k / 6 + 1.2 * Math.sin(k / 6 * Math.PI); g += `<path d="M${f1(xx - 1.2)} ${f1(yy)} h2.4" stroke="${night('#6E5234')}" stroke-width=".5"/>`; }
+      const lf = lg([[0, night('#5DAE57')], [1, night('#2F7234')]], 1, 1);
+      [[-1, .1, 1], [1, .1, 1], [-.75, .75, .85], [.75, .75, .85], [-.35, -.55, .8], [.35, -.55, .8], [0, .9, .7]].forEach(d => {
+        const ex2 = t[0] + d[0] * r * 1.6, ey2 = t[1] + d[1] * r * 1.1 + 3, mx = t[0] + d[0] * r * .8, my = t[1] + d[1] * r * .3 - 2.5;
+        g += `<path d="M${f1(t[0])} ${f1(t[1])} Q${f1(mx)} ${f1(my - 1.6)} ${f1(ex2)} ${f1(ey2)} Q${f1(mx)} ${f1(my + 1.4)} ${f1(t[0])} ${f1(t[1])}Z" fill="${lf}"/>`;
+      });
+      g += `<circle cx="${f1(t[0])}" cy="${f1(t[1] + .6)}" r="1.3" fill="${night('#7A5A2E')}"/>`;
+      return g;
+    }
+    const c = p(x, y, r * 1.6);
+    g += `<rect x="${f1(b[0] - .9)}" y="${f1(c[1])}" width="1.8" height="${f1(b[1] - c[1])}" fill="${night('#7A5A3A')}"/>`;
+    const tg = rg([[0, night('#9ED48C')], [.55, night('#55A050')], [1, night('#2C6630')]], .35, .3, .75);
+    g += `<circle cx="${f1(c[0] - r * .35)}" cy="${f1(c[1] + r * .15)}" r="${f1(r * .75)}" fill="${tg}"/><circle cx="${f1(c[0] + r * .4)}" cy="${f1(c[1] + r * .2)}" r="${f1(r * .7)}" fill="${tg}"/><circle cx="${f1(c[0])}" cy="${f1(c[1] - r * .3)}" r="${f1(r * .8)}" fill="${tg}"/>`;
     return g;
   };
-  const palm = (tx, h, flip) => { const s = flip ? -1 : 1; return `<path d="M${tx} ${ground + 1} Q${tx - 3 * s} ${ground - h * .5} ${tx + 2 * s} ${ground - h}" stroke="#8A6A44" stroke-width="3.4" fill="none" stroke-linecap="round"/><g stroke="#4E8A3E" stroke-width="3" fill="none" stroke-linecap="round"><path d="M${tx + 2 * s} ${ground - h} q${-16 * s} -4 ${-22 * s} 8"/><path d="M${tx + 2 * s} ${ground - h} q${-12 * s} -13 ${-24 * s} -8"/><path d="M${tx + 2 * s} ${ground - h} q${3 * s} -15 ${-4 * s} -22"/><path d="M${tx + 2 * s} ${ground - h} q${12 * s} -11 ${9 * s} -21"/><path d="M${tx + 2 * s} ${ground - h} q${14 * s} -2 ${18 * s} 8"/></g>`; };
-  let s = `<defs><clipPath id="${id}"><rect x="0" y="0" width="200" height="172" rx="12"/></clipPath></defs><g clip-path="url(#${id})">`;
-  s += `<rect x="0" y="0" width="200" height="172" fill="#EAF1F5"/><circle cx="26" cy="22" r="11" fill="#F7E3B5"/>`;
-  s += `<rect x="0" y="${ground}" width="200" height="${172 - ground}" fill="#D2E3CF"/><rect x="0" y="${ground - 1}" width="200" height="3" fill="#BCD3B8"/>`;
-  /* السرداب: قطاع تحت الأرض */
-  if (sp.basement) { s += `<rect x="52" y="${ground + 2}" width="96" height="24" fill="#6F5B43"/><rect x="52" y="${ground + 2}" width="96" height="3" fill="rgba(0,0,0,.25)"/><path d="M50 ${ground + 2} V${ground + 27} H150 V${ground + 2}" fill="none" stroke="#C4B08A" stroke-width="2"/>`; [58, 88, 118].forEach(bx => { s += pane(bx, ground + 9, 24, 12, 2); }); }
-  /* البيت */
-  const W = 124, X = 38, top = ground - f * fh, cx = X + W / 2;
-  if (st === 'modern') {
-    const gx = X, gw = W - 20, ux = X + 18, uw = W - 6;
-    s += `<rect x="${gx}" y="${ground - fh}" width="${gw}" height="${fh}" fill="${wallG}"/>`;
-    s += pane(gx + 6, ground - fh + 4, 56, fh - 4, 3);
-    s += `<rect x="${gx + 68}" y="${ground - fh + 4}" width="${gw - 72}" height="${fh - 4}" fill="${wood}"/>` + Array.from({ length: 9 }, (_, i) => `<rect x="${gx + 70 + i * 3.6}" y="${ground - fh + 4}" width=".9" height="${fh - 4}" fill="${woodD}"/>`).join('');
-    s += `<rect x="${gx + 78}" y="${ground - 17}" width="10" height="17" fill="${dark}"/><circle cx="${gx + 86}" cy="${ground - 8}" r=".8" fill="#D4AF37"/><circle cx="${gx + 74}" cy="${ground - 13}" r="1.6" fill="#F7D9A0"/><circle cx="${gx + 92}" cy="${ground - 13}" r="1.6" fill="#F7D9A0"/>`;
-    for (let i = 1; i < f; i++) {
-      const y = ground - (i + 1) * fh;
-      s += `<rect x="${ux}" y="${y}" width="${uw}" height="${fh}" fill="${wall}"/><rect x="${ux}" y="${y + fh - 1}" width="${uw}" height="1" fill="#DADAD5"/>`;
-      s += pane(ux + 6, y + 4, 70, fh - 9, 3);
-      s += `<rect x="${ux + 82}" y="${y + 9}" width="${uw - 86}" height="${fh - 9}" fill="#BFD8E2" opacity=".8"/><rect x="${ux + 82}" y="${y + 9}" width="${uw - 86}" height="1.2" fill="#8FA9B4"/>`;
-    }
-    if (f > 1) s += `<rect x="${gx + gw}" y="${ground - fh}" width="${ux + uw - gx - gw}" height="3" fill="#BDBDB7"/>`;
-    s += `<rect x="${Math.min(gx, ux) - 6}" y="${top - 5}" width="${(f > 1 ? ux + uw : gx + gw) - Math.min(gx, ux) + 12}" height="5" fill="${dark}"/>`;
-  } else {
-    s += `<rect x="${X}" y="${top}" width="${W}" height="${f * fh}" fill="${wall}"/><rect x="${X + W * .74}" y="${top}" width="${W * .26}" height="${f * fh}" fill="${shade}"/>`;
-    if (st === 'heritage') for (let yy = top + 5; yy < ground; yy += 6) s += `<rect x="${X}" y="${yy}" width="${W}" height=".7" fill="rgba(120,90,50,.13)"/>`;
-    for (let i = 1; i < f; i++) s += `<rect x="${X}" y="${top + i * fh - 1.5}" width="${W}" height="${st === 'classic' ? 3 : 1.4}" fill="${st === 'classic' ? '#FFFFFF' : 'rgba(0,0,0,.12)'}"/>`;
-    for (let i = 0; i < f; i++) {
-      const y = top + i * fh, gf = i === f - 1, XS = gf ? [X + 12, X + W - 36] : [X + 12, cx - 12, X + W - 36];
-      XS.forEach(wx => {
-        if (st === 'heritage') s += `<path d="M${wx + 2} ${y + 25} V${y + 15} a10 10 0 0 1 20 0 V${y + 25} Z" fill="#E9DCC3"/><path d="M${wx + 4} ${y + 24} V${y + 15} a8 8 0 0 1 16 0 V${y + 24} Z" fill="#6B4A2B"/><path d="M${wx + 8} ${y + 11} V${y + 24} M${wx + 12} ${y + 9} V${y + 24} M${wx + 16} ${y + 11} V${y + 24} M${wx + 4} ${y + 17} H${wx + 20} M${wx + 4} ${y + 20.5} H${wx + 20}" stroke="#A47A4E" stroke-width=".8"/>`;
-        else s += pane(wx, y + 6, 24, 17, 2, { frame: '#FFFFFF', fw: 1.4 }) + `<rect x="${wx - 2}" y="${y + 23.4}" width="28" height="1.8" fill="#FFFFFF"/>` + (st === 'minimal' && gf ? `<rect x="${wx}" y="${y + 24.6}" width="24" height="2.6" fill="#7A5230"/><circle cx="${wx + 3}" cy="${y + 24.2}" r="1.5" fill="#E0465C"/><circle cx="${wx + 8}" cy="${y + 23.8}" r="1.5" fill="#F49AB0"/><circle cx="${wx + 13}" cy="${y + 24.2}" r="1.5" fill="#E0465C"/><circle cx="${wx + 18}" cy="${y + 24}" r="1.3" fill="#3FA65F"/>` : '') + (st === 'classic' ? `<rect x="${wx - 4}" y="${y + 6}" width="3.4" height="17" fill="#3D5A4C"/><rect x="${wx + 24.6}" y="${y + 6}" width="3.4" height="17" fill="#3D5A4C"/>` : '');
-      });
-    }
-    if (st === 'heritage') s += `<path d="M${cx - 11} ${ground} V${ground - 12} a11 11 0 0 1 22 0 V${ground} Z" fill="#E9DCC3"/><path d="M${cx - 9} ${ground} V${ground - 12} a9 9 0 0 1 18 0 V${ground} Z" fill="#7A5230"/><path d="M${cx} ${ground - 21} V${ground}" stroke="#5A3B22" stroke-width="1"/>` + [[-4, -14], [4, -14], [-4, -8], [4, -8], [-4, -3], [4, -3]].map(d => `<circle cx="${cx + d[0]}" cy="${ground + d[1]}" r=".9" fill="#D4AF37"/>`).join('');
-    else if (st === 'minimal') s += `<rect x="${cx - 8}" y="${ground - 19}" width="16" height="19" fill="#8C2F1E"/><path d="M${cx - 8} ${ground - 19} a8 6 0 0 1 16 0 Z" fill="${glass}" stroke="#FFFFFF" stroke-width="1.2"/><circle cx="${cx + 5}" cy="${ground - 9}" r=".9" fill="#D4AF37"/><circle cx="${cx + 12}" cy="${ground - 17}" r="1.6" fill="#F7D9A0"/>`;
-    else s += `<rect x="${cx - 13}" y="${ground - 23}" width="26" height="3" fill="#FFFFFF"/><rect x="${cx - 12}" y="${ground - 20}" width="2.2" height="20" fill="#FFFFFF"/><rect x="${cx + 9.8}" y="${ground - 20}" width="2.2" height="20" fill="#FFFFFF"/><rect x="${cx - 7}" y="${ground - 19}" width="14" height="19" fill="#2F4A3A"/><circle cx="${cx + 4.6}" cy="${ground - 9}" r=".9" fill="#D4AF37"/>`;
-    if (st === 'classic') s += `<rect x="${X - 5}" y="${top - 6}" width="${W + 10}" height="6" fill="#FFFFFF"/><rect x="${X - 5}" y="${top - 1}" width="${W + 10}" height="1.2" fill="rgba(0,0,0,.12)"/><rect x="${X}" y="${top}" width="3.4" height="${f * fh}" fill="#FFFFFF"/><rect x="${X + W - 3.4}" y="${top}" width="3.4" height="${f * fh}" fill="#FFFFFF"/>`;
-    else if (st === 'heritage') { const n = 9, mw = W / (2 * n - 1); for (let i = 0; i < n; i++) s += `<rect x="${X + i * 2 * mw}" y="${top - 8}" width="${mw}" height="8" fill="${wall}"/><rect x="${X + i * 2 * mw + mw * .74}" y="${top - 8}" width="${mw * .26}" height="8" fill="${shade}"/>`; s += `<rect x="${X - 3}" y="${top - 1}" width="${W + 6}" height="2.6" fill="#7A5230"/>` + Array.from({ length: 11 }, (_, i) => `<rect x="${X + 6 + i * 11.2}" y="${top + 1.6}" width="2.4" height="3.2" fill="#5A3B22"/>`).join(''); }
-    else if (st === 'minimal') s += `<rect x="${X + W - 28}" y="${top - 30}" width="9" height="16" fill="#8A4B3A"/><rect x="${X + W - 29.5}" y="${top - 32}" width="12" height="3" fill="#5E3326"/><path d="M${X - 8} ${top} L${cx} ${top - 30} L${X + W + 8} ${top} Z" fill="#A8432C"/><path d="M${cx} ${top - 30} L${X + W + 8} ${top} L${cx + 14} ${top} Z" fill="rgba(0,0,0,.12)"/>` + [8, 16, 23].map(d => `<rect x="${X - 8 + d * (W / 2 + 8) / 30}" y="${top - d}" width="${W + 16 - 2 * d * (W / 2 + 8) / 30}" height=".9" fill="rgba(0,0,0,.18)"/>`).join('') + `<path d="M${X - 10} ${top + 1} L${cx} ${top - 32} L${X + W + 10} ${top + 1}" fill="none" stroke="#5E3326" stroke-width="2" stroke-linejoin="round"/><circle cx="${cx}" cy="${top - 15}" r="4" fill="${glass}" stroke="#FFFFFF" stroke-width="1.4"/>`;
+  const shrub = (x, y, r, flower) => { const q = p(x, y, r * .6); return `<ellipse cx="${f1(q[0])}" cy="${f1(q[1])}" rx="${f1(r * 1.1)}" ry="${f1(r * .8)}" fill="${rg([[0, night('#7CC06E')], [1, night('#3A7A3A')]], .35, .3, .8)}"/>` + (flower && !LITE ? [[-.5, -.2], [.3, -.4], [.6, .1]].map(d => `<circle cx="${f1(q[0] + d[0] * r)}" cy="${f1(q[1] + d[1] * r)}" r=".7" fill="${flower}"/>`).join('') : ''); };
+  if (ex.includes('garden')) s += tree(10, 8, 6, area === 'coast' || area === 'sub' ? 'palm' : 'tree') + tree(96, 8, 5.5, 'tree') + tree(6, 40, 4.5, 'tree');
+  /* ---------- السرداب ---------- */
+  if (sp.basement) {
+    const stone = pat(6, 3, `<rect width="6" height="3" fill="${night('#A4AAB1')}"/><path d="M0 0H6M0 1.5H6M3 0V1.5M0 1.5V3M6 1.5V3" stroke="${night('#868D95')}" stroke-width=".25"/>`, 'front', [0, y1 + 1, 0]);
+    s += box(x0 - 1, y0 - 1, 0, x1 + 1, y1 + 1, zb, night('#A4AAB1'), night('#7F868E'), night('#B7BCC2'));
+    if (!LITE) s += poly([[x0 - 1, y1 + 1, 0], [x1 + 1, y1 + 1, 0], [x1 + 1, y1 + 1, zb], [x0 - 1, y1 + 1, zb]], stone);
+    for (let i = 0; i < 3; i++) { const a = x0 + 6 + i * ((x1 - x0 - 12) / 3), b = a + 11; s += poly([[a, y1 + 1.1, 1.8], [b, y1 + 1.1, 1.8], [b, y1 + 1.1, 5.2], [a, y1 + 1.1, 5.2]], NIGHT ? '#FFCF7A' : '#22404D') + poly([[a, y1 + 1.15, 1.8], [b, y1 + 1.15, 1.8], [b, y1 + 1.15, 2.4], [a, y1 + 1.15, 2.4]], '#fff', 'opacity=".25"'); }
+    for (let i = 0; i < 2; i++) { const a = y0 + 8 + i * 22, b = a + 11; s += poly([[x1 + 1.1, a, 1.8], [x1 + 1.1, b, 1.8], [x1 + 1.1, b, 5.2], [x1 + 1.1, a, 5.2]], NIGHT ? '#E9B866' : '#1D3540'); }
   }
-  /* المصعد */
-  if (ex.includes('elevator')) { const ex0 = st === 'modern' ? X + W + 12 : X + W; s += `<rect x="${ex0}" y="${top - 4}" width="10" height="${f * fh + 4}" fill="#BFD8E2" opacity=".85"/><rect x="${ex0}" y="${top - 4}" width="10" height="${f * fh + 4}" fill="none" stroke="#8FA9B4" stroke-width="1"/><rect x="${ex0 + 1.6}" y="${top + 4}" width="6.8" height="10" fill="#C9D2DC"/><rect x="${ex0 + 2.6}" y="${top + 6}" width="4.8" height="4" fill="${warm}"/>`; }
-  /* الحديقة: نخل وشجيرات */
-  if (ex.includes('garden')) s += palm(16, 46, false) + palm(186, 52, true) + `<circle cx="${X + 4}" cy="${ground - 3}" r="4.6" fill="#5E9B5A"/><circle cx="${X + 66}" cy="${ground - 3}" r="4" fill="#5E9B5A"/><circle cx="${X + W + 6}" cy="${ground - 4}" r="5.4" fill="#4E8A4C"/><circle cx="${X + W + 13}" cy="${ground - 3}" r="3.8" fill="#5E9B5A"/>`;
-  /* الباركن */
-  if (ex.includes('parking')) s += `<g transform="translate(${ex.includes('garden') ? 150 : 158} ${ground - 13})"><path d="M1 10.5 Q1 6.4 5 6 L10.6 1.6 Q12.4 .2 15.4 .2 L25 .2 Q28 .2 30 2 L34 5.8 Q37.6 6.2 38 9.6 L38 12 L1 12 Z" fill="#E4572E"/><path d="M12 2.4 L15.6 1.4 L21.4 1.4 L21.4 5.6 L9.2 5.6 Z M23.4 1.4 L26.6 1.4 Q28.6 1.6 30 3 L32.4 5.6 L23.4 5.6 Z" fill="#BFDCEB"/><rect x="34.6" y="7" width="3" height="1.8" rx=".6" fill="#FFE29A"/><circle cx="9.6" cy="12.2" r="3.4" fill="#1F2937"/><circle cx="9.6" cy="12.2" r="1.4" fill="#C9D2DC"/><circle cx="29.6" cy="12.2" r="3.4" fill="#1F2937"/><circle cx="29.6" cy="12.2" r="1.4" fill="#C9D2DC"/></g>`;
-  /* ممشى ومسبح قدام البيت */
-  if (!sp.basement) s += [0, 1, 2].map(i => `<rect x="${cx - 4 + (i % 2) * 3}" y="${ground + 4 + i * 8}" width="10" height="4" rx="1" fill="#D8D2C4"/>`).join('');
-  if (ex.includes('pool')) { const px = sp.basement ? 8 : 18, pw = sp.basement ? 40 : 64, py = sp.basement ? ground + 20 : ground + 8; s += `<rect x="${px - 3}" y="${py - 3}" width="${pw + 6}" height="4" fill="#E9E6DE"/><rect x="${px}" y="${py}" width="${pw}" height="16" fill="#5DB7D8"/><rect x="${px + 4}" y="${py}" width="${pw * .35}" height="3" fill="#3E8FB0" opacity=".6"/><path d="M${px + 6} ${py + 7} q5 -3 10 0 t10 0 M${px + pw * .5} ${py + 11} q5 -3 10 0 t10 0" stroke="#B5E3F2" stroke-width="1.4" fill="none"/>`; }
-  s += `</g>`;
-  return `<svg viewBox="0 0 200 172" class="house">${s}</svg>`;
+  /* ---------- النوافذ ---------- */
+  const gl = lg([[0, night('#9CCCE0')], [.5, night('#3C6878')], [1, night('#1F3A47')]], 1, 1);
+  const glS = lg([[0, night('#6A93A3')], [1, night('#1A303B')]], 1, 1);
+  const warm = lg([[0, '#FFE7A8'], [1, '#F1A94E']], 0, 1);
+  const lit = () => NIGHT ? rnd() > .2 : rnd() > .82;
+  const winF = (a, b, za, zt, frame, kind) => {
+    const yy = y1 + .2, L2 = lit();
+    let g = '';
+    if (kind === 'arch') {
+      const r = (b - a) / 2, cx = (a + b) / 2, arc = [], arcO = [];
+      for (let k = 0; k <= 10; k++) { const t = Math.PI * k / 10; arc.push([cx + r * Math.cos(t), yy, zt - r + r * Math.sin(t)]); arcO.push([cx + (r + 1.2) * Math.cos(t), yy - .05, zt - r + (r + 1.2) * Math.sin(t)]); }
+      g += poly([[a - 1.2, yy - .05, za - 1.2], [b + 1.2, yy - .05, za - 1.2]].concat(arcO), frame);
+      g += poly([[a, yy, za], [b, yy, za]].concat(arc), L2 ? warm : gl);
+      if (!LITE) { g += poly([[cx - .3, yy + .05, za], [cx + .3, yy + .05, za], [cx + .3, yy + .05, zt], [cx - .3, yy + .05, zt]], frame); g += poly([[a, yy + .05, za + (zt - za) * .45], [b, yy + .05, za + (zt - za) * .45], [b, yy + .05, za + (zt - za) * .45 + .5], [a, yy + .05, za + (zt - za) * .45 + .5]], frame); }
+      g += poly([[a - 1.8, yy + .1, za - 1.8], [b + 1.8, yy + .1, za - 1.8], [b + 1.8, yy + 1.6, za - 1.8], [a - 1.8, yy + 1.6, za - 1.8]], mix(frame, '#000', .12));
+      return g;
+    }
+    g += poly([[a - 1.1, yy - .05, za - 1.1], [b + 1.1, yy - .05, za - 1.1], [b + 1.1, yy - .05, zt + 1.1], [a - 1.1, yy - .05, zt + 1.1]], frame);
+    g += poly([[a, yy, za], [b, yy, za], [b, yy, zt], [a, yy, zt]], L2 ? warm : gl);
+    if (L2 && !LITE) g += poly([[a, yy + .02, za], [a + (b - a) * .28, yy + .02, za], [a + (b - a) * .22, yy + .02, zt], [a, yy + .02, zt]], '#FFF7E6', 'opacity=".55"') + poly([[b - (b - a) * .28, yy + .02, za], [b, yy + .02, za], [b, yy + .02, zt], [b - (b - a) * .22, yy + .02, zt]], '#FFF7E6', 'opacity=".55"');
+    if (!L2) g += poly([[a + (b - a) * .1, yy + .05, za + (zt - za) * .15], [a + (b - a) * .32, yy + .05, za + (zt - za) * .15], [a + (b - a) * .62, yy + .05, zt - .6], [a + (b - a) * .4, yy + .05, zt - .6]], '#FFFFFF', 'opacity=".28"');
+    if (!LITE) { const m = (a + b) / 2; g += poly([[m - .25, yy + .08, za], [m + .25, yy + .08, za], [m + .25, yy + .08, zt], [m - .25, yy + .08, zt]], frame); }
+    g += poly([[a - 1.8, yy + .1, za - 1.6], [b + 1.8, yy + .1, za - 1.6], [b + 1.8, yy + 1.8, za - 1.6], [a - 1.8, yy + 1.8, za - 1.6]], mix(frame, '#000', .1));
+    return g;
+  };
+  const winS = (xx, a, b, za, zt, frame, kind) => {
+    const L2 = lit();
+    if (kind === 'arch') {
+      const r = (b - a) / 2, cy = (a + b) / 2, arc = [];
+      for (let k = 0; k <= 10; k++) { const t = Math.PI * k / 10; arc.push([xx + .2, cy - r * Math.cos(t), zt - r + r * Math.sin(t)]); }
+      return poly([[xx + .2, a, za], [xx + .2, b, za]].concat(arc.reverse()), L2 ? warm : glS);
+    }
+    return poly([[xx + .15, a - 1, za - 1], [xx + .15, b + 1, za - 1], [xx + .15, b + 1, zt + 1], [xx + .15, a - 1, zt + 1]], mix(frame, '#000', .22)) + poly([[xx + .2, a, za], [xx + .2, b, za], [xx + .2, b, zt], [xx + .2, a, zt]], L2 ? warm : glS) + (LITE ? '' : poly([[xx + .25, (a + b) / 2 - .25, za], [xx + .25, (a + b) / 2 + .25, za], [xx + .25, (a + b) / 2 + .25, zt], [xx + .25, (a + b) / 2 - .25, zt]], mix(frame, '#000', .22)));
+  };
+  const doorF = (cx, z0, w, h, frame, arch) => {
+    const yy = y1 + .2; let g = poly([[cx - w / 2 - 1.4, yy - .05, z0], [cx + w / 2 + 1.4, yy - .05, z0], [cx + w / 2 + 1.4, yy - .05, z0 + h + 1.4], [cx - w / 2 - 1.4, yy - .05, z0 + h + 1.4]], frame);
+    const wd = lg([[0, night('#A87448')], [1, night('#6B4426')]], 1, 1);
+    g += poly([[cx - w / 2, yy, z0], [cx + w / 2, yy, z0], [cx + w / 2, yy, z0 + h], [cx - w / 2, yy, z0 + h]], wd);
+    if (!LITE) { g += poly([[cx - .2, yy + .05, z0], [cx + .2, yy + .05, z0], [cx + .2, yy + .05, z0 + h], [cx - .2, yy + .05, z0 + h]], night('#4E3018')); [-1, 1].forEach(sg => { for (let k = 0; k < 2; k++) g += poly([[cx + sg * w * .12, yy + .06, z0 + 2 + k * h * .45], [cx + sg * w * .38, yy + .06, z0 + 2 + k * h * .45], [cx + sg * w * .38, yy + .06, z0 + h * .4 + k * h * .45], [cx + sg * w * .12, yy + .06, z0 + h * .4 + k * h * .45]], '#000', 'opacity=".12"'); }); }
+    g += [-1, 1].map(sg => { const q = p(cx + sg * .9, yy + .1, z0 + h * .48); return `<circle cx="${f1(q[0])}" cy="${f1(q[1])}" r=".55" fill="#E8C77A"/>`; }).join('');
+    /* إضاءة جنب الباب */
+    [-1, 1].forEach(sg => { const q = p(cx + sg * (w / 2 + 3), yy + .3, z0 + h * .75); g += `<rect x="${f1(q[0] - .8)}" y="${f1(q[1] - 1.2)}" width="1.6" height="2.4" rx=".5" fill="#2B2B2B"/><rect x="${f1(q[0] - .5)}" y="${f1(q[1] - .8)}" width="1" height="1.5" fill="#FFE3A0"/>` + (NIGHT ? glow(cx + sg * (w / 2 + 3), yy + .3, z0 + h * .75, 8, '#FFD27A', .55) : ''); });
+    return g;
+  };
+  /* درابزين بلكونة */
+  const balcony = (a, b, z, glass) => {
+    let g = box(a, y1, z - 1.2, b, y1 + 5, z, night('#F2F0EA'), night('#CFCAC0'), night('#FBFAF7'));
+    if (glass) g += poly([[a, y1 + 5, z], [b, y1 + 5, z], [b, y1 + 5, z + 5], [a, y1 + 5, z + 5]], 'rgba(170,215,230,.38)', 'stroke="#9FC0CC" stroke-width=".3"') + poly([[b, y1, z], [b, y1 + 5, z], [b, y1 + 5, z + 5], [b, y1, z + 5]], 'rgba(140,190,210,.38)');
+    else { g += poly([[a, y1 + 5, z + 4.6], [b, y1 + 5, z + 4.6], [b, y1 + 5, z + 5.2], [a, y1 + 5, z + 5.2]], '#2E2E33'); for (let xx = a + 1; xx < b; xx += 1.6) g += poly([[xx, y1 + 5, z], [xx + .3, y1 + 5, z], [xx + .3, y1 + 5, z + 4.8], [xx, y1 + 5, z + 4.8]], '#2E2E33'); g += poly([[b, y1, z + 4.6], [b, y1 + 5, z + 4.6], [b, y1 + 5, z + 5.2], [b, y1, z + 5.2]], '#2E2E33'); }
+    return g;
+  };
+  /* أشياء السطح */
+  const ac = (x, y, z) => box(x, y, z, x + 6, y + 5, z + 3.4, night('#E4E7EA'), night('#B9BFC5'), night('#F1F3F4')) + (() => { const q = p(x + 3, y + 2.5, z + 3.45); return `<ellipse cx="${f1(q[0])}" cy="${f1(q[1])}" rx="2" ry="1.1" fill="#8E969D"/><ellipse cx="${f1(q[0])}" cy="${f1(q[1])}" rx="1.2" ry=".6" fill="#5F676E"/>`; })();
+  const tank = (x, y, z) => { const b = p(x, y, z), t = p(x, y, z + 6); return `<rect x="${f1(b[0] - 3.4)}" y="${f1(t[1])}" width="6.8" height="${f1(b[1] - t[1])}" fill="${lg([[0, night('#F5F5F5')], [1, night('#B9BEC3')]], 1, 0)}"/><ellipse cx="${f1(b[0])}" cy="${f1(b[1])}" rx="3.4" ry="1.7" fill="${night('#B9BEC3')}"/><ellipse cx="${f1(t[0])}" cy="${f1(t[1])}" rx="3.4" ry="1.7" fill="${night('#FAFAFA')}"/><ellipse cx="${f1(t[0])}" cy="${f1(t[1])}" rx="1.2" ry=".6" fill="#9AA0A6"/>`; };
+  const solar = (x, y, z) => { let g = ''; for (let k = 0; k < 3; k++) { const a = x + k * 9; g += poly([[a, y, z + .4], [a + 8, y, z + .4], [a + 8, y + 9, z + 3.6], [a, y + 9, z + 3.6]], lg([[0, '#3A5BA8'], [1, '#1B2F66']], 1, 1), 'stroke="#C9D3E6" stroke-width=".25"'); if (!LITE) for (let j = 1; j < 3; j++) g += poly([[a, y + j * 3, z + .4 + j * 1.07], [a + 8, y + j * 3, z + .4 + j * 1.07], [a + 8, y + j * 3 + .15, z + .45 + j * 1.07], [a, y + j * 3 + .15, z + .45 + j * 1.07]], '#9DB2DC', 'opacity=".6"'); } return g; };
+  /* ---------- الستايلات ---------- */
+  const frameC = st === 'heritage' ? night('#B98F5B') : st === 'modern' ? night('#2F3337') : night('#FFFFFF');
+  if (st === 'modern') {
+    const g = zb, conc = night('#ECEDEE');
+    const panel = LITE ? null : pat(14, H, `<rect width="14" height="${H}" fill="none" stroke="#000" stroke-opacity=".06" stroke-width=".35"/>`, 'front', [0, y1, 0]);
+    s += box(x0, y0, g, x1 - 14, y1, g + H, lg([[0, mix(conc, '#fff', .2)], [1, mix(conc, '#556', .06)]]), lg([[0, mix(conc, '#334', .2)], [1, mix(conc, '#223', .3)]]), conc, 'stroke="#000" stroke-opacity=".08" stroke-width=".3"');
+    s += poly([[x0 + 4, y1 + .2, g + 2], [x1 - 18, y1 + .2, g + 2], [x1 - 18, y1 + .2, g + H - 3], [x0 + 4, y1 + .2, g + H - 3]], NIGHT ? warm : gl);
+    for (let k = 1; k < 4; k++) { const xx = x0 + 4 + k * (x1 - 22 - x0) / 4; s += poly([[xx, y1 + .3, g + 2], [xx + .6, y1 + .3, g + 2], [xx + .6, y1 + .3, g + H - 3], [xx, y1 + .3, g + H - 3]], '#2F3337'); }
+    if (!NIGHT) s += poly([[x0 + 7, y1 + .3, g + 3], [x0 + 15, y1 + .3, g + 3], [x0 + 24, y1 + .3, g + H - 4], [x0 + 16, y1 + .3, g + H - 4]], '#FFFFFF', 'opacity=".22"');
+    else if (!LITE) s += `<g opacity=".55">${poly([[x0 + 10, y1 + .35, g + 2], [x0 + 14, y1 + .35, g + 2], [x0 + 14, y1 + .35, g + 12], [x0 + 10, y1 + .35, g + 12]], '#7A5A3A')}</g>`;
+    s += winS(x1 - 14, y0 + 8, y1 - 8, g + 4, g + H - 4, frameC);
+    s += poly([[x0, y1 + .1, g], [x1 - 14, y1 + .1, g], [x1 - 14, y1 + .1, g + 3], [x0, y1 + .1, g + 3]], AO);
+    for (let i = 1; i < f; i++) {
+      const z = g + i * H, sx = i % 2 ? 10 : 0, yy = y1 + 4, fx0 = x0 + sx, fx1 = x1 + sx - (i % 2 ? 0 : 14);
+      s += `<g filter="url(#${id}bl)" opacity=".25">${poly([[fx0, y0 + 4, z], [fx1, y0 + 4, z], [fx1, yy, z], [fx0, yy, z]], '#000')}</g>`;
+      const wl = LITE ? night('#9A6A42') : pat(2.4, H, `<rect width="2.4" height="${H}" fill="${night('#A06E44')}"/><rect width=".35" height="${H}" fill="${night('#6E4627')}"/><rect x="1.1" width=".2" height="${H}" fill="${night('#C08A5A')}" opacity=".6"/>`, 'front', [0, yy, 0]);
+      s += box(fx0, y0 + 4, z, fx1, yy, z + H, lg([[0, mix(conc, '#fff', .2)], [1, mix(conc, '#556', .06)]]), lg([[0, mix(conc, '#334', .2)], [1, mix(conc, '#223', .3)]]), conc, 'stroke="#000" stroke-opacity=".08" stroke-width=".3"');
+      s += poly([[fx0, yy + .2, z], [fx0 + 16, yy + .2, z], [fx0 + 16, yy + .2, z + H], [fx0, yy + .2, z + H]], wl);
+      s += poly([[fx0 + 19, yy + .2, z + 3], [fx1 - 3, yy + .2, z + 3], [fx1 - 3, yy + .2, z + H - 3], [fx0 + 19, yy + .2, z + H - 3]], NIGHT ? warm : gl);
+      if (!NIGHT) s += poly([[fx0 + 23, yy + .3, z + 4], [fx0 + 29, yy + .3, z + 4], [fx0 + 36, yy + .3, z + H - 4], [fx0 + 30, yy + .3, z + H - 4]], '#FFFFFF', 'opacity=".22"');
+      s += poly([[fx0 + 19, yy + .3, z + 3], [fx1 - 3, yy + .3, z + 3], [fx1 - 3, yy + .3, z + 3.5], [fx0 + 19, yy + .3, z + 3.5]], '#2F3337');
+      if (panel) s += poly([[fx0, yy + .25, z], [fx1, yy + .25, z], [fx1, yy + .25, z + H], [fx0, yy + .25, z + H]], panel);
+      s += winS(fx1, y0 + 12, y1 - 2, z + 4, z + H - 4, frameC);
+      s += box(fx0 - 2, y0 + 2, z + H, fx1 + 2, yy + 2, z + H + 1.4, night('#F3F4F5'), night('#C4C8CE'), night('#FAFAFB'));
+      /* بلكونة زجاج على الدور الأخير */
+      if (i === f - 1 && !LITE) { const by = yy; s += box(fx0 + 19, by, z - .8, fx1 - 3, by + 5, z, night('#F3F4F5'), night('#C4C8CE'), night('#FAFAFB')) + poly([[fx0 + 19, by + 5, z], [fx1 - 3, by + 5, z], [fx1 - 3, by + 5, z + 5], [fx0 + 19, by + 5, z + 5]], 'rgba(170,215,230,.35)', 'stroke="#A9C6D0" stroke-width=".3"'); }
+      if (i === f - 1) { s += solar(fx0 + 4, y0 + 7, z + H + 1.4); }
+    }
+    if (f === 1) { s += box(x0 - 2, y0 - 2, g + H, x1 - 12, y1 + 2, g + H + 1.4, night('#F3F4F5'), night('#C4C8CE'), night('#FAFAFB')); s += solar(x0 + 4, y0 + 6, g + H + 1.4); }
+    s += doorF(x1 - 24, g, 6, 15, night('#2F3337'));
+  } else {
+    const g = zb;
+    s += box(x0, y0, g, x1, y1, g + top, gL, gR, wT, `stroke="${mix(wall, '#3A3226', .3)}" stroke-width=".25"`);
+    /* خامة الجدار */
+    if (!LITE) {
+      let tex = null, texS = null;
+      if (st === 'heritage') { const b = `<rect width="10" height="4" fill="none"/><path d="M0 .2H10M0 2.2H10M3 .2V2.2M8 2.2V4" stroke="#8A6A3E" stroke-opacity=".25" stroke-width=".25"/><circle cx="6" cy="1.2" r=".25" fill="#8A6A3E" opacity=".2"/>`; tex = pat(10, 4, b, 'front', [0, y1, 0]); texS = pat(10, 4, b, 'side', [x1, 0, 0]); }
+      else if (st === 'classic') { const b = `<path d="M0 3.5H12" stroke="#000" stroke-opacity=".05" stroke-width=".3"/>`; tex = pat(12, 3.5, b, 'front', [0, y1, 0]); texS = pat(12, 3.5, b, 'side', [x1, 0, 0]); }
+      else if (st === 'euro') { const b = `<rect width="5" height="2.2" fill="none" stroke="#7A2E22" stroke-opacity=".14" stroke-width=".25"/><rect x="2.5" y="2.2" width="5" height="2.2" fill="none" stroke="#7A2E22" stroke-opacity=".14" stroke-width=".25"/>`; tex = pat(5, 4.4, b, 'front', [0, y1, 0]); texS = pat(5, 4.4, b, 'side', [x1, 0, 0]); }
+      if (tex) s += poly([[x0, y1 + .05, g], [x1, y1 + .05, g], [x1, y1 + .05, g + top], [x0, y1 + .05, g + top]], tex) + poly([[x1 + .05, y0, g], [x1 + .05, y1, g], [x1 + .05, y1, g + top], [x1 + .05, y0, g + top]], texS);
+    }
+    /* حجر الزوايا للكلاسيك */
+    if (st === 'classic' && !LITE) for (let z = g; z < g + top - 2; z += 4) { const w = ((z - g) / 4) % 2 ? 3 : 5; s += box(x1 - w, y1 - .1, z + .3, x1 + .4, y1 + .4, z + 3.6, night('#FFFFFF'), night('#DCD7CC'), night('#F7F5F0')) + poly([[x1 + .4, y1 - w, z + .3], [x1 + .4, y1, z + .3], [x1 + .4, y1, z + 3.6], [x1 + .4, y1 - w, z + 3.6]], night('#E4DFD5')); }
+    /* أحزمة الأدوار */
+    for (let i = 1; i < f; i++) { const zA = g + i * H - .6, zB = g + i * H + .8, cF = night(st === 'heritage' ? '#D9BE8E' : '#FFFFFF'), cS = night(st === 'heritage' ? '#B89A6A' : '#DCD7CC');
+      s += poly([[x0 - .4, y1 + .4, zA], [x1 + .4, y1 + .4, zA], [x1 + .4, y1 + .4, zB], [x0 - .4, y1 + .4, zB]], cF) + poly([[x1 + .4, y0 - .4, zA], [x1 + .4, y1 + .4, zA], [x1 + .4, y1 + .4, zB], [x1 + .4, y0 - .4, zB]], cS); }
+    s += poly([[x0, y1 + .1, g], [x1, y1 + .1, g], [x1, y1 + .1, g + 3], [x0, y1 + .1, g + 3]], AO) + poly([[x1 + .1, y0, g], [x1 + .1, y1, g], [x1 + .1, y1, g + 3], [x1 + .1, y0, g + 3]], AO);
+    const n = 3, fw = (x1 - x0) / n, kind = st === 'heritage' ? 'arch' : '';
+    for (let i = 0; i < f; i++) {
+      const z = g + i * H;
+      for (let k = 0; k < n; k++) {
+        if (i === 0 && k === 1) continue;
+        const a = x0 + k * fw + fw * .27, b = a + fw * .46;
+        s += winF(a, b, z + 5, z + H - 4, frameC, kind);
+        if (st === 'euro' && !LITE) [[a - 3.2, a - 1.4], [b + 1.4, b + 3.2]].forEach(w => { s += poly([[w[0], y1 + .25, z + 5], [w[1], y1 + .25, z + 5], [w[1], y1 + .25, z + H - 4], [w[0], y1 + .25, z + H - 4]], night('#3F6B5A')); for (let j = 0; j < 4; j++) s += poly([[w[0], y1 + .3, z + 6 + j * 2.6], [w[1], y1 + .3, z + 6 + j * 2.6], [w[1], y1 + .3, z + 6.4 + j * 2.6], [w[0], y1 + .3, z + 6.4 + j * 2.6]], '#000', 'opacity=".18"'); });
+        if (st === 'classic' && !LITE) s += box(a - 1.8, y1, z + H - 3.4, b + 1.8, y1 + 1.2, z + H - 2.6, night('#FFFFFF'), night('#DCD7CC'), night('#FFFFFF'));
+      }
+      s += winS(x1, y0 + 9, y0 + 19, z + 5, z + H - 4, frameC, kind) + winS(x1, y1 - 19, y1 - 9, z + 5, z + H - 4, frameC, kind);
+      if (i > 0 && st !== 'heritage' && !LITE) s += balcony(x0 + fw + 2, x0 + 2 * fw - 2, z + .5, false);
+      if (i > 0 && st === 'heritage' && !LITE) { /* مشربية خشب */ const a = x0 + fw + 4, b = x0 + 2 * fw - 4; s += box(a, y1, z + 4, b, y1 + 3.5, z + H - 3, night('#9A6A42'), night('#6E4627'), night('#B58258')); for (let xx = a + 1; xx < b; xx += 1.5) s += poly([[xx, y1 + 3.55, z + 5], [xx + .6, y1 + 3.55, z + 5], [xx + .6, y1 + 3.55, z + H - 4], [xx, y1 + 3.55, z + H - 4]], night('#5A381F'), 'opacity=".6"'); }
+    }
+    const cx = x0 + 1.5 * fw, zt = g + top;
+    if (st === 'classic') {
+      s += doorF(cx, g, 8, 15, night('#FFFFFF'));
+      s += box(cx - 10, y1, g, cx - 8, y1 + 9, g + 16, night('#FFFFFF'), night('#E1DDD4'), night('#FFFFFF')) + box(cx + 8, y1, g, cx + 10, y1 + 9, g + 16, night('#FFFFFF'), night('#E1DDD4'), night('#FFFFFF'));
+      s += box(cx - 12, y1 - 1, g + 16, cx + 12, y1 + 11, g + 18.6, night('#FFFFFF'), night('#DCD7CC'), night('#F6F4EF'));
+      s += box(cx - 10, y1, 0, cx + 10, y1 + 10, .8 + zb, night('#EDE8DE'), night('#CFC7B8'), night('#F6F2EA'));
+      s += box(x0 - 1.6, y0 - 1.6, zt, x1 + 1.6, y1 + 1.6, zt + 2.4, night('#FFFFFF'), night('#DCD7CC'), night('#F6F4EF'));
+      s += box(x0, y0, zt + 2.4, x1, y1, zt + 4, gL, gR, night('#9CA3AA'));
+      s += poly([[x0 + 1, y0 + 1, zt + 4.05], [x1 - 1, y0 + 1, zt + 4.05], [x1 - 1, y1 - 1, zt + 4.05], [x0 + 1, y1 - 1, zt + 4.05]], night('#B4BAC0'));
+      s += ac(x0 + 8, y0 + 6, zt + 4) + ac(x0 + 18, y0 + 6, zt + 4) + tank(x1 - 10, y0 + 10, zt + 4);
+    } else if (st === 'heritage') {
+      s += doorF(cx, g, 8, 14, night('#B98F5B'));
+      const ar = []; for (let k = 0; k <= 10; k++) { const t = Math.PI * k / 10; ar.push([cx + 5.6 * Math.cos(t), y1 + .25, g + 15.4 + 4.2 * Math.sin(t)]); }
+      s += poly(ar, night('#8A5A35'));
+      if (!LITE) for (let k = 0; k < 3; k++) for (let j = 0; j < 2; j++) { const q = p(cx - 2.6 + j * 5.2, y1 + .3, g + 3 + k * 4.5); s += `<circle cx="${f1(q[0])}" cy="${f1(q[1])}" r=".45" fill="#E2C27A"/>`; }
+      for (let xx = x0; xx < x1 - 1; xx += 7) s += box(xx, y1 - 2.5, zt, xx + 4, y1, zt + 4.5, gL, gR, wT);
+      for (let yy = y0; yy < y1 - 1; yy += 7) s += box(x1 - 2.5, yy, zt, x1, yy + 4, zt + 4.5, gL, gR, wT);
+      for (let xx = x0 + 4; xx < x1 - 2; xx += 6) { const q = p(xx, y1 + .3, zt - 2.6); s += `<circle cx="${f1(q[0])}" cy="${f1(q[1])}" r="1.05" fill="${night('#6E4627')}"/>`; }
+      /* برجيل */
+      s += box(x0 + 6, y0 + 4, zt, x0 + 17, y0 + 15, zt + 16, gL, gR, wT);
+      for (let k = 0; k < 2; k++) s += poly([[x0 + 7.5 + k * 4.5, y0 + 15.1, zt + 7], [x0 + 10.5 + k * 4.5, y0 + 15.1, zt + 7], [x0 + 10.5 + k * 4.5, y0 + 15.1, zt + 14], [x0 + 7.5 + k * 4.5, y0 + 15.1, zt + 14]], night('#5E3B20')) + poly([[x0 + 17.1, y0 + 5.5 + k * 4.5, zt + 7], [x0 + 17.1, y0 + 8.5 + k * 4.5, zt + 7], [x0 + 17.1, y0 + 8.5 + k * 4.5, zt + 14], [x0 + 17.1, y0 + 5.5 + k * 4.5, zt + 14]], night('#4A2E18'));
+      s += box(x0 + 5, y0 + 3, zt + 16, x0 + 18, y0 + 16, zt + 17.4, gL, gR, wT);
+    } else {
+      s += doorF(cx, g, 8, 15, night('#FFFFFF'));
+      s += box(cx - 8.5, y1, g + 16.2, cx + 8.5, y1 + 6, g + 17.2, night('#7A3B2A'), night('#5E2C1F'), night('#A04A33'));
+      const R = 22, ym = (y0 + y1) / 2, o = 3;
+      s += poly([[x0 - o, y0 - o, zt], [x1 + o, y0 - o, zt], [x1 + o, ym, zt + R], [x0 - o, ym, zt + R]], night('#8E3B28'));
+      s += poly([[x1, y0, zt], [x1, y1, zt], [x1, ym, zt + R]], gR);
+      s += winS(x1, ym - 4, ym + 4, zt + 4, zt + 12, frameC, 'arch');
+      s += box(x0 + 10, ym - 10, zt + 10, x0 + 17, ym - 4, zt + R + 9, night('#B65A3F'), night('#8E4430'), night('#9A4A35')) + box(x0 + 9.4, ym - 10.6, zt + R + 9, x0 + 17.6, ym - 3.4, zt + R + 10.4, night('#C9C3BA'), night('#A39C92'), night('#DAD5CD'));
+      /* قرميد: صفوف بنقش */
+      const slope = [[x0 - o, y1 + o, zt], [x1 + o, y1 + o, zt], [x1 + o, ym, zt + R], [x0 - o, ym, zt + R]];
+      s += poly(slope, lg([[0, night('#D0623F')], [1, night('#A7462E')]], 0, 1));
+      const rows = 7;
+      for (let k = 0; k < rows; k++) {
+        const t0 = k / rows, yy = y1 + o - t0 * (y1 + o - ym), zz = zt + t0 * R;
+        s += poly([[x0 - o, yy, zz], [x1 + o, yy, zz], [x1 + o, yy + .8, zz - .7], [x0 - o, yy + .8, zz - .7]], night('#7E2F1E'), 'opacity=".55"');
+        if (!LITE) for (let xx = x0 - o + (k % 2) * 2.5; xx < x1 + o - 1; xx += 5) { const q = p(xx, yy, zz), q2 = p(xx, yy - (y1 + o - ym) / rows, zz + R / rows); s += `<line x1="${f1(q[0])}" y1="${f1(q[1])}" x2="${f1(q2[0])}" y2="${f1(q2[1])}" stroke="${night('#8E3622')}" stroke-width=".35" opacity=".6"/>`; }
+      }
+      s += poly([[x1 + o, y1 + o, zt], [x1 + o, ym, zt + R], [x1 + o + .1, ym, zt + R - 1.6], [x1 + o + .1, y1 + o, zt - 1.6]], night('#6E2D1E'));
+      s += poly([[x0 - o, ym - .6, zt + R + .6], [x1 + o, ym - .6, zt + R + .6], [x1 + o, ym + .6, zt + R - .2], [x0 - o, ym + .6, zt + R - .2]], night('#7A2C1C'));
+    }
+  }
+  /* ---------- المصعد ---------- */
+  if (ex.includes('elevator')) {
+    const xe = st === 'modern' ? x1 - 14 : x1, ze = zb + top + (st === 'euro' ? 0 : 4);
+    s += box(xe, y0 + 22, 0, xe + 7.5, y0 + 30.5, ze, 'rgba(165,210,228,.5)', 'rgba(110,165,190,.6)', night('#DDE6EA'), 'stroke="#7E98A3" stroke-width=".35"');
+    for (let z = 4; z < ze; z += 7) s += poly([[xe, y0 + 30.55, z], [xe + 7.5, y0 + 30.55, z], [xe + 7.5, y0 + 30.55, z + .4], [xe, y0 + 30.55, z + .4]], '#7E98A3', 'opacity=".7"');
+    const cz = zb + 1 + (f - 1) * H * .55;
+    s += box(xe + 1, y0 + 23, cz, xe + 6.5, y0 + 29.5, cz + 8, night('#D9E0E6'), night('#AAB4BD'), night('#EEF2F5')) + (NIGHT ? glow(xe + 3.5, y0 + 30, cz + 4, 7, '#CFEFFF', .5) : '');
+    s += box(xe - .5, y0 + 21.5, ze, xe + 8, y0 + 31, ze + 1.4, night('#C9D3D9'), night('#9FAEB7'), night('#E3E9EC'));
+  }
+  /* ---------- المسبح ---------- */
+  if (ex.includes('pool')) {
+    const a = 8, b = 34, c = 74, d = 100;
+    const deck = LITE ? night('#EFE9DC') : pat(4, 4, `<rect width="4" height="4" fill="${night('#EFE9DC')}"/><rect width="4" height="4" fill="none" stroke="${night('#D9D0BE')}" stroke-width=".3"/>`, 'top', [0, 0, .3]);
+    s += poly([[a - 4, c - 4, .3], [b + 14, c - 4, .3], [b + 14, d + 4, .3], [a - 4, d + 4, .3]], deck);
+    s += poly([[a, c, -.6], [b, c, -.6], [b, d, -.6], [a, d, -.6]], NIGHT ? lg([[0, '#4FE0FF'], [1, '#1B7FB0']]) : lg([[0, '#9BE7F7'], [.6, '#3FB0D6'], [1, '#2690BC']]));
+    s += poly([[a, c, .3], [b, c, .3], [b, c, -2.2], [a, c, -2.2]], '#1F6E90', 'opacity=".55"') + poly([[a, c, .3], [a, d, .3], [a, d, -2.2], [a, c, -2.2]], '#185C79', 'opacity=".55"');
+    if (!LITE) s += [0, 1, 2, 3].map(k => { const q1 = p(a + 4 + k * 6, c + 6 + k * 5, -.5), q2 = p(a + 10 + k * 6, c + 6 + k * 5, -.5); return `<path d="M${f1(q1[0])} ${f1(q1[1])} Q${f1((q1[0] + q2[0]) / 2)} ${f1((q1[1] + q2[1]) / 2 - 1.4)} ${f1(q2[0])} ${f1(q2[1])} T${f1(q2[0] + (q2[0] - q1[0]))} ${f1(q2[1] + (q2[1] - q1[1]))}" stroke="#fff" stroke-width=".7" fill="none" opacity=".7"/>`; }).join('');
+    if (NIGHT) s += glow((a + b) / 2, (c + d) / 2, 0, 18, '#7FE6FF', .35);
+    /* كراسي وشمسية */
+    if (!LITE) {
+      [c + 4, c + 13].forEach(yy => { s += box(b + 4, yy, .3, b + 12, yy + 4.5, 1.6, night('#FFFFFF'), night('#DADADA'), night('#F5F5F5')) + poly([[b + 4, yy, 1.6], [b + 4, yy + 4.5, 1.6], [b + 1.5, yy + 4.5, 4.4], [b + 1.5, yy, 4.4]], night('#F7F7F7')); });
+      const u = p(b + 9, c + 24, 0), ut = p(b + 9, c + 24, 13);
+      s += `<line x1="${f1(u[0])}" y1="${f1(u[1])}" x2="${f1(ut[0])}" y2="${f1(ut[1])}" stroke="#6B5B4B" stroke-width=".8"/><path d="M${f1(ut[0] - 11)} ${f1(ut[1] + 4)} Q${f1(ut[0])} ${f1(ut[1] - 6)} ${f1(ut[0] + 11)} ${f1(ut[1] + 4)} Q${f1(ut[0])} ${f1(ut[1] + 1)} ${f1(ut[0] - 11)} ${f1(ut[1] + 4)}Z" fill="${lg([[0, night('#F6F1E7')], [1, night('#E2593B')]], 0, 1)}"/>`;
+      for (let k = -2; k <= 2; k++) s += `<path d="M${f1(ut[0])} ${f1(ut[1] - 1)} L${f1(ut[0] + k * 5)} ${f1(ut[1] + 3.6 - Math.abs(k) * .6)}" stroke="${night('#C9472C')}" stroke-width=".35" opacity=".7"/>`;
+    }
+  }
+  /* ---------- المواقف ---------- */
+  if (ex.includes('parking')) {
+    const a = 86, b = 106, c = 26, d = 60;
+    s += poly([[a, c, .3], [b, c, .3], [b, d, .3], [a, d, .3]], night('#C3C8CE')) + poly([[a + 1, (c + d) / 2, .35], [b - 1, (c + d) / 2, .35], [b - 1, (c + d) / 2 + .6, .35], [a + 1, (c + d) / 2 + .6, .35]], '#FFFFFF', 'opacity=".8"');
+    const car = (cy, col) => {
+      col = night(col);
+      const xa = a + 3, xb = b - 3, paint = lg([[0, mix(col, '#fff', .25)], [1, mix(col, '#000', .1)]], 1, 1);
+      let c2 = `<g filter="url(#${id}bl)" opacity=".35">${poly([[xa, cy, .4], [xb, cy, .4], [xb + 2, cy + 11, .4], [xa + 2, cy + 11, .4]], '#000')}</g>`;
+      c2 += box(xa, cy, 1.4, xb, cy + 10, 5.2, paint, mix(col, '#000', .3), mix(col, '#fff', .12));
+      c2 += box(xa + 4, cy + 1, 5.2, xb - 5, cy + 9, 9, '#33505E', '#223944', mix(col, '#fff', .22));
+      c2 += poly([[xa + 4.6, cy + 9.05, 5.6], [xb - 5.6, cy + 9.05, 5.6], [xb - 5.6, cy + 9.05, 8.4], [xa + 4.6, cy + 9.05, 8.4]], lg([[0, '#B8DCEA'], [1, '#5C8597']]));
+      c2 += poly([[xa + 6, cy + 9.1, 5.8], [xa + 8, cy + 9.1, 5.8], [xa + 10, cy + 9.1, 8.2], [xa + 8, cy + 9.1, 8.2]], '#FFFFFF', 'opacity=".5"');
+      c2 += poly([[xa, cy + 10.05, 3.2], [xb, cy + 10.05, 3.2], [xb, cy + 10.05, 3.6], [xa, cy + 10.05, 3.6]], mix(col, '#000', .35));
+      c2 += [[xa + 3.6, cy + 10], [xb - 3.6, cy + 10]].map(w => { const q = p(w[0], w[1], 1.8); return `<ellipse cx="${f1(q[0])}" cy="${f1(q[1])}" rx="2.3" ry="2.1" fill="#1C1C1C"/><ellipse cx="${f1(q[0])}" cy="${f1(q[1])}" rx="1" ry=".9" fill="#B5BDC3"/>`; }).join('');
+      const hl = p(xb + .1, cy + 8.4, 3.8), hl2 = p(xb + .1, cy + 1.6, 3.8);
+      c2 += `<circle cx="${f1(hl[0])}" cy="${f1(hl[1])}" r=".9" fill="#FFF3B0"/><circle cx="${f1(hl2[0])}" cy="${f1(hl2[1])}" r=".9" fill="#FFF3B0"/>`;
+      if (NIGHT) c2 += glow(xb + 3, cy + 5, 2, 9, '#FFF3B0', .35);
+      return c2;
+    };
+    s += car(c + 4, '#E4572E');
+    const wood = [night('#B08358'), night('#8A6240'), night('#C49A6C')];
+    s += box(a - 1, d - 1, 0, a + 1, d + 1, 14, ...wood) + box(b - 1, d - 1, 0, b + 1, d + 1, 14, ...wood) + box(b - 1, c - 1, 0, b + 1, c + 1, 14, ...wood);
+    s += box(a - 2, c - 1, 14, a, d + 1, 15, ...wood) + box(b, c - 1, 14, b + 2, d + 1, 15, ...wood);
+    for (let k = 0; k < 8; k++) { const yy = c + k * (d - c) / 7; s += box(a - 3, yy - .5, 15, b + 3, yy + .5, 16, night('#C9A070'), night('#8A6240'), night('#DDB98A')); }
+  }
+  /* ---------- السور والبوابة والإنارة ---------- */
+  const wc = [night('#F1ECE2'), night('#D4CBBB'), night('#FBF8F2')];
+  s += box(0, L - 2, 0, dx - 9, L, 4, ...wc) + box(dx + 9, L - 2, 0, L, L, 4, ...wc) + box(L - 2, 0, 0, L, L - 2, 4, ...wc);
+  s += box(-.6, L - 2.6, 4, dx - 9, L + .6, 4.8, night('#D8CDB8'), night('#B9AD97'), night('#E6DCC8')) + box(dx + 9, L - 2.6, 4, L + .6, L + .6, 4.8, night('#D8CDB8'), night('#B9AD97'), night('#E6DCC8')) + box(L - 2.6, -.6, 4, L + .6, L - 2.6, 4.8, night('#D8CDB8'), night('#B9AD97'), night('#E6DCC8'));
+  [dx - 11, dx + 9].forEach(xx => { s += box(xx, L - 2.4, 0, xx + 2.4, L, 7.5, night('#E9E2D4'), night('#C8BDA9'), night('#F5F0E6')) + box(xx - .4, L - 2.8, 7.5, xx + 2.8, L + .4, 8.3, night('#D8CDB8'), night('#B9AD97'), night('#E6DCC8')); const q = p(xx + 1.2, L - 1.2, 9.8); s += `<rect x="${f1(q[0] - 1)}" y="${f1(q[1] - 1.5)}" width="2" height="2.6" rx=".6" fill="#2B2B2B"/><rect x="${f1(q[0] - .6)}" y="${f1(q[1] - 1.1)}" width="1.2" height="1.6" fill="#FFE6A6"/>`; if (NIGHT) s += glow(xx + 1.2, L - 1.2, 9.6, 12, '#FFD27A', .5); });
+  /* شجر قدام */
+  if (ex.includes('garden')) s += shrub(4, 96, 3, '#F06C9B') + shrub(14, 104, 2.6, '#FFFFFF') + shrub(102, 74, 3, '#F5C542') + tree(62, 100, 5.5, 'palm') + tree(102, 98, 5, area === 'city' ? 'tree' : 'palm');
+  else s += shrub(102, 96, 3, null) + shrub(8, 100, 2.6, null);
+  if (!LITE) s += Array.from({ length: 6 }, (_, k) => shrub(L - 4.5, 8 + k * 12, 2.4, null)).join('');
+  if (NIGHT) s += `<rect width="200" height="172" fill="${rg([[0, '#000', 0], [1, '#14122A', .35]], .5, .45, .75)}"/>`;
+  else s += `<rect width="200" height="172" fill="${rg([[0, '#fff', 0], [1, '#5B6E86', .12]], .5, .45, .8)}"/>`;
+  return `<svg viewBox="${opt.crop ? '18 8 164 142' : '0 0 200 172'}" class="house"><defs>${defs}</defs>${s}</svg>`;
 }
+
+/* البيوت: رسم أيزومتريك (houseISO). بالوضع المسائي تطلع نسخة المغرب، وبالبطاقات الصغيرة نسخة أخف ومقرّبة */
+const isDarkUI = () => document.documentElement.classList.contains('aq-dark');
+function houseSVG(sp, small) { return houseISO(sp, { night: isDarkUI(), lite: !!small, crop: !!small }); }
+let darkWas = null; new MutationObserver(() => { const d = isDarkUI(); if (d !== darkWas) { darkWas = d; try { if (typeof render === 'function' && window.AQS) render(); } catch (e) { } } }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
 
 
@@ -964,6 +1257,7 @@ function houseSVG(sp) {
 const perkLeft = (id, k) => (G.perks[id] || []).includes(k) && !(G.used[id] || []).includes(k);
 const isSusp = id => G.suspended[id] === G.round;
 const isProt = id => G.protectedRound[id] === G.round;
+const isInsp = id => !!G && (G.inspect || {})[id] === G.round;
 const pendingOn = pid => G.dealsList.some(d => d.propId === pid && d.status === 'pending');
 const heldOn = pid => G.holds.some(h => h.propId === pid);
 const lockedProp = pid => pendingOn(pid) || heldOn(pid);
@@ -1031,7 +1325,8 @@ const GAME = {
   },
   view() {
     const lbl = { setup: L('تجهيز المكتب', 'Office setup'), pitch: L('العرض والإقناع', 'Pitch'), deals: L('التفاوض والصفقات', 'Negotiation & deals'), vote: L('التصويت', 'Voting') }[G.phase];
-    let h = lbl ? clockBox(lbl) : '';
+    const head = (lbl ? clockBox(lbl) : '') + dock();
+    let h = head ? `<div class="sticky">${head}</div>` : '';
     if (G.phase === 'setup') h += setupView();
     if (G.phase === 'pre') h += preView();
     if (G.phase === 'pitch') h += pitchView();
@@ -1041,7 +1336,9 @@ const GAME = {
     if (G.phase === 'final') h += finalView();
     return h;
   },
+  afterRender() { inboxPing(); },
   modalView(m) {
+    if (m.type === 'panel') return panelModal(m);
     if (m.type === 'offices') return officesModal();
     if (m.type === 'offer') return offerModal(m);
     if (m.type === 'perk') return perkModal(m);
@@ -1063,6 +1360,7 @@ function applyPerk(id, r) {
   if (k === 'budgetUp') { G.budget[id] += CONFIG.budgetUpAmount; use(); addLog(`➕ ${nm}: ${pk}`); }
   if (k === 'budgetDown') { const t = r.target; if (!inRoom(t) || t === id) return; G.budget[t] = Math.max(0, G.budget[t] - CONFIG.budgetDownAmount); use(); addLog(`➖ ${nm} → ${P(t).name}: ${pk}`); }
   if (k === 'violation') { const t = r.target; if (!inRoom(t) || t === id) return; G.suspended[t] = G.round; use(); addLog(`⛔ ${office(t)} ${L('موقوف هالجولة', 'is suspended this round')}`); }
+  if (k === 'inspect') { G.inspect = G.inspect || {}; G.inspect[id] = G.round; use(); addLog(`🔍 ${nm}: ${pk}`); }
   if (k === 'protect') { G.protectedRound[id] = G.round; use(); addLog(`🛡️ ${nm} ${L('محمي هالجولة', 'is protected this round')}`); }
   if (k === 'negotiator') { const cur = G.presenters[G.pIdx]; if (!cur || cur.id !== id) return; G.negotiator[id] = G.round; use(); addLog(`🧑‍💼 ${nm}: ${pk}`); }
   if (k === 'addons') { const pr = byId(G.props, r.target), e = byId(CONFIG.extras, r.target2); if (!pr || pr.owner !== id || !e || pr.extras.includes(e.id) || G.budget[id] < e.price) return; G.budget[id] -= e.price; pr.extras.push(e.id); pr.cost += e.price; use(); addLog(`🏗️ ${nm}: ${N(e.name)}`); }
@@ -1141,6 +1439,42 @@ ACT.voteEnd = H(() => phaseTo(() => {
 ACT.rematch = H(() => { G.gameNo++; G.log = []; HIST.length = 0; GAME.start(); });
 
 /* ---------- واجهات ---------- */
+function dock() {
+  if (!G || !['pre', 'pitch', 'deals', 'summary'].includes(G.phase)) return '';
+  const pl = amPlayer(); let b = '';
+  if (pl) b += `<span class="dk money"><i>💰</i><span>${money(G.budget[ME_ID] || 0)}</span></span>`;
+  if (pl) b += `<button class="dk" data-act="panel" data-v="props"><i>🏠</i><span>${L('عقاراتي', 'Properties')} ${owned(ME_ID).length}</span></button>`;
+  if (pl && (G.perks[ME_ID] || []).length && G.phase !== 'pre') { const left = G.perks[ME_ID].filter(k => !(G.used[ME_ID] || []).includes(k)).length; b += `<button class="dk" data-act="panel" data-v="perks"><i>✨</i><span>${L('مزاياي', 'Perks')} ${left}</span></button>`; }
+  if ((G.props || []).some(p => p.owner)) b += `<button class="dk" data-act="panel" data-v="map"><i>🗺️</i><span>${L('الخريطة', 'Map')}</span></button>`;
+  b += isInsp(ME_ID) ? `<button class="dk money" style="cursor:pointer" data-act="offices"><i>🔍</i><span>${L('التفتيش', 'Inspect')}</span></button>` : `<button class="dk" data-act="offices"><i>📊</i><span>${L('المكاتب', 'Offices')}</span></button>`;
+  return `<div class="dock">${b}</div>`;
+}
+ACT.panel = d => { U.modal = { type: 'panel', v: d.v }; };
+function panelModal(m) {
+  let body = '';
+  if (m.v === 'map') body = mapCard();
+  if (m.v === 'perks') body = perksPanel() || `<div class="empty">${L('ما عندك مزايا.', 'No perks.')}</div>`;
+  if (m.v === 'props') body = `<h3>🏠 ${L('عقاراتي المعروضة', 'My listed properties')}</h3><p class="sub">${L('تقدر تغيّر سعر العرض من هني.', 'You can change the asking price here.')}</p>${owned(ME_ID).length ? owned(ME_ID).map(pr => propRow(pr, true)).join('') : `<div class="empty">${L('ما عندك عقارات.', 'No properties.')}</div>`}`;
+  return body + `<button class="btn ghost" data-act="closeModal">${L('إغلاق', 'Close')}</button>`;
+}
+function myNotes() {
+  if (!amPlayer()) return '';
+  return `${isSusp(ME_ID) ? `<div class="warn">⛔ ${L('مكتبك موقوف هالجولة (مخالفة نظم).', 'Your office is suspended this round.')}</div>` : ''}${isProt(ME_ID) ? `<div class="note">🛡️ ${L('أنت محمي هالجولة.', 'You are protected this round.')}</div>` : ''}${isInsp(ME_ID) ? `<div class="note">🔍 ${L('التفتيش شغّال هالجولة — اضغط «التفتيش» فوق وشوف فلوس وبيوت كل مكتب.', 'Inspection is on this round — tap “Inspect” above to see every office’s money and houses.')}</div>` : ''}`;
+}
+function inboxPing() {
+  let n = 0;
+  if (G && G.phase === 'deals' && amPlayer()) n = G.offers.filter(o => o.seller === ME_ID).length + G.rentReqs.filter(q => q.owner === ME_ID).length;
+  const prev = U.inboxN || 0; U.inboxN = n;
+  let el = document.getElementById('aqping');
+  if (!n || U.modal) { if (el) el.remove(); return; }
+  if (n <= prev) return;
+  const ib = document.getElementById('inbox'); if (!ib) return;
+  const r = ib.getBoundingClientRect(); if (r.top > 110 && r.top < innerHeight - 60) return;
+  if (!el) { el = document.createElement('button'); el.id = 'aqping'; document.body.appendChild(el); }
+  el.textContent = '📩 ' + L('وصلك عرض جديد — اضغط هني', 'New offer for you — tap here');
+  el.onclick = () => { el.remove(); const t = document.getElementById('inbox'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+  clearTimeout(U.pingT); U.pingT = setTimeout(() => { const e = document.getElementById('aqping'); if (e) e.remove(); }, 8000);
+}
 function myBar() {
   if (!amPlayer()) return `<div class="moneybar"><button class="money link" data-act="offices">📊 ${L('المكاتب', 'Offices')}</button></div>`;
   const left = (G.perks[ME_ID] || []).filter(k => !(G.used[ME_ID] || []).includes(k)).length;
@@ -1149,7 +1483,8 @@ function myBar() {
 }
 ACT.offices = () => { U.modal = { type: 'offices' }; };
 function officesModal() {
-  return `<h3>📊 ${L('المكاتب', 'Offices')}</h3>${G.players.map(p => `<div class="orow"><b>${esc(office(p.id))}${isSusp(p.id) ? ' ⛔' : ''}${isProt(p.id) ? ' 🛡' : ''}</b><span>💰 ${p.id === ME_ID ? money(G.budget[p.id] || 0) : L('سرية 🔒', 'secret 🔒')}</span><span>🏠 ${owned(p.id).length}</span><span>✨ ${(G.perks[p.id] || []).filter(k => !(G.used[p.id] || []).includes(k)).length}/${(G.perks[p.id] || []).length}</span></div>`).join('')}
+  const ins = isInsp(ME_ID);
+  return `<h3>${ins ? '🔍 ' + L('التفتيش', 'Inspection') : '📊 ' + L('المكاتب', 'Offices')}</h3>${ins ? `<div class="note">🔍 ${L('التفتيش شغّال هالجولة: تشوف فلوس كل مكتب وكم بيت عنده.', 'Inspection is on this round: you see every office’s money and houses.')}</div>` : ''}${G.players.map(p => `<div class="orow"><b>${esc(office(p.id))}${isSusp(p.id) ? ' ⛔' : ''}${isProt(p.id) ? ' 🛡' : ''}</b><span>💰 ${p.id === ME_ID || ins ? money(G.budget[p.id] || 0) : L('سرية 🔒', 'secret 🔒')}</span><span>🏠 ${owned(p.id).length}</span><span>✨ ${(G.perks[p.id] || []).filter(k => !(G.used[p.id] || []).includes(k)).length}/${(G.perks[p.id] || []).length}</span></div>`).join('')}
   <p class="sub">${L('✨ = المزايا الباقية. أنواعها سرية.', '✨ = perks left. Their types are secret.')}</p><button class="btn" data-act="closeModal">${L('تمام', 'OK')}</button>`;
 }
 const doneBtn = () => { const d = (mine().done || {})[G.phase] === G.gameNo; return d ? `<div class="note" style="text-align:center">✓ ${L('سجّلنا إنك خلصت. تقدر تعدّل لين المضيف ينهي المرحلة.', 'Marked as done. You can edit until the host ends this stage.')}</div>` : `<button class="btn ghost" data-act="markDone">✓ ${L('خلصت', 'I’m done')}</button>`; };
@@ -1196,9 +1531,9 @@ function setupView() {
       <div class="row"><span>🏢 ${L('عدد الأدوار', 'Floors')} <small>(${money(CONFIG.floorPrice)})</small></span><div class="stepper"><button data-act="floors" data-v="1">+</button><span class="v">${x.floors}</span><button data-act="floors" data-v="-1">−</button></div></div>
       <h3>⬇️ ${L('السرداب', 'Basement')}</h3><div class="chips"><button class="chip ${x.basement ? '' : 'on'}" data-act="basement" data-v="0">${L('بدون', 'None')} <small>${money(0)}</small></button><button class="chip ${x.basement ? 'on' : ''}" data-act="basement" data-v="1">${L('مع سرداب', 'With basement')} <small>${money(CONFIG.basementPrice)}</small></button></div>
       <h3>🏛️ ${L('الستايل', 'Style')}</h3>${chipRow(CONFIG.styles, 'style')}
-      <h3>🎨 ${L('لون البيت', 'House colour')}</h3><div class="chips">${CONFIG.colors.map(c => `<button class="chip ${x.color === c.id ? 'on' : ''}" data-act="setDraft" data-k="color" data-v="${c.id}"><span class="sw" style="background:${c.hex}"></span>${N(c.name)} <small>${c.price ? money(c.price) : L('مجاني', 'Free')}</small></button>`).join('')}</div><h3>✨ ${L('تجهيزات إضافية', 'Extra fittings')}</h3>${chipRow(CONFIG.extras, 'extras')}
+      <h3>🎨 ${L('لون البيت', 'House colour')}</h3><div class="chips">${CONFIG.colors.map(c => `<button class="chip ${x.color === c.id ? 'on' : ''}" data-act="setDraft" data-k="color" data-v="${c.id}"><span class="sw" data-aqkeep style="background:${c.hex}"></span>${N(c.name)} <small>${c.price ? money(c.price) : L('مجاني', 'Free')}</small></button>`).join('')}</div><h3>✨ ${L('تجهيزات إضافية', 'Extra fittings')}</h3>${chipRow(CONFIG.extras, 'extras')}
       <div class="total">${L('قيمة العقار', 'Property value')}: <b>${money(specValue(x))}</b></div><button class="btn" data-act="buyProp">${L('اشترِ العقار', 'Buy property')}</button></div>
-      ${m.props.map(p => `<div class="prop"><div class="pv">${houseSVG(p)}</div><div class="pi2"><b>${propTitle(p)}</b><small>${propSpecs(p)}</small><small>${L('القيمة', 'Value')}: ${money(specValue(p))}</small></div>
+      ${m.props.map(p => `<div class="prop"><div class="pv">${houseSVG(p, 1)}</div><div class="pi2"><b>${propTitle(p)}</b><small>${propSpecs(p)}</small><small>${L('القيمة', 'Value')}: ${money(specValue(p))}</small></div>
         <div class="askbox"><small>${L('سعر العرض', 'Asking')}</small><div class="stepper sm"><button data-act="setupAsk" data-key="${p.key}" data-v="1">+</button><span class="v">${money(p.asking)}</span><button data-act="setupAsk" data-key="${p.key}" data-v="-1">−</button></div><button class="mini" data-act="delProp" data-key="${p.key}">${L('إلغاء', 'Remove')}</button></div></div>`).join('')}
       ${doneBtn()}`;
     }
@@ -1206,18 +1541,18 @@ function setupView() {
   if (host) h += progBox(L('مين خلص', 'Who’s done'), done) + endBtn(L('الذهاب للجولة ١', 'go to round 1'), 'setupEnd'); else h += waitHost();
   return h;
 }
-function propRow(pr, mine_) {
+function propRow(pr, mine_, acts) {
   const h = G.holds.find(x => x.propId === pr.id), rn = G.rentals.find(x => x.propId === pr.id && x.left > 0);
   const b = [h ? `🧾 ${L('عليه عربون', 'Deposit')}: ${esc(P(h.holder).name)}` : '', rn ? `🔑 ${L('مستأجر', 'Rented')}: ${esc(P(rn.renter).name)}` : '', pendingOn(pr.id) ? `⏳ ${L('بيعة قيد الإتمام', 'Deal pending')}` : ''].filter(Boolean);
-  return `<div class="prop"><div class="pv">${houseSVG(pr)}</div><div class="pi2"><b>${propTitle(pr)}</b><small>${propSpecs(pr)}</small><small>${mine_ ? `${L('القيمة الفعلية (تشوفها انت بس)', 'Actual value (only you see it)')}: ${money(specValue(pr))} • ${L('سعر العرض', 'Asking')}: ${money(pr.asking)}` : `${L('السعر المطلوب', 'Asking price')}: ${money(pr.asking)} • ${esc(office(pr.owner))}`}</small>${b.length ? `<div class="pbadges">${b.map(x => `<span>${x}</span>`).join('')}</div>` : ''}</div>
-  ${mine_ ? `<div class="askbox"><small>${L('سعر العرض', 'Asking')}</small><div class="stepper sm"><button data-act="ask" data-id="${pr.id}" data-v="1">+</button><span class="v">${money(pr.asking)}</span><button data-act="ask" data-id="${pr.id}" data-v="-1">−</button></div></div>` : `<div class="askbox"><small>${L('السعر', 'Price')}</small><b>${money(pr.asking)}</b></div>`}</div>`;
+  return `<div class="prop"><div class="pv">${houseSVG(pr, 1)}</div><div class="pi2"><b>${propTitle(pr)}</b><small>${propSpecs(pr)}</small><small>${mine_ ? `${L('القيمة الفعلية (تشوفها انت بس)', 'Actual value (only you see it)')}: ${money(specValue(pr))} • ${L('سعر العرض', 'Asking')}: ${money(pr.asking)}` : (acts != null ? esc(office(pr.owner)) : `${L('السعر المطلوب', 'Asking price')}: ${money(pr.asking)} • ${esc(office(pr.owner))}`)}</small>${b.length ? `<div class="pbadges">${b.map(x => `<span>${x}</span>`).join('')}</div>` : ''}</div>
+  ${mine_ ? `<div class="askbox"><small>${L('سعر العرض', 'Asking')}</small><div class="stepper sm"><button data-act="ask" data-id="${pr.id}" data-v="1">+</button><span class="v">${money(pr.asking)}</span><button data-act="ask" data-id="${pr.id}" data-v="-1">−</button></div></div>` : (acts ? `<div class="askbox"><div class="acts in">${acts}</div><b>${money(pr.asking)}</b></div>` : `<div class="askbox"><small>${L('السعر', 'Price')}</small><b>${money(pr.asking)}</b></div>`)}</div>`;
 }
 ACT.ask = d => { const pr = byId(G.props, +d.id); sendReq({ type: 'ask', propId: pr.id, price: Math.max(CONFIG.priceStep, pr.asking + (+d.v) * CONFIG.priceStep), g: G.gameNo }); };
 function perksPanel() {
   if (!amPlayer() || !(G.perks[ME_ID] || []).length) return '';
   return `<div class="card"><h3>✨ ${L('مزاياك', 'Your perks')}</h3>${G.perks[ME_ID].map(k => {
     const p = byId(PERKS, k), used = (G.used[ME_ID] || []).includes(k), now = PERK_WHEN[k].includes(G.phase);
-    const direct = ['budgetUp', 'budgetDown', 'protect', 'addons', 'violation', 'negotiator'].includes(k);
+    const direct = ['inspect', 'budgetUp', 'budgetDown', 'protect', 'addons', 'violation', 'negotiator'].includes(k);
     let ctl = used ? `<span class="usedtag">${L('مستخدمة', 'Used')}</span>` : (now && direct && !(k === 'negotiator' && (G.presenters[G.pIdx] || {}).id !== ME_ID)) ? `<button class="mini ok" data-act="perk" data-id="${k}">${L('استخدم', 'Use')}</button>`
       : `<small class="where">${{ violation: L('قبل بداية الجولة', 'before a round'), negotiator: L('وقت عرضك', 'during your pitch'), hijack: L('من ملخص الجولة', 'from the round summary') }[k] || (now ? L('من القوائم تحت', 'from the lists') : L('وقت الصفقات', 'during deals'))}</small>`;
     return `<div class="perkrow ${used ? 'used' : ''}"><span class="pi">${p.icon}</span><span class="pt"><b>${N(p.name)}</b><small>${p.effect()}</small></span>${ctl}</div>`;
@@ -1228,7 +1563,7 @@ ACT.op = d => { U.offerPrice = Math.max(U.minOffer || CONFIG.priceStep, U.offerP
 function perkModal(m) {
   const k = byId(PERKS, m.id); let inputs = '';
   const others = G.players.filter(p => p.id !== ME_ID);
-  if (m.id === 'budgetDown' || m.id === 'violation') inputs = `<label class="lbl">${L('اختر المكتب', 'Choose the office')}</label><select id="pt" class="field">${others.map(o => `<option value="${o.id}">${esc(office(o.id))} — ${money(G.budget[o.id] || 0)}</option>`).join('')}</select>`;
+  if (m.id === 'budgetDown' || m.id === 'violation') inputs = `<label class="lbl">${L('اختر المكتب', 'Choose the office')}</label><select id="pt" class="field">${others.map(o => `<option value="${o.id}">${esc(office(o.id))}${isInsp(ME_ID) ? ' — ' + money(G.budget[o.id] || 0) : ''}</option>`).join('')}</select>`;
   if (m.id === 'addons') { if (!owned(ME_ID).length) return `<h3>${k.icon} ${N(k.name)}</h3><div class="warn">${L('ما عندك عقار.', 'You have no property.')}</div><button class="btn ghost" data-act="closeModal">${L('إغلاق', 'Close')}</button>`;
     inputs = `<label class="lbl">${L('العقار', 'Property')}</label><select id="pt" class="field">${owned(ME_ID).map(pr => `<option value="${pr.id}">${propTitle(pr)}</option>`).join('')}</select><label class="lbl">${L('التجهيز', 'Fitting')}</label><select id="px" class="field">${CONFIG.extras.map(e => `<option value="${e.id}">${e.icon} ${N(e.name)} — ${money(e.price)}</option>`).join('')}</select>`; }
   if (m.id === 'outbid' || m.id === 'hijack') { const d = G.dealsList.find(x => x.id === m.target) || G.roundDone.find(x => x.id === m.target); if (!d) return ''; U.minOffer = roundTo(d.price + CONFIG.priceStep);
@@ -1250,9 +1585,9 @@ ACT.perkGo = () => {
 function preView() {
   const susp = G.players.filter(p => isSusp(p.id));
   return `<span class="tag">${L('الجولة', 'Round')} ${G.round} / ${G.settings.rounds}</span><h2>${L('قبل بداية الجولة', 'Before the round')} ${G.round}</h2>
-  <p class="sub">${L('هذا وقت «مخالفة نظم». وتقدر تستخدم مزايا ثانية مثل زيادة أو نقص الميزانية.', 'Time for “Regulation breach”. You can also use other perks like budget boost or cut.')}</p>${myBar()}
+  <p class="sub">${L('هذا وقت «مخالفة نظم». وتقدر تستخدم مزايا ثانية مثل زيادة أو نقص الميزانية.', 'Time for “Regulation breach”. You can also use other perks like budget boost or cut.')}</p>${myNotes()}
   ${susp.length ? `<div class="warn">⛔ ${L('موقوف هالجولة', 'Suspended this round')}: ${susp.map(p => esc(office(p.id))).join(L('، ', ', '))}</div>` : ''}
-  ${perksPanel()}${isHost() ? `<button class="btn" data-act="startPitches">${L('ابدأ العروض', 'Start pitches')} ←</button>` : waitHost()}`;
+  ${perksPanel()}${isHost() ? hostGo(L('ابدأ العروض', 'Start pitches') + ' ←', 'startPitches') : waitHost()}`;
 }
 ACT.pitchProp = d => sendReq({ type: 'pitchProp', propId: +d.id, g: G.gameNo });
 function pitchView() {
@@ -1264,7 +1599,7 @@ function pitchView() {
   ${mine_ && owned(ME_ID).length > 1 ? `<div class="card"><h3>${L('اختر العقار اللي بتعرضه', 'Pick the property to pitch')}</h3><div class="chips">${owned(ME_ID).map(x => `<button class="chip ${cur.prop === x.id ? 'on' : ''}" data-act="pitchProp" data-id="${x.id}">${propTitle(x)}</button>`).join('')}</div></div>` : ''}
   ${pr ? `<div class="card big"><div class="preview">${houseSVG(pr)}</div><div class="ptitle">${propTitle(pr)}</div><div class="sub">${propSpecs(pr)}</div><div class="total">${L('السعر المطلوب', 'Asking price')}: <b>${money(pr.asking)}</b>${pr.owner === ME_ID ? ` <small>(${L('القيمة الفعلية', 'actual value')} ${money(specValue(pr))} · ${L('تشوفها انت بس', 'only you see this')})</small>` : ''}</div></div>` : ''}
   ${G.negotiator[cur.id] === G.round ? `<div class="note">🧑‍💼 ${L('معه مفاوض يساعده بهالعرض', 'A negotiator is helping with this pitch')}</div>` : ''}</div>
-  ${myBar()}${perksPanel()}${endBtn(nxt, 'pitchNext')}${waitHost()}`;
+  ${myNotes()}${mine_ ? perksPanel() : ''}${endBtn(nxt, 'pitchNext')}${waitHost()}`;
 }
 ACT.openOffer = d => { const pr = byId(G.props, +d.id); U.modal = { type: 'offer', pid: pr.id }; U.offerPrice = pr.asking; U.minOffer = CONFIG.priceStep; };
 function offerModal(m) {
@@ -1288,7 +1623,7 @@ function dealRow(d, ctx) {
     }
     if (ctx === 'done' && !mineIn && perkLeft(ME_ID, 'hijack') && pr.owner === d.buyer) acts += isProt(d.buyer) ? `<span class="shield">🛡</span>` : `<button class="mini" data-act="perk" data-id="hijack" data-t="${d.id}">🦅 ${L('خطف الصفقة', 'Hijack')}</button>`;
   }
-  return `<div class="deal ${mineIn ? 'mine' : ''}"><div class="dv">${houseSVG(pr)}</div><div class="di"><b>${propTitle(pr)}</b><small>${esc(P(d.seller).name)} ${L('←', '→')} ${esc(P(d.buyer).name)} • <b>${money(d.price)}</b></small></div><div class="da">${acts}</div></div>`;
+  return `<div class="deal ${mineIn ? 'mine' : ''}"><div class="dv">${houseSVG(pr, 1)}</div><div class="di"><b>${propTitle(pr)}</b><small>${esc(P(d.seller).name)} ${L('←', '→')} ${esc(P(d.buyer).name)} • <b>${money(d.price)}</b></small></div><div class="da">${acts}</div></div>`;
 }
 function mapCard() {
   const props = (G.props || []).filter(p => p.owner);
@@ -1315,33 +1650,34 @@ function mapCard() {
     <g font-size="8.5" font-weight="700" fill="#5B6578" font-family="system-ui,sans-serif" text-anchor="middle"><text x="160" y="30" fill="#2B6F8F">${N(byId(CONFIG.areas, 'coast').name)}</text><text x="160" y="164">${N(byId(CONFIG.areas, 'city').name)}</text><text x="60" y="186">${N(byId(CONFIG.areas, 'res').name)}</text><text x="264" y="186">${N(byId(CONFIG.areas, 'sub').name)}</text></g>
     ${pins}</svg>`;
   const owners = G.players.filter(p => props.some(pr => pr.owner === p.id));
-  return `<div class="card mapcard"><h3>🗺️ ${L('خريطة العقارات', 'Property map')}</h3>${svg}<div class="maplg">${owners.map(p => `<span><i style="background:${ci(p.id)}"></i>${esc(p.name)}${p.id === ME_ID ? L(' (أنت)', ' (you)') : ''}</span>`).join('')}</div></div>`;
+  return `<div class="card mapcard"><h3>🗺️ ${L('خريطة العقارات', 'Property map')}</h3>${svg}<div class="maplg">${owners.map(p => `<span><i data-aqkeep style="background:${ci(p.id)}"></i>${esc(p.name)}${p.id === ME_ID ? L(' (أنت)', ' (you)') : ''}</span>`).join('')}</div></div>`;
 }
 function dealsView() {
   const me = ME_ID, pl = amPlayer(), pend = G.dealsList.filter(d => d.status === 'pending');
   const inc = G.offers.filter(o => o.seller === me), outg = G.offers.filter(o => o.buyer === me), rq = G.rentReqs.filter(q => q.owner === me);
   const holds = G.holds.filter(h => h.holder === me && h.round === G.round - 1);
   const market = G.props.filter(pr => pr.owner !== me);
-  return `<span class="tag">${L('الجولة', 'Round')} ${G.round} — ${L('الصفقات', 'Deals')}</span><h2>${L('التفاوض والصفقات', 'Negotiation & deals')}</h2>${mapCard()}
-  <p class="sub">${L('تفاوضوا بالكلام، وسجّلوا هني السعر المتفق عليه. الصفقات تكتمل بنهاية الوقت.', 'Negotiate out loud, then record the agreed price. Deals complete when time ends.')}</p>${myBar()}
+  return `<span class="tag">${L('الجولة', 'Round')} ${G.round} — ${L('الصفقات', 'Deals')}</span>
+  <p class="sub">${L('تفاوضوا بالكلام، وسجّلوا هني السعر المتفق عليه. الصفقات تكتمل بنهاية الوقت.', 'Negotiate out loud, then record the agreed price. Deals complete when time ends.')}</p>${myNotes()}
+  <div id="inbox">
   ${holds.map(h => { const pr = byId(G.props, h.propId); return pr ? `<div class="note">🧾 ${L('عربونك على', 'Your deposit on')} ${propTitle(pr)} — ${L('اشترِه بـ', 'buy it for')} ${money(h.price)} ${L('أو تخسر العربون', 'or lose it')} <button class="mini ok" data-act="buyHold" data-id="${pr.id}">${L('اشترِ الحين', 'Buy now')}</button></div>` : ''; }).join('')}
-  ${rq.length ? `<div class="card"><h3>🔑 ${L('طلبات إيجار', 'Rent requests')}</h3>${rq.map(q => { const pr = byId(G.props, q.propId); return `<div class="deal"><div class="dv">${houseSVG(pr)}</div><div class="di"><b>${esc(office(q.renter))}</b><small>${propTitle(pr)} • ${CONFIG.rentRounds} × ${money(CONFIG.rentPerRound)}</small></div><div class="da"><button class="mini ok" data-act="rentResp" data-id="${q.id}" data-ok="1">${L('موافق', 'Agree')}</button><button class="mini" data-act="rentResp" data-id="${q.id}" data-ok="0">${L('رفض', 'Refuse')}</button></div></div>`; }).join('')}</div>` : ''}
-  ${inc.length ? `<div class="card"><h3>📩 ${L('عروض على عقاراتك', 'Offers on your properties')}</h3>${inc.map(o => { const pr = byId(G.props, o.propId); return `<div class="deal"><div class="dv">${houseSVG(pr)}</div><div class="di"><b>${esc(office(o.buyer))}</b><small>${propTitle(pr)} • <b>${money(o.price)}</b> (${L('طلبك', 'you ask')} ${money(pr.asking)})</small></div><div class="da"><button class="mini ok" data-act="offerResp" data-id="${o.id}" data-ok="1">${L('قبول', 'Accept')}</button><button class="mini" data-act="offerResp" data-id="${o.id}" data-ok="0">${L('رفض', 'Reject')}</button></div></div>`; }).join('')}</div>` : ''}
-  ${outg.length ? `<div class="card"><h3>⏳ ${L('عروضك بانتظار الرد', 'Your offers awaiting reply')}</h3>${outg.map(o => `<div class="note">${propTitle(byId(G.props, o.propId))} — ${esc(office(o.seller))} • ${money(o.price)}</div>`).join('')}</div>` : ''}
-  <div class="card"><h3>⏳ ${L('صفقات قيد الإتمام', 'Pending deals')}</h3>${pend.length ? pend.map(d => dealRow(d, 'pending')).join('') : `<div class="empty">${L('ما في صفقات للحين.', 'No deals yet.')}</div>`}</div>
-  <div class="card"><h3>🏘️ ${L('السوق', 'Market')}</h3>${market.length ? market.map(pr => { const lock = lockedProp(pr.id), sus = isSusp(pr.owner) || isSusp(me); return propRow(pr, false) + (pl ? `<div class="acts">
+  ${rq.length ? `<div class="card"><h3>🔑 ${L('طلبات إيجار', 'Rent requests')}</h3>${rq.map(q => { const pr = byId(G.props, q.propId); return `<div class="deal"><div class="dv">${houseSVG(pr, 1)}</div><div class="di"><b>${esc(office(q.renter))}</b><small>${propTitle(pr)} • ${CONFIG.rentRounds} × ${money(CONFIG.rentPerRound)}</small></div><div class="da"><button class="mini ok" data-act="rentResp" data-id="${q.id}" data-ok="1">${L('موافق', 'Agree')}</button><button class="mini" data-act="rentResp" data-id="${q.id}" data-ok="0">${L('رفض', 'Refuse')}</button></div></div>`; }).join('')}</div>` : ''}
+  ${inc.length ? `<div class="card"><h3>📩 ${L('عروض على عقاراتك', 'Offers on your properties')}</h3>${inc.map(o => { const pr = byId(G.props, o.propId); return `<div class="deal"><div class="dv">${houseSVG(pr, 1)}</div><div class="di"><b>${esc(office(o.buyer))}</b><small>${propTitle(pr)} • <b>${money(o.price)}</b> (${L('طلبك', 'you ask')} ${money(pr.asking)})</small></div><div class="da"><button class="mini ok" data-act="offerResp" data-id="${o.id}" data-ok="1">${L('قبول', 'Accept')}</button><button class="mini" data-act="offerResp" data-id="${o.id}" data-ok="0">${L('رفض', 'Reject')}</button></div></div>`; }).join('')}</div>` : ''}
+  </div>
+  <div class="card"><h3>🏘️ ${L('السوق', 'Market')}</h3>${market.length ? market.map(pr => { const lock = lockedProp(pr.id), sus = isSusp(pr.owner) || isSusp(me); return propRow(pr, false, pl ? `
     <button class="mini ok" ${lock || sus ? 'disabled' : ''} data-act="openOffer" data-id="${pr.id}">🤝 ${L('سجّل عرض', 'Make offer')}</button>
     ${perkLeft(me, 'deposit') ? `<button class="mini" ${lock || sus ? 'disabled' : ''} data-act="perk" data-id="deposit" data-t="${pr.id}">🧾 ${L('عربون', 'Deposit')}</button>` : ''}
-    ${perkLeft(me, 'rent') ? `<button class="mini" ${sus ? 'disabled' : ''} data-act="perk" data-id="rent" data-t="${pr.id}">🔑 ${L('إيجار', 'Rent')}</button>` : ''}</div>` : ''); }).join('') : `<div class="empty">${L('السوق فاضي.', 'The market is empty.')}</div>`}</div>
-  ${pl ? `<div class="card"><h3>🏠 ${L('عقاراتك المعروضة', 'Your listed properties')}</h3>${owned(me).length ? owned(me).map(pr => propRow(pr, true)).join('') : `<div class="empty">${L('ما عندك عقارات.', 'No properties.')}</div>`}</div>` : ''}
-  ${perksPanel()}${endBtn(L('إتمام الصفقات', 'complete the deals'), 'dealsEnd')}${waitHost()}`;
+    ${perkLeft(me, 'rent') ? `<button class="mini" ${sus ? 'disabled' : ''} data-act="perk" data-id="rent" data-t="${pr.id}">🔑 ${L('إيجار', 'Rent')}</button>` : ''}` : ''); }).join('') : `<div class="empty">${L('السوق فاضي.', 'The market is empty.')}</div>`}</div>
+  ${outg.length ? `<div class="card"><h3>⏳ ${L('عروضك بانتظار الرد', 'Your offers awaiting reply')}</h3>${outg.map(o => `<div class="note">${propTitle(byId(G.props, o.propId))} — ${esc(office(o.seller))} • ${money(o.price)}</div>`).join('')}</div>` : ''}
+  <div class="card"><h3>⏳ ${L('صفقات قيد الإتمام', 'Pending deals')}</h3>${pend.length ? pend.map(d => dealRow(d, 'pending')).join('') : `<div class="empty">${L('ما في صفقات للحين.', 'No deals yet.')}</div>`}</div>
+  ${endBtn(L('إتمام الصفقات', 'complete the deals'), 'dealsEnd')}${waitHost()}`;
 }
 function summaryView() {
   const last = G.round >= G.settings.rounds;
-  return `<span class="tag">${L('الجولة', 'Round')} ${G.round} / ${G.settings.rounds}</span><h2>${L('ملخص الجولة', 'Round summary')} ${G.round}</h2>${mapCard()}
-  <p class="sub">${L('هذي الصفقات اللي اكتملت. هذا وقت «خطف الصفقة».', 'These deals completed. Time for “Deal hijack”.')}</p>${myBar()}
+  return `<span class="tag">${L('الجولة', 'Round')} ${G.round} / ${G.settings.rounds}</span><h2>${L('ملخص الجولة', 'Round summary')} ${G.round}</h2>
+  <p class="sub">${L('هذي الصفقات اللي اكتملت. هذا وقت «خطف الصفقة».', 'These deals completed. Time for “Deal hijack”.')}</p>${myNotes()}
   <div class="card"><h3>✅ ${L('صفقات مكتملة', 'Completed deals')}</h3>${G.roundDone.length ? G.roundDone.map(d => dealRow(d, 'done')).join('') : `<div class="empty">${L('ما اكتملت صفقات هالجولة.', 'No deals completed this round.')}</div>`}</div>
-  ${perksPanel()}${isHost() ? `<button class="btn" data-act="summaryNext">${last ? L('الذهاب للتصويت', 'Go to voting') : L('الجولة', 'Round') + ' ' + (G.round + 1)} ←</button>` : waitHost()}`;
+  ${isHost() ? hostGo((last ? L('الذهاب للتصويت', 'Go to voting') : L('الجولة', 'Round') + ' ' + (G.round + 1)) + ' ←', 'summaryNext') : waitHost()}`;
 }
 function voteView() {
   const v = mine().vote, cands = G.presentedIds.filter(id => id !== ME_ID && inRoom(id));

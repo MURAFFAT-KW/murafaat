@@ -186,7 +186,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
         var sp = mem.sp, spent = perks.length * CF.perkPrice + props.reduce(function (a, x) { return a + SV(x); }, 0), bud = G.settings.budget - spent;
         if (c.has('togPerk')) {
           if (perks.length < sp.perks) {
-            var good = ['budgetUp', 'protect', 'outbid', 'deposit', 'budgetDown', 'violation'];
+            var good = ['budgetUp', 'protect', 'outbid', 'deposit', 'budgetDown', 'violation', 'inspect'];
             var opts = c.acts('togPerk').filter(function (e) { return !e.classList.contains('perk') || !e.classList.contains('on'); }).filter(function (e) { return good.indexOf(e.dataset.id) >= 0 && perks.indexOf(e.dataset.id) < 0; });
             if (opts.length) { c.clickEl(c.pick(opts)); return 'اشترى ميزة'; }
           }
@@ -236,7 +236,7 @@ window.__DEV_BRAINS = window.__DEV_BRAINS || {};
 
     if (ph === 'pre') {
       var k1 = 'pre' + G.round;
-      if (!mem[k1]) { mem[k1] = 1; var u = usePerk(['budgetUp', 'violation', 'budgetDown'], 0.35); if (u) return u; }
+      if (!mem[k1]) { mem[k1] = 1; var u = usePerk(['budgetUp', 'violation', 'budgetDown', 'inspect'], 0.35); if (u) return u; }
       if (host && since(c, 'Hpre' + G.round) > 3) { if (c.click('startPitches')) return 'المضيف: بدأ العروض'; }
       return null;
     }

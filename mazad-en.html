@@ -1215,7 +1215,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
           '<button class="btn xl primary" data-act="sendPrice">Lock price</button></section>';
       } else if (seller) body = '<section class="card pass"><h2>Price locked ✓</h2><p class="muted">Waiting for the other seller.</p></section>';
       else body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>Sellers are setting their prices secretly…</h2></section>';
-      return head + itemCard() + sellersBox(false) + body + pp + clockBox('Pricing time', 'go to the price reveal') + progBox('Who locked their price', [c.a, c.b]);
+      return head + body + itemCard() + sellersBox(false) + pp + clockBox('Pricing time', 'go to the price reveal') + progBox('Who locked their price', [c.a, c.b]);
     }
     if (c.stage === 'reveal') {
       return head + itemCard() + '<section class="vkind"><b>Prices revealed!</b><span class="muted">Think it over. Then each seller gets ' + G.settings.pitch + ' seconds to convince you. ' + esc(P(c[c.first]).name) + ' goes first.</span></section>' +
@@ -1246,7 +1246,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
           opt('a') + opt('b') + '<button class="vopt none ' + (U.pick === 'x' ? 'on' : '') + '" data-act="pick" data-v="x"><span class="vt"><b>Pass</b><span>I don’t want to buy this round</span></span><span class="radio">' + (U.pick === 'x' ? '✓' : '') + '</span></button></div>' +
           '<button class="btn xl primary" data-act="sendBuy">Confirm</button><p class="muted small">Only one sale: the first person to confirm a purchase gets the item and the sale closes.</p></section>';
       } else body = '<section class="card pass"><h2>Decision received ✓</h2><p class="muted">' + (b.v === 'x' ? 'You passed.' : 'You chose to buy from ' + esc(P(c[b.v]).name) + '.') + '</p></section>';
-      return head + itemCard() + sellersBox(true) + body + clockBox('Decision time', 'go to the result') + progBox('Who decided', buyers());
+      return head + body + itemCard() + sellersBox(true) + clockBox('Decision time', 'go to the result') + progBox('Who decided', buyers());
     }
     if (c.stage === 'result') {
       /* بعد البيعة: الكل يشوف «مبروك تمت البيعة» مع اسم البايع والمشتري بس. كل واحد يشوف نتيجته هو.

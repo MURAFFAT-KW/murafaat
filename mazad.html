@@ -1215,7 +1215,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
           '<button class="btn xl primary" data-act="sendPrice">ثبّت السعر</button></section>';
       } else if (seller) body = '<section class="card pass"><h2>ثبّت سعرك ✓</h2><p class="muted">بانتظار البائع الثاني.</p></section>';
       else body = '<section class="card pass"><div class="spin" aria-hidden="true"></div><h2>البائعين يحطون أسعارهم سرًّا…</h2></section>';
-      return head + itemCard() + sellersBox(false) + body + pp + clockBox('وقت التسعير', 'الذهاب لكشف الأسعار') + progBox('مين ثبّت سعره', [c.a, c.b]);
+      return head + body + itemCard() + sellersBox(false) + pp + clockBox('وقت التسعير', 'الذهاب لكشف الأسعار') + progBox('مين ثبّت سعره', [c.a, c.b]);
     }
     if (c.stage === 'reveal') {
       return head + itemCard() + '<section class="vkind"><b>انكشفت الأسعار!</b><span class="muted">فكروا شوي. بعدها كل بائع عنده ' + G.settings.pitch + ' ثانية يقنعكم. يبدأ ' + esc(P(c[c.first]).name) + '.</span></section>' +
@@ -1246,7 +1246,7 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
           opt('a') + opt('b') + '<button class="vopt none ' + (U.pick === 'x' ? 'on' : '') + '" data-act="pick" data-v="x"><span class="vt"><b>أرفض</b><span>ما أبي أشتري بهالجولة</span></span><span class="radio">' + (U.pick === 'x' ? '✓' : '') + '</span></button></div>' +
           '<button class="btn xl primary" data-act="sendBuy">تأكيد</button><p class="muted small">بيعة وحدة بس: أول واحد يأكد الشراء ياخذ الغرض وتسكر البيعة.</p></section>';
       } else body = '<section class="card pass"><h2>وصل قرارك ✓</h2><p class="muted">' + (b.v === 'x' ? 'رفضت الشراء.' : 'اخترت تشتري من ' + esc(P(c[b.v]).name) + '.') + '</p></section>';
-      return head + itemCard() + sellersBox(true) + body + clockBox('وقت القرار', 'الذهاب للنتيجة') + progBox('مين قرر', buyers());
+      return head + body + itemCard() + sellersBox(true) + clockBox('وقت القرار', 'الذهاب للنتيجة') + progBox('مين قرر', buyers());
     }
     if (c.stage === 'result') {
       /* بعد البيعة: الكل يشوف «مبروك تمت البيعة» مع اسم البايع والمشتري بس. كل واحد يشوف نتيجته هو.

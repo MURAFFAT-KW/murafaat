@@ -126,6 +126,8 @@
   function fixInline(el) {
     if (!el || el.nodeType !== 1 || !el.getAttribute) return;
     if (el.closest && el.closest('svg')) return;
+    /* ألوان يختارها اللاعب (عينات الألوان، خلفية المتجر...) تظل مثل ما هي بالوضع المسائي */
+    if (el.closest && el.closest('[data-aqkeep]')) return;
     var s = el.getAttribute('style'); if (!s || !/#|rgb|white/i.test(s)) return;
     if (el.__aqOrig == null || el.__aqLast !== s) { el.__aqOrig = s; }
     var out = s.replace(/(^|;)\s*(background(?:-color)?|-webkit-text-fill-color|color|border(?:-[a-z]+)?-color|border(?:-(?:top|right|bottom|left))?)\s*:\s*([^;]+)/gi, function (m, pre, prop, val) {
