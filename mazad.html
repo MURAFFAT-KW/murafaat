@@ -684,14 +684,14 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     } catch (e) { ME = null; }
     if (ME && ME.room !== code) ME = null;
   }
-  function becomeHost() {
+  function becomeHost() { beatOn();
     hostOn = true;
     if (unsubInp) { try { unsubInp(); } catch (e) { } }
     unsubInp = db.collection('mazad/' + G.code + '/inputs').onSnapshot(onInputs, () => { });
     if (!hostTick) hostTick = setInterval(hostTickFn, 300);
     publish();
   }
-  function stopHost() {
+  function stopHost() { beatOff();
     if (unsubInp) { try { unsubInp(); } catch (e) { } unsubInp = null; }
     if (hostTick) { clearInterval(hostTick); hostTick = null; }
     INP = {};
@@ -1403,7 +1403,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   setInterval(tickUI, 250);
 
   /* ---------- actions ---------- */
-  const ACT = {}; window.AQS = { get G() { return G; }, get U() { return U; }, isHost: () => isHost(), me: () => ME_ID, kick: id => { const r = ACT.aqKick({ id }); render(); return r; } };
+  const ACT = {}; window.AQS = { cfg: () => AQCFG(), setCfg: (k, v) => { const r = ACT.liveCfg({ k, v }); render(); return r; }, get G() { return G; }, get U() { return U; }, isHost: () => isHost(), me: () => ME_ID, kick: id => { const r = ACT.aqKick({ id }); render(); return r; } };
+
   ACT.tPause = (...a) => H(() => {
     const c = G && G.cur; if (!c || !c.endsAt) return false;
     if (isPz()) { c.endsAt = Date.now() + c.pz * 1000; c.pz = 0; return; }
@@ -1417,6 +1418,24 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   })(...a);
   const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
   ACT.aqKick = H(d => { if (!d.id || d.id === G.host) return false; G.kicked = G.kicked || {}; G.kicked[d.id] = true; if (G.phase === 'lobby') G.players = G.players.filter(p => p.id !== d.id); });
+  /* تعديل الإعدادات وسط اللعبة (المضيف بس) */
+  function AQCFG() {
+    const TT = (a, e) => ((document.documentElement.getAttribute('lang') || 'ar').slice(0, 2) === 'en' ? e : a);
+    if (!G || G.phase === 'lobby') return null;
+    const s = G.settings, out = [], tm = (k, a, e) => out.push({ k, l: TT(a, e), v: +s[k] || 60, min: 30, max: 120, st: 30, u: 's' });
+    if (G.phase !== 'final' && G.total != null) {
+      const n = Math.max(1, G.players.length), cur = Math.max(1, G.roundNo || 0); let mn = 1; while (mn < 5 && Math.ceil(n * mn / 2) < cur) mn++;
+      out.push({ k: 'rounds', l: TT('عدد الجولات', 'Rounds'), v: Math.max(1, +s.rounds || 1), min: mn, max: 5, st: 1, apply: v => { G.total = Math.max(G.roundNo || 0, Math.ceil(n * v / 2)); } });
+    }
+    tm('voteSec', 'وقت التصويت على الغرض', 'Item vote time'); tm('priceSec', 'وقت التسعير', 'Pricing time'); tm('think', 'وقت التفكير', 'Thinking time'); tm('pitch', 'وقت كل بائع يقنع', 'Pitch time per seller'); tm('buySec', 'وقت قرار الشراء', 'Buying decision time');
+    return out;
+  }
+  ACT.liveCfg = H(d => {
+    const it = (AQCFG() || []).find(x => x.k === d.k); if (!it) return false;
+    const v = Math.min(it.max, Math.max(it.min, Math.round(+d.v)));
+    if (v === +G.settings[d.k] && !it.pool) return false;
+    if (it.apply) it.apply(v); G.settings[d.k] = v;
+  });
 
   ACT.enter = () => { U.splash = false; };
   ACT.noticeOk = () => { U.notice = false; try { localStorage.setItem('aq.notice.ok', '1'); } catch (e) { } try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
@@ -1437,10 +1456,13 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   };
   async function flushDirect() { try { G.rev = (G.rev || 0) + 1; G.sentAt = Date.now(); await db.doc(roomPath(G.code)).set(clone(G)); nudge('v'); } catch (e) { writeFailed(e); } }
   ACT.handTo = async d => { if (!isHost()) return; U.modal = null; G.host = d.id; hostOn = false; stopHost(); await flushDirect(); toast('انتقلت الاستضافة.'); render(); };
-  ACT.takeHost = async () => {
+  let BEAT_T = null;
+function beatOn() { if (BEAT_T) return; const b = () => { if (G && isHost()) { try { db.doc(roomPath(G.code) + '/priv/beat').set({ t: Date.now(), h: ME_ID }); } catch (e) { } } }; b(); BEAT_T = setInterval(b, 10000); }
+function beatOff() { if (BEAT_T) { clearInterval(BEAT_T); BEAT_T = null; } }
+ACT.takeHost = async () => {
     U.modal = null;
     try { const s = await db.doc(roomPath(U.code)).get(); if (s.exists) G = clone(s.data()); } catch (e) { }
-    if (!G || G.closed || !inRoom(ME_ID)) return;
+    if (!G || G.closed || !inRoom(ME_ID)) return; /* استلام الاستضافة: بس إذا المضيف فعلاً منقطع */ let alive = false; try { const bt = await db.doc(roomPath(U.code) + '/priv/beat').get(); const bd = bt.exists ? bt.data() : null, hn = Date.now() - (skew || 0); alive = bd && bd.h === G.host ? hn - bd.t < 40000 : !!(G.sentAt && hn - G.sentAt < 60000); } catch (e) { } if (alive) { toast('المضيف متصل الحين، فما تقدر تستلم الاستضافة. هالخيار يشتغل بس إذا المضيف انقطع أكثر من نص دقيقة.'); if (typeof render === 'function') render(); return; }
     G.host = ME_ID; await flushDirect(); becomeHost(); toast('صرت المضيف.'); render();
   };
 

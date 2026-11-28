@@ -963,14 +963,14 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     try { const s = await db.doc(inpPath(code, ME_ID)).get(); ME = s.exists ? clone(s.data()) : null; } catch (e) { ME = null; }
     if (ME && ME.room !== code) ME = null;
   }
-  function becomeHost() {
+  function becomeHost() { beatOn();
     hostOn = true;
     if (unsubInp) { try { unsubInp(); } catch (e) { } }
     unsubInp = db.collection('nadik/' + G.code + '/inputs').onSnapshot(onInputs, () => { });
     if (!hostTick) hostTick = setInterval(hostTickFn, 400);
     publish();
   }
-  function stopHost() {
+  function stopHost() { beatOff();
     if (unsubInp) { try { unsubInp(); } catch (e) { } unsubInp = null; }
     if (hostTick) { clearInterval(hostTick); hostTick = null; }
     INP = {};
@@ -1862,7 +1862,8 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   setInterval(tickUI, 250);
 
   /* ---------- actions ---------- */
-  const ACT = {}; window.AQS = { get G() { return G; }, get U() { return U; }, isHost: () => isHost(), me: () => ME_ID, kick: id => { const r = ACT.aqKick({ id }); render(); return r; } };
+  const ACT = {}; window.AQS = { cfg: () => AQCFG(), setCfg: (k, v) => { const r = ACT.liveCfg({ k, v }); render(); return r; }, get G() { return G; }, get U() { return U; }, isHost: () => isHost(), me: () => ME_ID, kick: id => { const r = ACT.aqKick({ id }); render(); return r; } };
+
   ACT.tPause = (...a) => H(() => {
     const o = curT(); if (!o || !o.endsAt) return false;
     if (isPz(o)) { o.endsAt = Date.now() + o.pz * 1000; o.pz = 0; return; }
@@ -1876,6 +1877,21 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
   })(...a);
   const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) { publish(); setTimeout(hostStep, 60); } return r; };
   ACT.aqKick = H(d => { if (!d.id || d.id === G.host) return false; G.kicked = G.kicked || {}; G.kicked[d.id] = true; if (G.phase === 'lobby') G.players = G.players.filter(p => p.id !== d.id); });
+  /* تعديل الإعدادات وسط اللعبة (المضيف بس) */
+  function AQCFG() {
+    const TT = (a, e) => ((document.documentElement.getAttribute('lang') || 'ar').slice(0, 2) === 'en' ? e : a);
+    if (!G || G.phase === 'lobby') return null;
+    const s = G.settings, out = [], tm = (k, a, e) => out.push({ k, l: TT(a, e), v: +s[k] || 60, min: 30, max: 120, st: 30, u: 's' });
+    if (!['lineup', 'cup', 'final'].includes(G.phase)) out.push({ k: 'seasons', l: TT('عدد المواسم (كل موسم سوقين)', 'Seasons (2 markets each)'), v: +s.seasons || 1, min: G.mk ? Math.max(1, Math.ceil(G.mk.no / 2)) : 1, max: 5, st: 1 });
+    tm('listSec', 'وقت عرض اللاعبين للبيع', 'Listing time'); tm('mkSec', 'وقت السوق (المزايدة)', 'Market (bidding) time'); tm('revSec', 'وقت المراجعة', 'Review time'); tm('voteSec', 'وقت تصويت الكأس', 'Cup vote time');
+    return out;
+  }
+  ACT.liveCfg = H(d => {
+    const it = (AQCFG() || []).find(x => x.k === d.k); if (!it) return false;
+    const v = Math.min(it.max, Math.max(it.min, Math.round(+d.v)));
+    if (v === +G.settings[d.k] && !it.pool) return false;
+    if (it.apply) it.apply(v); G.settings[d.k] = v;
+  });
   ACT.enter = () => { U.splash = false; };
   ACT.noticeOk = () => { U.notice = false; try { localStorage.setItem('aq.notice.ok', '1'); } catch (e) { } try { const m = (location.hash || '').match(/^#room-([A-Za-z0-9]{4,6})$/); if (m) sessionStorage.setItem('aq.notice.' + m[1].toUpperCase(), '1'); } catch (e) { } window.scrollTo(0, 0); };
   ACT.closeModal = () => { U.modal = null; U.err = ''; };
@@ -1897,10 +1913,13 @@ section.splash.intro .ar{color:#DE0921!important;-webkit-text-fill-color:#DE0921
     leaveLocal(); render();
   };
   ACT.handTo = async d => { if (!isHost()) return; U.modal = null; G.host = d.id; hostOn = false; stopHost(); await flushDirect(); toast('Hosting handed over.'); render(); };
-  ACT.takeHost = async () => {
+  let BEAT_T = null;
+function beatOn() { if (BEAT_T) return; const b = () => { if (G && isHost()) { try { db.doc(roomPath(G.code) + '/priv/beat').set({ t: Date.now(), h: ME_ID }); } catch (e) { } } }; b(); BEAT_T = setInterval(b, 10000); }
+function beatOff() { if (BEAT_T) { clearInterval(BEAT_T); BEAT_T = null; } }
+ACT.takeHost = async () => {
     U.modal = null;
     try { const s = await db.doc(roomPath(U.code)).get(); if (s.exists) G = clone(s.data()); } catch (e) { }
-    if (!G || G.closed || !inRoom(ME_ID)) return;
+    if (!G || G.closed || !inRoom(ME_ID)) return; /* استلام الاستضافة: بس إذا المضيف فعلاً منقطع */ let alive = false; try { const bt = await db.doc(roomPath(U.code) + '/priv/beat').get(); const bd = bt.exists ? bt.data() : null, hn = Date.now() - (skew || 0); alive = bd && bd.h === G.host ? hn - bd.t < 40000 : !!(G.sentAt && hn - G.sentAt < 60000); } catch (e) { } if (alive) { toast('The host is still connected, so you can’t take over. This only works if the host has been gone for over 30 seconds.'); if (typeof render === 'function') render(); return; }
     G.host = ME_ID; await flushDirect(); becomeHost(); toast('You’re the host now.'); render();
   };
   ACT.create = async () => {

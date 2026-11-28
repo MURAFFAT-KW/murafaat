@@ -241,6 +241,9 @@
     '#aqrepov textarea{width:100%;box-sizing:border-box;border:1.5px solid #D5DBE5;border-radius:12px;padding:10px;font:inherit;resize:vertical}' +
     '#aqrepov .tag{font-size:.78rem;color:#5B6678;background:#F4F6F9;border-radius:99px;padding:2px 9px}' +
     '#aqrepov .ok{background:#ECFDF3;color:#067647;border-radius:12px;padding:10px 12px;font-weight:700;margin:8px 0}' +
+    '#aqrepov .sec{font-weight:800;font-size:.95rem;margin:14px 0 4px;padding-top:10px;border-top:2px solid #EEF1F5}' +
+    '#aqrepov .row.cfg b{white-space:normal;font-size:.9rem}#aqrepov .row.cfg b small{display:block;font-weight:500;color:#5B6678;font-size:.76rem}' +
+    '#aqrepov .row.cfg button{width:40px;height:40px;padding:0;font-size:20px;line-height:1}#aqrepov .row.cfg button:disabled{opacity:.35}#aqrepov .cv{min-width:58px;text-align:center;font-weight:800;font-variant-numeric:tabular-nums}' +
     '#aqrepov .er{color:#C81E1E;font-size:.86rem;min-height:1em}#aqrepov .ct{margin-top:14px;font-size:.82rem;color:#5B6678;text-align:center}';
   document.head.appendChild(css);
 
@@ -260,6 +263,7 @@
     var c = ctx();
     var show = !!(c && /^(game|wait|spect)$/.test(c.U.view || '') && !document.querySelector('.splash'));
     btn.hidden = !show;
+    var ic = c && c.host ? '⚙️' : '🚩'; if (btn.textContent !== ic) { btn.textContent = ic; btn.setAttribute('aria-label', c && c.host ? T('إدارة اللعبة', 'Manage game') : T('بلاغ وإدارة اللاعبين', 'Report & players')); }
     if (!show && st.open) close();
   }
   setInterval(tick, 700);
@@ -275,7 +279,20 @@
     var kicked = c.G.kicked || {}, h = '';
     if (st.step === 'list') {
       var others = (c.G.players || []).filter(function (p) { return p.id !== c.me; });
-      h = '<h3>🚩 ' + T('بلاغ وإدارة اللاعبين', 'Report & players') + '</h3><p class="mu">' +
+      var cf = null; if (c.host && c.s.cfg) { try { cf = c.s.cfg(); } catch (x) { cf = null; } }
+      if (c.host) {
+        h = '<h3>⚙️ ' + T('إدارة اللعبة', 'Manage game') + '</h3>';
+        if (cf && cf.length) {
+          h += '<div class="sec">' + T('الإعدادات', 'Settings') + '</div><p class="mu">' + T('تقدر تغيّرها بأي وقت. الأوقات تنطبق من المؤقت الجاي.', 'Change them any time. Times apply from the next timer.') + '</p>';
+          h += cf.map(function (x) {
+            var val = x.u === 's' ? (x.v >= 60 && x.v % 60 === 0 ? (x.v / 60) + T(' د', ' min') : x.v + T(' ث', 's')) : x.v;
+            return '<div class="row cfg"><b>' + esc(x.l) + (x.note ? '<small>' + esc(x.note) + '</small>' : '') + '</b><button type="button" data-rp="cfg" data-k="' + esc(x.k) + '" data-v="' + (x.v - x.st) + '"' + (x.v <= x.min ? ' disabled' : '') + ' aria-label="' + T('أقل', 'Less') + '">−</button><span class="cv">' + val + '</span><button type="button" data-rp="cfg" data-k="' + esc(x.k) + '" data-v="' + (x.v + x.st) + '"' + (x.v >= x.max ? ' disabled' : '') + ' aria-label="' + T('أكثر', 'More') + '">+</button></div>';
+          }).join('');
+          if (st.msg) h += '<div class="ok">' + esc(st.msg) + '</div>';
+        }
+        h += '<div class="sec">' + T('اللاعبين', 'Players') + '</div>';
+      }
+      h += (c.host ? '' : '<h3>🚩 ' + T('بلاغ وإدارة اللاعبين', 'Report & players') + '</h3>') + '<p class="mu">' +
         (c.host ? T('تقدر تطرد أي لاعب يسيء، وما يقدر يرجع لنفس الغرفة. وتقدر تبلّغنا عنه بعد.', 'You can remove anyone who misbehaves; they can’t rejoin this room. You can also report them to us.')
           : T('إذا أحد أساء أو كتب شي مو زين، بلّغنا. المضيف يقدر يطرده من الغرفة.', 'If someone is abusive or writes something offensive, report it. The host can remove them from the room.')) + '</p>';
       h += others.map(function (p) {
@@ -333,6 +350,7 @@
     else if (a === 'send') { if (!st.reason) { st.err = T('اختر وش صار أول.', 'Pick what happened first.'); } else { send(c); return; } }
     else if (a === 'kick') { st.confirm = b.getAttribute('data-id'); }
     else if (a === 'kickno') { st.confirm = null; }
+    else if (a === 'cfg') { if (c.host && c.s.setCfg) { c.s.setCfg(b.getAttribute('data-k'), +b.getAttribute('data-v')); st.msg = T('تم التعديل ✓ وصل لكل اللاعبين', 'Updated ✓ for everyone'); clearTimeout(st.mt); st.mt = setTimeout(function () { st.msg = ''; if (st.open) draw(); }, 2500); } }
     else if (a === 'kickok') { if (c.host && c.s.kick) c.s.kick(st.confirm); st.confirm = null; }
     draw();
   }, true);

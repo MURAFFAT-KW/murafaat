@@ -482,14 +482,14 @@ async function loadMe(code) {
   try { const s = await db.doc(inpPath(code, ME_ID)).get(); ME = s.exists ? clone(s.data()) : null; } catch (e) { ME = null; }
   if (ME && ME.room !== code) ME = null;
 }
-function becomeHost() {
+function becomeHost() { beatOn();
   hostOn = true;
   if (unsubInp) { try { unsubInp(); } catch (e) { } }
   unsubInp = db.collection(GAME.key + '/' + G.code + '/inputs').onSnapshot(onInputs, () => { });
   if (!hostTick) hostTick = setInterval(() => { if (GAME.hostTick && GAME.hostTick()) publish(); }, 500);
   publish();
 }
-function stopHost() {
+function stopHost() { beatOff();
   if (unsubInp) { try { unsubInp(); } catch (e) { } unsubInp = null; }
   if (hostTick) { clearInterval(hostTick); hostTick = null; }
   INP = {};
@@ -717,9 +717,28 @@ function render() {
 }
 
 /* ---------- الأفعال ---------- */
-const ACT = {}; window.AQS = { get G() { return G; }, get U() { return U; }, isHost: () => isHost(), me: () => ME_ID, kick: id => { const r = ACT.aqKick({ id }); render(); return r; } };
+const ACT = {}; window.AQS = { cfg: () => AQCFG(), setCfg: (k, v) => { const r = ACT.liveCfg({ k, v }); render(); return r; }, get G() { return G; }, get U() { return U; }, isHost: () => isHost(), me: () => ME_ID, kick: id => { const r = ACT.aqKick({ id }); render(); return r; } };
+
 const H = fn => (...a) => { if (!isHost()) return false; const r = fn(...a); if (r !== false) publish(); return r; };
 ACT.aqKick = H(d => { if (!d.id || d.id === G.host) return false; G.kicked = G.kicked || {}; G.kicked[d.id] = true; if (G.phase === 'lobby') G.players = G.players.filter(p => p.id !== d.id); });
+/* تعديل الإعدادات وسط اللعبة (المضيف بس) */
+function AQCFG() {
+  const TT = (a, e) => ((document.documentElement.getAttribute('lang') || 'ar').slice(0, 2) === 'en' ? e : a);
+  if (!G || G.phase === 'lobby') return null;
+  const s = G.settings, out = [], tm = (k, a, e) => out.push({ k, l: TT(a, e), v: +s[k] || 60, min: 30, max: 300, st: 30, u: 's' });
+  if (!['vote', 'final'].includes(G.phase)) {
+    out.push({ k: 'rounds', l: TT('عدد الجولات', 'Rounds'), v: +s.rounds || 1, min: Math.max(1, G.phase === 'setup' ? 1 : (G.round || 1)), max: 10, st: 1 });
+    out.push({ k: 'presenters', l: TT('عدد اللي يعرضون بالجولة', 'Presenters per round'), v: Math.min(+s.presenters || 1, G.players.length), min: 1, max: Math.max(1, Math.min(5, G.players.length)), st: 1, note: ['pitch', 'deals', 'summary'].includes(G.phase) ? TT('يبدأ من الجولة الجاية', 'From the next round') : '' });
+  }
+  tm('setupTime', 'وقت تجهيز المكتب', 'Office setup time'); tm('pitchTime', 'وقت العرض والإقناع', 'Pitch time'); tm('dealTime', 'وقت التفاوض والصفقات', 'Deals time'); tm('voteTime', 'وقت التصويت', 'Voting time');
+  return out;
+}
+ACT.liveCfg = H(d => {
+  const it = (AQCFG() || []).find(x => x.k === d.k); if (!it) return false;
+  const v = Math.min(it.max, Math.max(it.min, Math.round(+d.v)));
+  if (v === +G.settings[d.k] && !it.pool) return false;
+  if (it.apply) it.apply(v); G.settings[d.k] = v;
+});
 ACT.tPause = H(() => {
   if (!G || !G.endsAt) return false;
   if (isPz()) { G.endsAt = Date.now() + G.pz * 1000; G.pz = 0; return; }
@@ -763,10 +782,13 @@ ACT.leave = async () => {
   leaveLocal(); render();
 };
 ACT.handTo = async d => { if (!isHost()) return; U.modal = null; G.host = d.id; hostOn = false; stopHost(); await flushDirect(); toast(L('انتقلت الاستضافة.', 'Hosting handed over.')); };
+let BEAT_T = null;
+function beatOn() { if (BEAT_T) return; const b = () => { if (G && isHost()) { try { db.doc(roomPath(G.code) + '/priv/beat').set({ t: Date.now(), h: ME_ID }); } catch (e) { } } }; b(); BEAT_T = setInterval(b, 10000); }
+function beatOff() { if (BEAT_T) { clearInterval(BEAT_T); BEAT_T = null; } }
 ACT.takeHost = async () => {
   U.modal = null;
   try { const s = await db.doc(roomPath(U.code)).get(); if (s.exists) G = clone(s.data()); } catch (e) { }
-  if (!G || G.closed || !inRoom(ME_ID)) return;
+  if (!G || G.closed || !inRoom(ME_ID)) return; /* استلام الاستضافة: بس إذا المضيف فعلاً منقطع */ let alive = false; try { const bt = await db.doc(roomPath(U.code) + '/priv/beat').get(); const bd = bt.exists ? bt.data() : null, hn = Date.now() - (skew || 0); alive = bd && bd.h === G.host ? hn - bd.t < 40000 : !!(G.sentAt && hn - G.sentAt < 60000); } catch (e) { } if (alive) { toast(L('المضيف متصل الحين، فما تقدر تستلم الاستضافة. هالخيار يشتغل بس إذا المضيف انقطع أكثر من نص دقيقة.', 'The host is still connected, so you can’t take over. This only works if the host has been gone for over 30 seconds.')); if (typeof render === 'function') render(); return; }
   G.host = ME_ID; await flushDirect(); becomeHost(); toast(L('صرت المضيف.', 'You’re now the host.'));
 };
 ACT.create = async () => {
