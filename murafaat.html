@@ -689,8 +689,9 @@ const MZ = (function () {
     const tie = e[0][1] === e[1][1];
     const margin = e[0][1] - e[1][1];
     /* ما أحد صوّت: ما تنحسب تعادل، تنحسب «لا أحد». والاستئناف مسموح بكل سؤال بدون حد */
-    if (t.A + t.B + t.none === 0) return { leader: 'none', tie: false, margin: 0, zero: true, appealable: true };
-    return { leader: tie ? null : e[0][0], tie, margin, appealable: true };
+    if (t.A + t.B + t.none === 0) return { leader: 'none', tie: false, margin: 0, zero: true, appealable: false };
+    /* الاستئناف بس إذا تعادل أو الفرق صوت واحد */
+    return { leader: tie ? null : e[0][0], tie, margin, appealable: tie || margin === 1 };
   }
 
   /* Appeal vote: options A, B only. A tie means a new tie-break round. */
@@ -701,10 +702,12 @@ const MZ = (function () {
     return 'tie';
   }
 
+  /* الفوز ٣ نقاط (٦ مع المضاعفة)، التعادل نقطة لكل طرف، الخسارة و«لا أحد» صفر */
   function award(winner, doubles) {
+    if (winner === 'tie') return { pts: 1, doubled: false, each: true };
     if (winner !== 'A' && winner !== 'B') return { pts: 0, doubled: false };
     const doubled = !!(doubles && doubles[winner]);
-    return { pts: doubled ? 4 : 2, doubled };
+    return { pts: doubled ? 6 : 3, doubled };
   }
 
   return { PERKS, PACKS, norm, shuffle, formPair, tally, firstVoteOutcome, appealOutcome, award };
@@ -1218,10 +1221,10 @@ if (typeof module !== 'undefined') module.exports = MZ;
       c.used[c[side] + ':objection'] = true;
       if (acc) {
         const t = c.timer, l = left(); t.remaining = Math.max(0, l - PEN); t.running = false; if (t.remaining <= 0) { t.done = true; t.remaining = 0; }
-        c.notes.push('اعتراض ' + P(c[side]).name + ' مقبول' + (o.host ? ' من المضيف' : ' (' + yes + '-' + nay + ')') + ': خُصمت 15 ثانية من ' + P(c[other]).name + '.');
+        c.notes.push('الاعتراض مقبول' + (o.host ? ' من المضيف' : ' (' + yes + '-' + nay + ')') + ': خُصمت 15 ثانية من ' + P(c[other]).name + '.');
       } else {
         c.penalty[side] += PEN;
-        c.notes.push('اعتراض ' + P(c[side]).name + ' مرفوض' + (o.host ? ' من المضيف' : ' (' + yes + '-' + nay + ')') + ': تُخصم 15 ثانية من وقته القادم.');
+        c.notes.push('الاعتراض مرفوض' + (o.host ? ' من المضيف' : ' (' + yes + '-' + nay + ')') + '.');
       }
       c.obj = null; ch = true;
     }
@@ -1240,16 +1243,17 @@ if (typeof module !== 'undefined') module.exports = MZ;
   }
   function finalize(outcome, by) {
     const c = G.cur, a = award(outcome, c.doubles);
-    if (a.pts) { const w = G.players.find(p => p.id === c[outcome]); if (w) w.score += a.pts; }
+    if (a.each) ['A', 'B'].forEach(s => { const w = G.players.find(p => p.id === c[s]); if (w) w.score += a.pts; });
+    else if (a.pts) { const w = G.players.find(p => p.id === c[outcome]); if (w) w.score += a.pts; }
     const pa = P(c.A), pb = P(c.B);
     const snap = (p, def) => ({ id: p.id, name: p.name, gender: p.gender, defends: def });
     G.results.push({
       no: G.caseNo + 1, skipped: false, qText: G.qmap[c.qid].text, A: snap(pa, c.defA), B: snap(pb, c.defB),
       helperA: c.helper.A ? P(c.helper.A).name : null, helperB: c.helper.B ? P(c.helper.B).name : null,
       witness: c.witness && !c.witness.pending ? { name: P(c.witness.pid).name, text: c.witness.text } : null,
-      v1: c.v1, appeal: c.appealUsed, rounds: c.rounds.slice(), outcome, by, pts: a.pts, doubled: a.doubled
+      v1: c.v1, appeal: c.appealUsed, rounds: c.rounds.slice(), outcome, by, pts: a.pts, each: !!a.each, doubled: a.doubled
     });
-    c.final = { outcome, by, pts: a.pts, doubled: a.doubled };
+    c.final = { outcome, by, pts: a.pts, each: !!a.each, doubled: a.doubled };
     c.stage = 'done';
   }
   function doSwap(side) {
@@ -1263,7 +1267,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     G.appear[pair.A] = Math.max(0, (G.appear[pair.A] || 1) - 1);
     G.appear[pair.B] = Math.max(0, (G.appear[pair.B] || 1) - 1);
     G.cur = newCase(qid, pair, prev);
-    G.cur.notes.push('تبدّل السؤال بطلب من ' + by + '، ونفس الطرفين يكملون.');
+    G.cur.notes.push('تبدّل السؤال، ونفس الطرفين يكملون.');
   }
 
   /* Every in-case request from a player's phone lands here (the host's own too). */
@@ -1284,12 +1288,12 @@ if (typeof module !== 'undefined') module.exports = MZ;
     if (!st || !st.ok) return false;
     const pid = c[side], who = P(pid), key = pid + ':' + r.id;
     switch (r.id) {
-      case 'extend': c.used[key] = true; addT(BONUS); c.notes.push(who.name + ' ' + gv(who, 'استخدم', 'استخدمت') + ' تمديد الوقت: +30 ثانية.'); break;
+      case 'extend': c.used[key] = true; addT(BONUS); break;
       case 'reply':
         c.used[key] = true;
         if (c.stage === (side === 'A' ? 'reply1' : 'reply2')) addT(BONUS); else c.bonus[side] += BONUS;
-        c.notes.push(who.name + ' ' + gv(who, 'سيحصل', 'ستحصل') + ' على 30 ثانية إضافية في الرد.'); break;
-      case 'double': c.used[key] = true; c.doubles[side] = true; c.notes.push('نقاط ' + who.name + ' مضاعفة إن ' + gv(who, 'فاز', 'فازت') + '.'); break;
+        break;
+      case 'double': c.used[key] = true; c.doubles[side] = true; break;
       case 'team': {
         if (!helperCands(side).some(p => p.id === r.pid)) return false;
         const h = P(r.pid);
@@ -1300,13 +1304,13 @@ if (typeof module !== 'undefined') module.exports = MZ;
         if (!witnessCands().some(p => p.id === r.pid)) return false;
         pauseT();
         c.witness = { pid: r.pid, by: side, text: '', pending: true, key: uid('w') }; c.used[key] = true;
-        c.notes.push(who.name + ' ' + gv(who, 'استدعى', 'استدعت') + ' ' + P(r.pid).name + ' شاهدًا.'); break;
+        c.notes.push('استُدعي ' + P(r.pid).name + ' شاهدًا.'); break;
       }
       case 'swap': doSwap(side); break;
       case 'objection':
         pauseT();
         c.obj = { side, key: uid('o'), endsAt: Date.now() + 864e5, jurors: [], done: [], host: 1 };
-        c.notes.push(who.name + ' ' + gv(who, 'اعترض', 'اعترضت') + ' على كلام ' + P(c[side === 'A' ? 'B' : 'A']).name + '.'); break;
+        c.notes.push('في اعتراض على كلام ' + P(c[side === 'A' ? 'B' : 'A']).name + '.'); break;
     }
     return true;
   }
@@ -1365,7 +1369,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       '<li><span>المضيف ينشئ غرفة ويرسل الرمز أو الرابط، وكل لاعب يدخل من تلفونه.</span></li>' +
       '<li><span>كل لاعب يكتب إجاباته سرًّا على تلفونه، ولا تظهر الإجابات بأسماء أصحابها.</span></li>' +
       '<li><span>يُختار لاعبان إجابتاهما مختلفتان، ويدافع كلٌّ منهما عن رأي الآخر بمؤقت ومزايا.</span></li>' +
-      '<li><span>يصوّت بقية اللاعبين من تلفوناتهم. وعند تقارب الأصوات يحق لأي طرف أو الطرفين طلب الاستئناف، والمضيف يقبل أو يرفض، أو يفتحه بنفسه. خيار «لا أحد» بالتصويت الأول بس.</span></li></ol></section>';
+      '<li><span>يصوّت بقية اللاعبين من تلفوناتهم: الطرف الأول أو الثاني أو «لا أحد». إذا تعادلوا أو الفرق صوت واحد، المضيف يقدر يفتح استئناف: تصويت ثاني وأخير بين الطرفين. الفوز ٣ نقاط، والتعادل نقطة لكل طرف، والخسارة صفر.</span></li></ol></section>';
   }
   function joinView() {
     return '<section class="card" style="display:grid;gap:14px;text-align:center"><span class="muted">تنضم إلى الغرفة</span><div class="bigcode" dir="ltr">' + esc(U.code) + '</div></section>' +
@@ -1492,7 +1496,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const h = c.helper[side] ? P(c.helper[side]) : null;
     const showPerks = IDX[c.stage] !== undefined && (c[side] === ME_ID || (isHost() && G.settings.hostPlays === 0));
     const canSpk = h && sp && (c[side] === ME_ID || isHost());
-    return '<article class="party' + (sp ? ' speaking' : '') + (c[side] === ME_ID ? ' mine' : '') + '"><div class="ptop"><span class="chip">' + (side === 'A' ? 'الطرف الأول' : 'الطرف الثاني') + '</span>' + (c[side] === ME_ID ? '<span class="chip gold">أنت</span>' : '') + (sp ? '<span class="chip live">يتحدث الآن</span>' : '') + (c.doubles[side] ? '<span class="chip gold">نقاط مضاعفة</span>' : '') + '</div>' +
+    return '<article class="party' + (sp ? ' speaking' : '') + (c[side] === ME_ID ? ' mine' : '') + '"><div class="ptop"><span class="chip">' + (side === 'A' ? 'الطرف الأول' : 'الطرف الثاني') + '</span>' + (c[side] === ME_ID ? '<span class="chip gold">أنت</span>' : '') + (sp ? '<span class="chip live">يتحدث الآن</span>' : '') + (c.doubles[side] && (c[side] === ME_ID || (isHost() && G.settings.hostPlays === 0)) ? '<span class="chip gold">نقاط مضاعفة</span>' : '') + '</div>' +
       '<div class="pid">' + avatar(p, 56) + '<div><h3>' + esc(p.name) + '</h3></div></div>' +
       '<div class="defend"><span class="muted small">' + gv(p, 'يدافع', 'تدافع') + ' عن الرأي:</span><strong>«' + esc(c['def' + side]) + '»</strong></div>' +
       (h ? '<div class="helper">' + avatar(h, 34) + '<span>' + gv(p, 'معه', 'معها') + ' في الفريق: <b style="color:var(--text)">' + esc(h.name) + '</b>' + (c.spk[side] === 'helper' ? ' · يتحدث المساعد' : '') + '</span>' + (canSpk ? '<button class="btn sm ghost" data-act="spk" data-side="' + side + '">تبديل المتحدث</button>' : '') + '</div>' : '') +
@@ -1593,9 +1597,9 @@ if (typeof module !== 'undefined') module.exports = MZ;
       else msg = 'تقدّم ' + esc(P(c[o.leader]).name) + ' في التصويت الأول.';
       let appealBox = '';
       if (o.appealable) {
-        const why = o.tie ? 'تعادل في الصدارة' : o.margin === 1 ? 'الفارق صوت واحد فقط' : 'الاستئناف مسموح بكل سؤال';
+        const why = o.tie ? 'تعادل في الصدارة' : 'الفارق صوت واحد فقط';
         const card = (h, body) => '<section class="card" style="display:grid;gap:12px;border-color:var(--gold)"><h2>' + h + '</h2>' + body + '</section>';
-        appealBox = card('الاستئناف', host ? '<p class="muted">الاستئناف بيد المضيف بس، وبعد التصويت الأول بس: تصويت ثاني بين الطرفين (بدون «لا أحد»).</p><div class="btn-row"><button class="btn gold" data-act="hostAppeal">فتح الاستئناف</button><button class="btn" data-act="noAppeal">المتابعة دون استئناف</button></div>' : '<p class="muted">بانتظار المضيف يفتح الاستئناف أو يعتمد النتيجة.</p>');
+        appealBox = card('الاستئناف', host ? '<p class="muted">' + why + '. الاستئناف بيد المضيف: تصويت ثاني وأخير بين الطرفين (بدون «لا أحد»)، ونتيجته نهائية.</p><div class="btn-row"><button class="btn gold" data-act="hostAppeal">فتح الاستئناف</button><button class="btn" data-act="noAppeal">المتابعة دون استئناف</button></div>' : '<p class="muted">بانتظار المضيف يفتح الاستئناف أو يعتمد النتيجة.</p>');
       }
       return '<div class="vkind"><b>نتيجة التصويت الأول</b><span class="muted">هذه أصوات هيئة المحلفين.</span></div>' +
         '<section class="card" style="display:grid;gap:16px">' + bars(c.v1, ['A', 'B', 'none'], labels, o.leader) + '<p><b>' + msg + '</b></p></section>' + appealBox +
@@ -1605,13 +1609,13 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const last = c.rounds[c.rounds.length - 1];
     const ttl = last.kind === 'appeal' ? 'نتيجة تصويت الاستئناف' : 'نتيجة الجولة الفاصلة';
     return '<div class="vkind appeal"><b>' + ttl + '</b><span class="muted">اكتمل التصويت.</span></div>' +
-      '<section class="card" style="display:grid;gap:16px">' + bars(c.lastT, ['A', 'B'], labels, out === 'tie' || out === 'none' ? null : out) + '<p><b>' + (out === 'none' ? 'ما أحد صوّت بالاستئناف، فما في فايز بهالسؤال.' : out === 'tie' ? 'تعادل الطرفان. تُفتح جولة تصويت فاصلة بخيارين فقط.' : 'فاز ' + esc(P(c[out]).name) + ' بتصويت الاستئناف.') + '</b></p></section>' +
-      (!host ? '<p class="muted" style="text-align:center">بانتظار المضيف.</p>' : (out === 'tie' ? '<button class="btn xl gold" data-act="tiebreak">بدء الجولة الفاصلة</button>' : '<button class="btn xl primary" data-act="finalAppeal">اعتماد الحكم النهائي واحتساب النقاط</button>'));
+      '<section class="card" style="display:grid;gap:16px">' + bars(c.lastT, ['A', 'B'], labels, out === 'tie' || out === 'none' ? null : out) + '<p><b>' + (out === 'none' ? 'ما أحد صوّت بالاستئناف، فما في فايز بهالسؤال.' : out === 'tie' ? 'تعادل الطرفان بالاستئناف، والنتيجة نهائية: نقطة لكل طرف.' : 'فاز ' + esc(P(c[out]).name) + ' بتصويت الاستئناف.') + '</b></p></section>' +
+      (!host ? '<p class="muted" style="text-align:center">بانتظار المضيف.</p>' : (false ? '<button class="btn xl gold" data-act="tiebreak">بدء الجولة الفاصلة</button>' : '<button class="btn xl primary" data-act="finalAppeal">اعتماد الحكم النهائي واحتساب النقاط</button>'));
   }
   function outcomeText(o, A, B) {
     if (o === 'A' || o === 'B') return 'فاز ' + esc((o === 'A' ? A : B).name);
     if (o === 'none') return 'لا أحد: لم يقتنع المحلفون بأي طرف';
-    return 'تعادل دون استئناف';
+    return 'تعادل: نقطة لكل طرف';
   }
   function scoreMini() {
     return '<div class="seg-wide" style="gap:8px">' + G.players.slice().sort((a, b) => b.score - a.score).map(p => '<span class="chip' + (p.score ? ' gold' : '') + '">' + esc(p.name) + ' <b class="num">' + p.score + '</b></span>').join('') + '</div>';
@@ -1621,7 +1625,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const last = G.caseNo + 1 >= G.order.length;
     return '<div class="verdict"><p class="muted">حكم السؤال ' + (G.caseNo + 1) + '</p><h2>' + outcomeText(f.outcome, A, B) + '</h2>' +
       '<p>' + (f.by === 'appeal' ? 'انتهت بتصويت الاستئناف (الحكم النهائي).' : 'انتهت بالتصويت الأول.') + '</p>' +
-      '<p style="margin-top:8px">' + (f.pts ? '<span class="chip gold">' + ptsAr(f.pts) + (f.doubled ? ' (مضاعفة)' : '') + '</span>' : '<span class="chip">لا نقاط في هذا السؤال</span>') + '</p></div>' +
+      '<p style="margin-top:8px">' + (f.pts ? '<span class="chip gold">' + ptsAr(f.pts) + (f.each ? ' لكل طرف' : '') + (f.doubled ? ' (مضاعفة)' : '') + '</span>' : '<span class="chip">لا نقاط في هذا السؤال</span>') + '</p></div>' +
       '<section class="card" style="display:grid;gap:10px"><h3>الترتيب الحالي</h3>' + scoreMini() + '</section>' +
       (isHost() ? '<button class="btn xl primary" data-act="nextCase">' + (last ? 'عرض النتيجة النهائية' : 'السؤال التالي') + '</button>' : '<p class="muted" style="text-align:center">بانتظار المضيف.</p>');
   }
@@ -2003,7 +2007,7 @@ ACT.takeHost = async () => {
   ACT.cancelAppeal = H(() => { const c = G.cur; if (!c.appeal || !c.o1) return false; c.appeal = null; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
   ACT.hostAppeal = H(() => { const c = G.cur; if (!c || c.stage !== 'tally1' || !c.o1 || !c.o1.appealable || c.appealUsed) return false; c.appeal = null; c.appealUsed = true; c.notes.push('المضيف فتح الاستئناف.'); startVote('appeal', 1); });
   ACT.noAppeal = H(() => { const c = G.cur; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
-  ACT.tiebreak = H(() => { const c = G.cur; startVote('tiebreak', c.rounds.length + 1); });
+  ACT.tiebreak = H(() => false); /* ما في تصويت ثالث */
   ACT.finalAppeal = H(() => { const c = G.cur; finalize(appealOutcome(c.lastT), 'appeal'); });
   ACT.nextCase = H(() => { G.cur = null; G.caseNo++; startCase(); });
   ACT.rematch = H(() => { G.gameNo++; G.phase = 'perks'; G.prog = []; G.cur = null; G.results = []; G.players.forEach(p => { p.perks = []; p.score = 0; }); });

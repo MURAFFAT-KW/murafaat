@@ -690,8 +690,9 @@ const MZ = (function () {
     const tie = e[0][1] === e[1][1];
     const margin = e[0][1] - e[1][1];
     /* ما أحد صوّت: ما تنحسب تعادل، تنحسب «لا أحد». والاستئناف مسموح بكل سؤال بدون حد */
-    if (t.A + t.B + t.none === 0) return { leader: 'none', tie: false, margin: 0, zero: true, appealable: true };
-    return { leader: tie ? null : e[0][0], tie, margin, appealable: true };
+    if (t.A + t.B + t.none === 0) return { leader: 'none', tie: false, margin: 0, zero: true, appealable: false };
+    /* الاستئناف بس إذا تعادل أو الفرق صوت واحد */
+    return { leader: tie ? null : e[0][0], tie, margin, appealable: tie || margin === 1 };
   }
 
   /* Appeal vote: options A, B only. A tie means a new tie-break round. */
@@ -702,10 +703,12 @@ const MZ = (function () {
     return 'tie';
   }
 
+  /* الفوز ٣ نقاط (٦ مع المضاعفة)، التعادل نقطة لكل طرف، الخسارة و«لا أحد» صفر */
   function award(winner, doubles) {
+    if (winner === 'tie') return { pts: 1, doubled: false, each: true };
     if (winner !== 'A' && winner !== 'B') return { pts: 0, doubled: false };
     const doubled = !!(doubles && doubles[winner]);
-    return { pts: doubled ? 4 : 2, doubled };
+    return { pts: doubled ? 6 : 3, doubled };
   }
 
   return { PERKS, PACKS, norm, shuffle, formPair, tally, firstVoteOutcome, appealOutcome, award };
@@ -1218,10 +1221,10 @@ if (typeof module !== 'undefined') module.exports = MZ;
       c.used[c[side] + ':objection'] = true;
       if (acc) {
         const t = c.timer, l = left(); t.remaining = Math.max(0, l - PEN); t.running = false; if (t.remaining <= 0) { t.done = true; t.remaining = 0; }
-        c.notes.push(P(c[side]).name + '’s objection sustained' + (o.host ? ' by the host' : ' (' + yes + '-' + nay + ')') + ': 15 seconds taken from ' + P(c[other]).name + '.');
+        c.notes.push('Objection sustained' + (o.host ? ' by the host' : ' (' + yes + '-' + nay + ')') + ': 15 seconds taken from ' + P(c[other]).name + '.');
       } else {
         c.penalty[side] += PEN;
-        c.notes.push(P(c[side]).name + '’s objection overruled' + (o.host ? ' by the host' : ' (' + yes + '-' + nay + ')') + ': 15 seconds off their next turn.');
+        c.notes.push('Objection overruled' + (o.host ? ' by the host' : ' (' + yes + '-' + nay + ')') + '.');
       }
       c.obj = null; ch = true;
     }
@@ -1240,16 +1243,17 @@ if (typeof module !== 'undefined') module.exports = MZ;
   }
   function finalize(outcome, by) {
     const c = G.cur, a = award(outcome, c.doubles);
-    if (a.pts) { const w = G.players.find(p => p.id === c[outcome]); if (w) w.score += a.pts; }
+    if (a.each) ['A', 'B'].forEach(s => { const w = G.players.find(p => p.id === c[s]); if (w) w.score += a.pts; });
+    else if (a.pts) { const w = G.players.find(p => p.id === c[outcome]); if (w) w.score += a.pts; }
     const pa = P(c.A), pb = P(c.B);
     const snap = (p, def) => ({ id: p.id, name: p.name, gender: p.gender, defends: def });
     G.results.push({
       no: G.caseNo + 1, skipped: false, qText: G.qmap[c.qid].text, A: snap(pa, c.defA), B: snap(pb, c.defB),
       helperA: c.helper.A ? P(c.helper.A).name : null, helperB: c.helper.B ? P(c.helper.B).name : null,
       witness: c.witness && !c.witness.pending ? { name: P(c.witness.pid).name, text: c.witness.text } : null,
-      v1: c.v1, appeal: c.appealUsed, rounds: c.rounds.slice(), outcome, by, pts: a.pts, doubled: a.doubled
+      v1: c.v1, appeal: c.appealUsed, rounds: c.rounds.slice(), outcome, by, pts: a.pts, each: !!a.each, doubled: a.doubled
     });
-    c.final = { outcome, by, pts: a.pts, doubled: a.doubled };
+    c.final = { outcome, by, pts: a.pts, each: !!a.each, doubled: a.doubled };
     c.stage = 'done';
   }
   function doSwap(side) {
@@ -1263,7 +1267,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     G.appear[pair.A] = Math.max(0, (G.appear[pair.A] || 1) - 1);
     G.appear[pair.B] = Math.max(0, (G.appear[pair.B] || 1) - 1);
     G.cur = newCase(qid, pair, prev);
-    G.cur.notes.push('Question swapped at ' + by + '’s request; the same two players continue.');
+    G.cur.notes.push('The question was swapped; the same two players continue.');
   }
 
   /* Every in-case request from a player's phone lands here (the host's own too). */
@@ -1284,12 +1288,12 @@ if (typeof module !== 'undefined') module.exports = MZ;
     if (!st || !st.ok) return false;
     const pid = c[side], who = P(pid), key = pid + ':' + r.id;
     switch (r.id) {
-      case 'extend': c.used[key] = true; addT(BONUS); c.notes.push(who.name + ' used Extra Time: +30 seconds.'); break;
+      case 'extend': c.used[key] = true; addT(BONUS); break;
       case 'reply':
         c.used[key] = true;
         if (c.stage === (side === 'A' ? 'reply1' : 'reply2')) addT(BONUS); else c.bonus[side] += BONUS;
-        c.notes.push(who.name + ' gets 30 extra seconds in the reply.'); break;
-      case 'double': c.used[key] = true; c.doubles[side] = true; c.notes.push(who.name + '’s points are doubled if they win.'); break;
+        break;
+      case 'double': c.used[key] = true; c.doubles[side] = true; break;
       case 'team': {
         if (!helperCands(side).some(p => p.id === r.pid)) return false;
         const h = P(r.pid);
@@ -1300,13 +1304,13 @@ if (typeof module !== 'undefined') module.exports = MZ;
         if (!witnessCands().some(p => p.id === r.pid)) return false;
         pauseT();
         c.witness = { pid: r.pid, by: side, text: '', pending: true, key: uid('w') }; c.used[key] = true;
-        c.notes.push(who.name + ' called ' + P(r.pid).name + ' as a witness.'); break;
+        c.notes.push(P(r.pid).name + ' was called as a witness.'); break;
       }
       case 'swap': doSwap(side); break;
       case 'objection':
         pauseT();
         c.obj = { side, key: uid('o'), endsAt: Date.now() + 864e5, jurors: [], done: [], host: 1 };
-        c.notes.push(who.name + ' objected to what ' + P(c[side === 'A' ? 'B' : 'A']).name + ' said.'); break;
+        c.notes.push('An objection was raised against what ' + P(c[side === 'A' ? 'B' : 'A']).name + ' said.'); break;
     }
     return true;
   }
@@ -1365,7 +1369,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
       '<li><span>The host creates a room and sends the code or link; everyone joins from their phone.</span></li>' +
       '<li><span>Each player writes their answers secretly on their phone; answers are never shown with names.</span></li>' +
       '<li><span>Two players with different answers are chosen, and each defends the other’s view, with a timer and perks.</span></li>' +
-      '<li><span>The other players vote from their phones. If the vote is close, either side (or both) can request an appeal and the host accepts or rejects; the host can also open one. “Nobody” is only an option in the first vote.</span></li></ol></section>';
+      '<li><span>The other players vote from their phones: side one, side two or “Nobody”. If it’s a tie or a one-vote margin, the host can open an appeal: a second and final vote between the two sides. A win is 3 points, a tie 1 point each, a loss 0.</span></li></ol></section>';
   }
   function joinView() {
     return '<section class="card" style="display:grid;gap:14px;text-align:center"><span class="muted">You’re joining room</span><div class="bigcode" dir="ltr">' + esc(U.code) + '</div></section>' +
@@ -1492,7 +1496,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const h = c.helper[side] ? P(c.helper[side]) : null;
     const showPerks = IDX[c.stage] !== undefined && (c[side] === ME_ID || (isHost() && G.settings.hostPlays === 0));
     const canSpk = h && sp && (c[side] === ME_ID || isHost());
-    return '<article class="party' + (sp ? ' speaking' : '') + (c[side] === ME_ID ? ' mine' : '') + '"><div class="ptop"><span class="chip">' + (side === 'A' ? 'Side one' : 'Side two') + '</span>' + (c[side] === ME_ID ? '<span class="chip gold">You</span>' : '') + (sp ? '<span class="chip live">Speaking now</span>' : '') + (c.doubles[side] ? '<span class="chip gold">Double points</span>' : '') + '</div>' +
+    return '<article class="party' + (sp ? ' speaking' : '') + (c[side] === ME_ID ? ' mine' : '') + '"><div class="ptop"><span class="chip">' + (side === 'A' ? 'Side one' : 'Side two') + '</span>' + (c[side] === ME_ID ? '<span class="chip gold">You</span>' : '') + (sp ? '<span class="chip live">Speaking now</span>' : '') + (c.doubles[side] && (c[side] === ME_ID || (isHost() && G.settings.hostPlays === 0)) ? '<span class="chip gold">Double points</span>' : '') + '</div>' +
       '<div class="pid">' + avatar(p, 56) + '<div><h3>' + esc(p.name) + '</h3></div></div>' +
       '<div class="defend"><span class="muted small">' + 'Defends:</span><strong>“' + esc(c['def' + side]) + '”</strong></div>' +
       (h ? '<div class="helper">' + avatar(h, 34) + '<span>' + 'Teammate: <b style="color:var(--text)">' + esc(h.name) + '</b>' + (c.spk[side] === 'helper' ? ' · Helper speaking' : '') + '</span>' + (canSpk ? '<button class="btn sm ghost" data-act="spk" data-side="' + side + '">Switch speaker</button>' : '') + '</div>' : '') +
@@ -1593,9 +1597,9 @@ if (typeof module !== 'undefined') module.exports = MZ;
       else msg = esc(P(c[o.leader]).name) + ' leads after the first vote.';
       let appealBox = '';
       if (o.appealable) {
-        const why = o.tie ? 'Tied at the top' : o.margin === 1 ? 'Margin of just one vote' : 'Appeals are allowed on every question';
+        const why = o.tie ? 'Tied at the top' : 'Margin of just one vote';
         const card = (h, body) => '<section class="card" style="display:grid;gap:12px;border-color:var(--gold)"><h2>' + h + '</h2>' + body + '</section>';
-        appealBox = card('Appeal', host ? '<p class="muted">Only the host can open an appeal, and only after the first vote: a second vote with just the two sides (no “Nobody”).</p><div class="btn-row"><button class="btn gold" data-act="hostAppeal">Open an appeal</button><button class="btn" data-act="noAppeal">Continue without appeal</button></div>' : '<p class="muted">Waiting for the host to open an appeal or confirm the result.</p>');
+        appealBox = card('Appeal', host ? '<p class="muted">' + why + '. Only the host can open an appeal: a second and final vote between the two sides (no “Nobody”); its result is final.</p><div class="btn-row"><button class="btn gold" data-act="hostAppeal">Open an appeal</button><button class="btn" data-act="noAppeal">Continue without appeal</button></div>' : '<p class="muted">Waiting for the host to open an appeal or confirm the result.</p>');
       }
       return '<div class="vkind"><b>First vote result</b><span class="muted">These are the jury’s votes.</span></div>' +
         '<section class="card" style="display:grid;gap:16px">' + bars(c.v1, ['A', 'B', 'none'], labels, o.leader) + '<p><b>' + msg + '</b></p></section>' + appealBox +
@@ -1605,13 +1609,13 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const last = c.rounds[c.rounds.length - 1];
     const ttl = last.kind === 'appeal' ? 'Appeal vote result' : 'Tie-break result';
     return '<div class="vkind appeal"><b>' + ttl + '</b><span class="muted">Voting complete.</span></div>' +
-      '<section class="card" style="display:grid;gap:16px">' + bars(c.lastT, ['A', 'B'], labels, out === 'tie' || out === 'none' ? null : out) + '<p><b>' + (out === 'none' ? 'Nobody voted in the appeal, so there’s no winner for this question.' : out === 'tie' ? 'The two sides are tied. A tie-break round opens with just two options.' : esc(P(c[out]).name) + ' won the appeal vote.') + '</b></p></section>' +
-      (!host ? '<p class="muted" style="text-align:center">Waiting for the host.</p>' : (out === 'tie' ? '<button class="btn xl gold" data-act="tiebreak">Start the tie-break</button>' : '<button class="btn xl primary" data-act="finalAppeal">Confirm the final verdict and award points</button>'));
+      '<section class="card" style="display:grid;gap:16px">' + bars(c.lastT, ['A', 'B'], labels, out === 'tie' || out === 'none' ? null : out) + '<p><b>' + (out === 'none' ? 'Nobody voted in the appeal, so there’s no winner for this question.' : out === 'tie' ? 'The appeal is tied and the result is final: 1 point each.' : esc(P(c[out]).name) + ' won the appeal vote.') + '</b></p></section>' +
+      (!host ? '<p class="muted" style="text-align:center">Waiting for the host.</p>' : (false ? '<button class="btn xl gold" data-act="tiebreak">Start the tie-break</button>' : '<button class="btn xl primary" data-act="finalAppeal">Confirm the final verdict and award points</button>'));
   }
   function outcomeText(o, A, B) {
     if (o === 'A' || o === 'B') return esc((o === 'A' ? A : B).name) + ' wins';
     if (o === 'none') return 'Nobody: the jury wasn’t convinced by either side';
-    return 'Tie, no appeal';
+    return 'Tie: 1 point each';
   }
   function scoreMini() {
     return '<div class="seg-wide" style="gap:8px">' + G.players.slice().sort((a, b) => b.score - a.score).map(p => '<span class="chip' + (p.score ? ' gold' : '') + '">' + esc(p.name) + ' <b class="num">' + p.score + '</b></span>').join('') + '</div>';
@@ -1621,7 +1625,7 @@ if (typeof module !== 'undefined') module.exports = MZ;
     const last = G.caseNo + 1 >= G.order.length;
     return '<div class="verdict"><p class="muted">Verdict of question ' + (G.caseNo + 1) + '</p><h2>' + outcomeText(f.outcome, A, B) + '</h2>' +
       '<p>' + (f.by === 'appeal' ? 'Decided by the appeal vote (final verdict).' : 'Decided by the first vote.') + '</p>' +
-      '<p style="margin-top:8px">' + (f.pts ? '<span class="chip gold">' + f.pts + (f.pts === 1 ? ' point' : ' points') + (f.doubled ? ' (doubled)' : '') + '</span>' : '<span class="chip">No points in this question</span>') + '</p></div>' +
+      '<p style="margin-top:8px">' + (f.pts ? '<span class="chip gold">' + f.pts + (f.pts === 1 ? ' point' : ' points') + (f.each ? ' each' : '') + (f.doubled ? ' (doubled)' : '') + '</span>' : '<span class="chip">No points in this question</span>') + '</p></div>' +
       '<section class="card" style="display:grid;gap:10px"><h3>Current standings</h3>' + scoreMini() + '</section>' +
       (isHost() ? '<button class="btn xl primary" data-act="nextCase">' + (last ? 'Show the final result' : 'Next question') + '</button>' : '<p class="muted" style="text-align:center">Waiting for the host.</p>');
   }
@@ -2003,7 +2007,7 @@ ACT.takeHost = async () => {
   ACT.cancelAppeal = H(() => { const c = G.cur; if (!c.appeal || !c.o1) return false; c.appeal = null; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
   ACT.hostAppeal = H(() => { const c = G.cur; if (!c || c.stage !== 'tally1' || !c.o1 || !c.o1.appealable || c.appealUsed) return false; c.appeal = null; c.appealUsed = true; c.notes.push('The host opened an appeal.'); startVote('appeal', 1); });
   ACT.noAppeal = H(() => { const c = G.cur; finalize(c.o1.leader === null ? 'tie' : c.o1.leader, 'first'); });
-  ACT.tiebreak = H(() => { const c = G.cur; startVote('tiebreak', c.rounds.length + 1); });
+  ACT.tiebreak = H(() => false); /* ما في تصويت ثالث */
   ACT.finalAppeal = H(() => { const c = G.cur; finalize(appealOutcome(c.lastT), 'appeal'); });
   ACT.nextCase = H(() => { G.cur = null; G.caseNo++; startCase(); });
   ACT.rematch = H(() => { G.gameNo++; G.phase = 'perks'; G.prog = []; G.cur = null; G.results = []; G.players.forEach(p => { p.perks = []; p.score = 0; }); });
