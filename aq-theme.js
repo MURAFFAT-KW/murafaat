@@ -82,6 +82,7 @@
     return m.some(function (c) { var o = parse(c); if (!o || o.a < 0.6) return false; var x = toHsl(o); return x.l >= 0.45 && x.l < 0.82 && x.s > 0.35; });
   }
   function ruleText(rule) {
+    if (/aqkeep/.test(rule.selectorText || '')) return '';   // قواعد مقصودة (مثل لون اسم اللعبة) ما نغيرها
     var st = rule.style, decl = [], keepFg = brightBg(st);   // كلام غامق فوق لون فاتح ملوّن (مثل الزر الأصفر) يظل غامق
     for (var i = 0; i < st.length; i++) {
       var p = st[i], v = st.getPropertyValue(p), r;
@@ -153,7 +154,7 @@
     if (!root.classList.contains('aq-dark') || !document.body) return;
     var all = document.body.querySelectorAll('*'), n = 0;
     for (var i = 0; i < all.length && n < 1500; i++) {
-      var el = all[i]; if (el.closest('svg') || el.__aqNet === 'ok') continue;
+      var el = all[i]; if (el.closest('svg') || el.closest('[data-aqkeep]') || el.__aqNet === 'ok') continue;
       var hasText = false; for (var c = el.firstChild; c; c = c.nextSibling) if (c.nodeType === 3 && c.textContent.trim()) { hasText = true; break; }
       if (!hasText) continue; n++;
       var cs = getComputedStyle(el), f = lum(cs.webkitTextFillColor || cs.color) || lum(cs.color);
